@@ -8,11 +8,8 @@ const STATUS = ["incomplete", "pending_review", "approved", "rejected", "blocked
  * Confirm the caller is an admin. Throws if not. Returns the admin's email
  * (from the verified JWT claims) so callers can attribute audit entries.
  */
-async function assertAdmin(context: {
-  supabase: ReturnType<typeof requireSupabaseAuth> extends never ? never : any;
-  userId: string;
-  claims: Record<string, unknown>;
-}): Promise<string | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function assertAdmin(context: any): Promise<string | null> {
   const { supabase, userId, claims } = context;
   const { data: isAdmin, error } = await supabase.rpc("has_role", {
     _user_id: userId,
@@ -20,7 +17,7 @@ async function assertAdmin(context: {
   });
   if (error) throw new Error("Could not verify permissions.");
   if (!isAdmin) throw new Error("Not authorised. Admin access required.");
-  return (claims.email as string | undefined) ?? null;
+  return (claims?.email as string | undefined) ?? null;
 }
 
 /**
