@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.record_profile_status_history() FROM PUBLIC, anon, authenticated;
