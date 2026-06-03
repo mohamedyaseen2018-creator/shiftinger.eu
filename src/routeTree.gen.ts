@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TalentRouteImport } from './routes/talent'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ForBusinessesRouteImport } from './routes/for-businesses'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const TalentRoute = TalentRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsRoute = JobsRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
+  '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/talent': typeof TalentRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
+  '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/talent': typeof TalentRoute
 }
@@ -60,21 +68,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
+  '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/talent': typeof TalentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/for-businesses' | '/jobs' | '/register' | '/talent'
+  fullPaths:
+    | '/'
+    | '/for-businesses'
+    | '/jobs'
+    | '/login'
+    | '/register'
+    | '/talent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/for-businesses' | '/jobs' | '/register' | '/talent'
-  id: '__root__' | '/' | '/for-businesses' | '/jobs' | '/register' | '/talent'
+  to: '/' | '/for-businesses' | '/jobs' | '/login' | '/register' | '/talent'
+  id:
+    | '__root__'
+    | '/'
+    | '/for-businesses'
+    | '/jobs'
+    | '/login'
+    | '/register'
+    | '/talent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ForBusinessesRoute: typeof ForBusinessesRoute
   JobsRoute: typeof JobsRoute
+  LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   TalentRoute: typeof TalentRoute
 }
@@ -93,6 +116,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs': {
@@ -123,6 +153,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ForBusinessesRoute: ForBusinessesRoute,
   JobsRoute: JobsRoute,
+  LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   TalentRoute: TalentRoute,
 }
