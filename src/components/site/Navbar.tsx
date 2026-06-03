@@ -20,7 +20,7 @@ function Wordmark({ className = "" }: { className?: string }) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-ink/5 bg-canvas/80 backdrop-blur-md">
