@@ -46,12 +46,22 @@ export default function Navbar() {
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
-            <Link
-              to="/dashboard"
-              className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
-            >
-              Dashboard
-            </Link>
+            <>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
+                >
+                  Admin
+                </Link>
+              )}
+              <Link
+                to="/dashboard"
+                className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+              >
+                Dashboard
+              </Link>
+            </>
           ) : (
             <>
               <Link
