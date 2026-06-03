@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const NAV_LINKS = [
   { label: "Jobs available", to: "/jobs" },
@@ -19,6 +20,7 @@ function Wordmark({ className = "" }: { className?: string }) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-ink/5 bg-canvas/80 backdrop-blur-md">
@@ -43,18 +45,30 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            to="/login"
-            className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/register"
-            className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
-          >
-            Get started
-          </Link>
+          {user ? (
+            <Link
+              to="/dashboard"
+              className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                search={{ mode: "signin", role: "worker" }}
+                className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -81,20 +95,33 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="flex flex-col gap-3 border-t border-ink/10 pt-4">
-            <Link
-              to="/login"
-              className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
-              onClick={() => setOpen(false)}
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
-              onClick={() => setOpen(false)}
-            >
-              Get started
-            </Link>
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
+                onClick={() => setOpen(false)}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  search={{ mode: "signin", role: "worker" }}
+                  className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
+                  onClick={() => setOpen(false)}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
+                  onClick={() => setOpen(false)}
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

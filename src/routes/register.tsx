@@ -14,7 +14,7 @@ export const Route = createFileRoute("/register")({
 
 const ROLES = [
   {
-    key: "worker",
+    key: "worker" as const,
     icon: Briefcase,
     title: "I'm looking for work",
     body: "Build a verified profile, post your availability, and apply to shifts that match your skills.",
@@ -22,7 +22,7 @@ const ROLES = [
     accent: "teal" as const,
   },
   {
-    key: "business",
+    key: "business" as const,
     icon: Store,
     title: "I'm hiring staff",
     body: "Post shifts, see skill-matched candidates, and confirm reliable workers within hours.",
@@ -62,7 +62,8 @@ function RegisterPage() {
                 <ShieldCheck size={14} /> {r.perk}
               </p>
               <Link
-                to="/login"
+                to="/auth"
+                search={{ mode: "signup", role: r.key }}
                 className={`mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-medium text-canvas transition-colors ${
                   r.accent === "teal" ? "bg-teal hover:bg-teal-light" : "bg-gold hover:bg-gold-dark"
                 }`}
@@ -75,7 +76,7 @@ function RegisterPage() {
 
         <p className="mt-8 text-center text-sm text-ink/50">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-teal hover:underline">
+          <Link to="/auth" search={{ mode: "signin", role: "worker" }} className="font-medium text-teal hover:underline">
             Sign in
           </Link>
         </p>

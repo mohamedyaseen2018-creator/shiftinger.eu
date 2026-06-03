@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import JobCard from "@/components/features/JobCard";
-import { MOCK_JOBS } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { fetchOpenJobs, toJob, type JobRow } from "@/lib/jobs";
+import { computeMatch } from "@/lib/matching";
 import { ROLE_OPTIONS, CITY_OPTIONS } from "@/data/utils";
+import type { Job } from "@/data/types";
 
 export const Route = createFileRoute("/jobs")({
   head: () => ({
@@ -27,30 +32,109 @@ const minPay: Record<string, number> = { "€8+/hr": 8, "€10+/hr": 10, "€12+
 const selectCls =
   "rounded-md border-0 bg-white px-3 py-2 text-sm text-ink ring-1 ring-ink/10 focus:outline-none focus:ring-2 focus:ring-teal";
 
+interface DisplayJob {
+  job: Job;
+  row: JobRow;
+  match?: { score: number; criteria: { label: string; matched: boolean }[] };
+}
+
 function JobsPage() {
+  const { user, profile } = useAuth();
   const [role, setRole] = useState("All roles");
   const [type, setType] = useState("All types");
   const [city, setCity] = useState("All cities");
   const [pay, setPay] = useState("Any");
   const [keyword, setKeyword] = useState("");
-  const [applied, setApplied] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<DisplayJob[]>([]);
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
+  const [worker, setWorker] = useState<Record<string, unknown> | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { jobs, businesses } = await fetchOpenJobs();
+    let workerProfile: Record<string, unknown> | null = null;
+    if (user && profile?.account_type === "worker") {
+      const { data } = await supabase.from("worker_profiles").select("*").eq("user_id", user.id).maybeSingle();
+      workerProfile = data;
+      setWorker(data);
+      const { data: apps } = await supabase.from("applications").select("job_id").eq("worker_id", user.id);
+      setAppliedIds(new Set((apps ?? []).map((a) => a.job_id as string)));
+    }
+    const display: DisplayJob[] = jobs.map((row) => {
+      const job = toJob(row, businesses[row.owner_id]);
+      let match;
+      if (workerProfile) {
+        match = computeMatch(
+          {
+            main_role: workerProfile.main_role as string,
+            sub_roles: workerProfile.sub_roles,
+            languages: workerProfile.languages,
+            min_rate: workerProfile.min_rate as number,
+            atividade: Boolean(workerProfile.atividade),
+            looking_for: workerProfile.looking_for,
+          },
+          { role: row.role, type: row.type, rate: Number(row.rate), languages: row.languages, atividade: row.atividade },
+        );
+      }
+      return { job, row, match };
+    });
+    setItems(display);
+    setLoading(false);
+  }, [user, profile]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const apply = async (jobId: string) => {
+    if (!user) {
+      toast.error("Please sign in as a worker to apply.");
+      return;
+    }
+    if (profile?.account_type !== "worker") {
+      toast.error("Only worker accounts can apply.");
+      return;
+    }
+    if (profile.status !== "approved") {
+      toast.error("Your account must be verified before applying.");
+      return;
+    }
+    const { data: blocked } = await supabase.rpc("has_pending_review", { _user: user.id });
+    if (blocked) {
+      toast.error("Please review and close your finished job before applying to new ones.");
+      return;
+    }
+    const item = items.find((i) => i.row.id === jobId);
+    if (!item) return;
+    const { error } = await supabase.from("applications").insert({
+      job_id: jobId,
+      worker_id: user.id,
+      owner_id: item.row.owner_id,
+      match_score: item.match?.score ?? 0,
+      matched_criteria: item.match?.criteria ?? [],
+      status: "applied",
+    });
+    if (error) {
+      toast.error(error.message.includes("duplicate") ? "You already applied to this shift." : "Could not apply.");
+      return;
+    }
+    setAppliedIds((p) => new Set([...p, jobId]));
+    toast.success("Application sent!");
+  };
 
   const filtered = useMemo(() => {
-    return MOCK_JOBS.filter((job) => {
+    return items.filter(({ job }) => {
       if (role !== "All roles" && job.role !== role) return false;
       if (type === "Single shift" && job.type !== "single") return false;
       if (type === "Part-time" && job.type !== "parttime") return false;
       if (city !== "All cities" && job.city !== city) return false;
       if (pay !== "Any" && job.rate < minPay[pay]) return false;
-      if (
-        keyword &&
-        !job.role.toLowerCase().includes(keyword.toLowerCase()) &&
-        !job.area.toLowerCase().includes(keyword.toLowerCase())
-      )
+      if (keyword && !job.role.toLowerCase().includes(keyword.toLowerCase()) && !job.area.toLowerCase().includes(keyword.toLowerCase()))
         return false;
       return true;
     });
-  }, [role, type, city, pay, keyword]);
+  }, [items, role, type, city, pay, keyword]);
 
   return (
     <SiteLayout>
@@ -92,19 +176,22 @@ function JobsPage() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-teal" /></div>
+        ) : filtered.length === 0 ? (
           <div className="py-20 text-center text-ink/40">
-            <p className="font-serif text-lg">No shifts match your filters</p>
-            <p className="mt-2 text-sm">Try adjusting the role, city, or pay filters above.</p>
+            <p className="font-serif text-lg">No shifts available yet</p>
+            <p className="mt-2 text-sm">Check back soon, or adjust your filters.</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((job) => (
+            {filtered.map(({ job, match }) => (
               <JobCard
                 key={job.id}
                 job={job}
-                applied={applied.has(job.id)}
-                onApply={(id) => setApplied((p) => new Set([...p, id]))}
+                matchScore={worker ? match?.score : undefined}
+                applied={appliedIds.has(job.id)}
+                onApply={profile?.account_type === "worker" ? apply : undefined}
               />
             ))}
           </div>
