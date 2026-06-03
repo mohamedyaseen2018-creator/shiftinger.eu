@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Loader2,
   Clock,
@@ -13,8 +13,12 @@ import {
   MessageSquare,
   UserCog,
   LogOut,
+  Star,
+  Send,
+  Phone,
 } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -79,7 +83,7 @@ function DashboardPage() {
             {profile.status === "rejected" && <RejectedNote />}
             {profile.status === "blocked" && <BlockedNote />}
             {profile.status === "approved" &&
-              (profile.account_type === "worker" ? <WorkerHub /> : <BusinessHub />)}
+              (profile.account_type === "worker" ? <WorkerHub userId={profile.id} /> : <BusinessHub userId={profile.id} />)}
           </div>
         </div>
       </section>
@@ -164,11 +168,49 @@ function HubCard({ to, icon: Icon, title, body }: { to: string; icon: typeof Plu
   );
 }
 
-function WorkerHub() {
+function StatTile({ icon: Icon, label, value }: { icon: typeof Star; label: string; value: string | number }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 ring-1 ring-ink/5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-ink/50">{label}</span>
+        <Icon size={15} className="text-teal" />
+      </div>
+      <p className="mt-2 font-serif text-2xl text-ink">{value}</p>
+    </div>
+  );
+}
+
+const CONFIRMED = ["confirmed", "working", "completed"];
+
+function WorkerHub({ userId }: { userId: string }) {
+  const [stats, setStats] = useState({ applied: 0, confirmed: 0, done: 0, rating: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: apps }, { data: wp }] = await Promise.all([
+        supabase.from("applications").select("status").eq("worker_id", userId),
+        supabase.from("worker_profiles").select("rating").eq("user_id", userId).maybeSingle(),
+      ]);
+      const rows = apps ?? [];
+      setStats({
+        applied: rows.length,
+        confirmed: rows.filter((a) => CONFIRMED.includes(a.status as string)).length,
+        done: rows.filter((a) => a.status === "completed").length,
+        rating: Number(wp?.rating ?? 0),
+      });
+    })();
+  }, [userId]);
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2 rounded-xl bg-teal/5 px-4 py-3 text-sm text-teal ring-1 ring-teal/10">
         <CheckCircle size={16} /> Your account is verified. Start applying to shifts.
+      </div>
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile icon={Send} label="Applied" value={stats.applied} />
+        <StatTile icon={CheckCircle} label="Confirmed" value={stats.confirmed} />
+        <StatTile icon={Briefcase} label="Done" value={stats.done} />
+        <StatTile icon={Star} label="Rating" value={stats.rating.toFixed(1)} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <HubCard to="/jobs" icon={Briefcase} title="Browse shifts" body="Find shifts matching your skills and apply." />
@@ -180,11 +222,36 @@ function WorkerHub() {
   );
 }
 
-function BusinessHub() {
+function BusinessHub({ userId }: { userId: string }) {
+  const [stats, setStats] = useState({ posted: 0, confirmed: 0, done: 0, reaches: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [{ count: posted }, { data: apps }, { count: reaches }] = await Promise.all([
+        supabase.from("jobs").select("id", { count: "exact", head: true }).eq("owner_id", userId),
+        supabase.from("applications").select("status").eq("owner_id", userId),
+        supabase.from("conversations").select("id", { count: "exact", head: true }).eq("business_id", userId),
+      ]);
+      const rows = apps ?? [];
+      setStats({
+        posted: posted ?? 0,
+        confirmed: rows.filter((a) => CONFIRMED.includes(a.status as string)).length,
+        done: rows.filter((a) => a.status === "completed").length,
+        reaches: reaches ?? 0,
+      });
+    })();
+  }, [userId]);
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2 rounded-xl bg-teal/5 px-4 py-3 text-sm text-teal ring-1 ring-teal/10">
         <CheckCircle size={16} /> Your account is verified. Post shifts and browse talent.
+      </div>
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile icon={Plus} label="Jobs posted" value={stats.posted} />
+        <StatTile icon={CheckCircle} label="Confirmed" value={stats.confirmed} />
+        <StatTile icon={Briefcase} label="Done" value={stats.done} />
+        <StatTile icon={Phone} label="Reaches" value={stats.reaches} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <HubCard to="/post-job" icon={Plus} title="Post a shift" body="Create a single shift or part-time role." />
