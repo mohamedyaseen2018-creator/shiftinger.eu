@@ -1,8 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..600;1,9..40,300..600&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ── Shiftinger brand tokens (locked palette + fonts) ── */
+@theme {
+  --color-teal: #006C6B;
+  --color-teal-light: #00847F;
+  --color-teal-dark: #003D3B;
+  --color-gold: #C9A84C;
+  --color-gold-light: #D4B96A;
+  --color-gold-dark: #A8872A;
+  --color-ink: #1A1A1A;
+  --color-canvas: #F7F5F0;
+  --color-canvas-dark: #E8E4DB;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+}
 
 /*
  * Design system definition.
