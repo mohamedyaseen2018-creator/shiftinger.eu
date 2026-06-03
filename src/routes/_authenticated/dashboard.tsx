@@ -83,7 +83,7 @@ function DashboardPage() {
             {profile.status === "rejected" && <RejectedNote />}
             {profile.status === "blocked" && <BlockedNote />}
             {profile.status === "approved" &&
-              (profile.account_type === "worker" ? <WorkerHub /> : <BusinessHub />)}
+              (profile.account_type === "worker" ? <WorkerHub userId={profile.id} /> : <BusinessHub userId={profile.id} />)}
           </div>
         </div>
       </section>
