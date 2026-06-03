@@ -291,11 +291,18 @@ function WorkerForm({
       return;
     }
     setBusy(true);
+    const { error: cErr } = await supabase
+      .from("worker_contacts")
+      .upsert({ user_id: userId, phone }, { onConflict: "user_id" });
+    if (cErr) {
+      setBusy(false);
+      toast.error("Could not save your contact details. Please try again.");
+      return;
+    }
     const { error: wErr } = await supabase
       .from("worker_profiles")
       .update({
         name,
-        phone,
         city,
         nationality: nationality || null,
         residence: residence || null,
