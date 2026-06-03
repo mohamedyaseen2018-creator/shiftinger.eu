@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { SlidersHorizontal, Loader2 } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 import WorkerCard from "@/components/features/WorkerCard";
-import { MOCK_WORKERS } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { ROLE_OPTIONS, CITY_OPTIONS } from "@/data/utils";
+import type { WorkerProfile } from "@/data/types";
 
 export const Route = createFileRoute("/talent")({
   head: () => ({
@@ -20,32 +21,72 @@ export const Route = createFileRoute("/talent")({
 
 const ROLE_FILTER = ["All roles", ...ROLE_OPTIONS];
 const CITY_FILTER = ["All cities", ...CITY_OPTIONS];
-const AVAIL_FILTER = ["Any day", "Weekdays", "Weekends"];
-const VERIFIED_FILTER = ["All", "Verified only"];
 const ATIV_FILTER = ["Any", "Active Atividade only"];
 
 const selectCls =
   "rounded-md border-0 bg-white px-3 py-2 text-sm text-ink ring-1 ring-ink/10 focus:outline-none focus:ring-2 focus:ring-teal";
 
+function mapWorker(r: Record<string, unknown>): WorkerProfile {
+  const langs = Array.isArray(r.languages) ? (r.languages as { language: string; level: string }[]) : [];
+  const days = Array.isArray(r.available_days) ? (r.available_days as string[]) : [];
+  return {
+    id: r.id as string,
+    userId: r.user_id as string,
+    name: (r.name as string) ?? "Worker",
+    city: (r.city as string) ?? "",
+    mainRole: (r.main_role as string) ?? "",
+    mainRoleYears: (r.main_role_years as number) ?? 0,
+    subRoles: Array.isArray(r.sub_roles) ? (r.sub_roles as { role: string; years: number }[]) : [],
+    languages: langs,
+    experience: [],
+    atividade: Boolean(r.atividade),
+    verified: Boolean(r.verified),
+    rating: Number(r.rating) || 0,
+    shiftsCompleted: (r.shifts_completed as number) ?? 0,
+    bio: (r.bio as string) ?? "",
+    availability: {
+      lookingFor: Array.isArray(r.looking_for) ? (r.looking_for as string[]) : [],
+      days,
+      timeSlots: Array.isArray(r.time_slots) ? (r.time_slots as string[]) : [],
+      minRate: Number(r.min_rate) || 0,
+      bio: (r.bio as string) ?? "",
+      visible: Boolean(r.availability_visible),
+    },
+    minRate: Number(r.min_rate) || 0,
+    phone: (r.phone as string) ?? "",
+    nationality: (r.nationality as string) ?? "",
+  };
+}
+
 function TalentPage() {
   const [role, setRole] = useState("All roles");
   const [city, setCity] = useState("All cities");
-  const [avail, setAvail] = useState("Any day");
-  const [verified, setVerified] = useState("All");
   const [ativ, setAtiv] = useState("Any");
+  const [loading, setLoading] = useState(true);
+  const [workers, setWorkers] = useState<WorkerProfile[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("worker_profiles")
+      .select("*")
+      .eq("verified", true)
+      .eq("availability_visible", true)
+      .then(({ data }) => {
+        setWorkers((data ?? []).map(mapWorker));
+        setLoading(false);
+      });
+  }, []);
 
   const filtered = useMemo(() => {
-    return MOCK_WORKERS.filter((w) => {
-      if (role !== "All roles" && w.mainRole !== role && !w.subRoles.some((sr) => sr.role === role)) return false;
-      if (city !== "All cities" && w.city !== city) return false;
-      if (verified === "Verified only" && !w.verified) return false;
-      if (ativ === "Active Atividade only" && !w.atividade) return false;
-      if (avail === "Weekends" && !w.availability?.days.some((d) => ["Sat", "Sun"].includes(d))) return false;
-      if (avail === "Weekdays" && !w.availability?.days.some((d) => ["Mon", "Tue", "Wed", "Thu", "Fri"].includes(d)))
-        return false;
-      return true;
-    }).sort((a, b) => b.rating - a.rating);
-  }, [role, city, avail, verified, ativ]);
+    return workers
+      .filter((w) => {
+        if (role !== "All roles" && w.mainRole !== role && !w.subRoles.some((sr) => sr.role === role)) return false;
+        if (city !== "All cities" && w.city !== city) return false;
+        if (ativ === "Active Atividade only" && !w.atividade) return false;
+        return true;
+      })
+      .sort((a, b) => b.rating - a.rating);
+  }, [workers, role, city, ativ]);
 
   return (
     <SiteLayout>
@@ -62,8 +103,6 @@ function TalentPage() {
           {[
             { value: role, setter: setRole, options: ROLE_FILTER },
             { value: city, setter: setCity, options: CITY_FILTER },
-            { value: avail, setter: setAvail, options: AVAIL_FILTER },
-            { value: verified, setter: setVerified, options: VERIFIED_FILTER },
             { value: ativ, setter: setAtiv, options: ATIV_FILTER },
           ].map((f, i) => (
             <select key={i} value={f.value} onChange={(e) => f.setter(e.target.value)} className={selectCls}>
@@ -78,10 +117,12 @@ function TalentPage() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-teal" /></div>
+        ) : filtered.length === 0 ? (
           <div className="py-20 text-center text-ink/40">
-            <p className="font-serif text-lg">No workers match your filters</p>
-            <p className="mt-2 text-sm">Try adjusting role, city, or availability filters.</p>
+            <p className="font-serif text-lg">No workers available yet</p>
+            <p className="mt-2 text-sm">Verified workers who make their profile visible will appear here.</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,3 +1,25 @@
+export type AccountType = "worker" | "business";
+export type ProfileStatus =
+  | "incomplete"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "blocked";
+export type ApplicationStatus =
+  | "applied"
+  | "matched"
+  | "rejected"
+  | "confirmed"
+  | "working"
+  | "completed"
+  | "cancelled";
+export type ConversationStatus = "open" | "agreed" | "completed" | "closed";
+
+export interface MatchCriterion {
+  label: string;
+  matched: boolean;
+}
+
 export interface WorkExperience {
   position: string;
   employer: string;

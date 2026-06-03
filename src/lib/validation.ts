@@ -1,0 +1,27 @@
+import { z } from "zod";
+
+export const emailSchema = z
+  .string()
+  .trim()
+  .email("Enter a valid email address")
+  .max(255);
+
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(72, "Password is too long");
+
+export const signInSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, "Password is required").max(72),
+});
+
+export const signUpSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  fullName: z.string().trim().min(2, "Enter your name").max(120),
+  accountType: z.enum(["worker", "business"]),
+});
+
+export type SignInInput = z.infer<typeof signInSchema>;
+export type SignUpInput = z.infer<typeof signUpSchema>;
