@@ -99,6 +99,17 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>{s.label}</span>;
 }
 
+function EditProfileLink({ label = "Edit profile" }: { label?: string }) {
+  return (
+    <Link
+      to="/profile"
+      className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-teal ring-1 ring-teal/20 hover:bg-teal/5"
+    >
+      <UserCog size={15} /> {label}
+    </Link>
+  );
+}
+
 function PendingNote() {
   return (
     <div className="rounded-2xl bg-white p-10 text-center ring-1 ring-ink/5">
@@ -108,6 +119,7 @@ function PendingNote() {
         Thanks for completing your profile. Our team verifies every account to keep Shiftinger
         safe and trusted. You'll receive an email once you're confirmed — usually within 48 hours.
       </p>
+      <EditProfileLink label="Update my details" />
     </div>
   );
 }
@@ -121,6 +133,7 @@ function RejectedNote() {
         Unfortunately we couldn't verify your account at this time. If you think this is a mistake,
         contact us and we'll take another look.
       </p>
+      <EditProfileLink label="Update my details" />
     </div>
   );
 }
@@ -134,6 +147,7 @@ function BlockedNote() {
         You have an unfinished job that wasn't closed with a review. Please complete and review your
         open job to unblock posting and applying again.
       </p>
+      <EditProfileLink />
     </div>
   );
 }
