@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TalentRouteImport } from './routes/talent'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TalentRoute = TalentRouteImport.update({
+  id: '/talent',
+  path: '/talent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JobsRoute = JobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/jobs': typeof JobsRoute
+  '/talent': typeof TalentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/jobs': typeof JobsRoute
+  '/talent': typeof TalentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/jobs': typeof JobsRoute
+  '/talent': typeof TalentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/jobs'
+  fullPaths: '/' | '/jobs' | '/talent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/jobs'
-  id: '__root__' | '/' | '/jobs'
+  to: '/' | '/jobs' | '/talent'
+  id: '__root__' | '/' | '/jobs' | '/talent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   JobsRoute: typeof JobsRoute
+  TalentRoute: typeof TalentRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/talent': {
+      id: '/talent'
+      path: '/talent'
+      fullPath: '/talent'
+      preLoaderRoute: typeof TalentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jobs': {
       id: '/jobs'
       path: '/jobs'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   JobsRoute: JobsRoute,
+  TalentRoute: TalentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
