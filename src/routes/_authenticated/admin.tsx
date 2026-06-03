@@ -60,7 +60,9 @@ function AdminPage() {
     setPending((prev) => prev.filter((x) => x.id !== p.id));
   };
 
-  if (loading || (isAdmin && busy)) {
+  // While auth resolves, or for non-admins (who are being redirected away),
+  // never render the admin content — this prevents any flash of the panel.
+  if (loading || !isAdmin || busy) {
     return <SiteLayout><div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="animate-spin text-teal" /></div></SiteLayout>;
   }
 
