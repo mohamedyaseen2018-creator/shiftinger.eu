@@ -60,8 +60,12 @@ function WorkerEdit({ userId }: { userId: string }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle()
-      .then(({ data }) => setData(data));
+    Promise.all([
+      supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("worker_contacts").select("phone").eq("user_id", userId).maybeSingle(),
+    ]).then(([{ data: wp }, { data: wc }]) => {
+      if (wp) setData({ ...wp, phone: (wc?.phone as string) ?? "" });
+    });
   }, [userId]);
 
   if (!data) return <Loader2 className="mx-auto animate-spin text-teal" />;
