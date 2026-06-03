@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Loader2,
   Clock,
@@ -13,8 +13,12 @@ import {
   MessageSquare,
   UserCog,
   LogOut,
+  Star,
+  Send,
+  Phone,
 } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
