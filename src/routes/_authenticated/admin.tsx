@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { adminDeleteUser } from "@/lib/admin.functions";
 import { formatDate } from "@/data/utils";
+import type { ProfileStatus } from "@/data/types";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Shiftinger" }] }),
@@ -454,7 +455,7 @@ function RowActions({
   onDelete,
 }: {
   p: ProfileRow;
-  onStatus: (p: ProfileRow, status: string) => void;
+  onStatus: (p: ProfileRow, status: ProfileStatus) => void;
   onDelete: (p: ProfileRow) => void;
 }) {
   return (
