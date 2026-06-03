@@ -178,7 +178,7 @@ function AdminPage() {
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [p, w, b, j, a, c, au] = await Promise.all([
+    const [p, w, b, j, a, c, au, wc] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("worker_profiles").select("*"),
       supabase.from("business_profiles").select("*"),
@@ -186,9 +186,17 @@ function AdminPage() {
       supabase.from("applications").select("worker_id, owner_id, job_id, status"),
       supabase.from("conversations").select("worker_id, business_id"),
       supabase.from("admin_audit_log").select("id, admin_email, action, target_type, target_label, created_at").order("created_at", { ascending: false }),
+      supabase.from("worker_contacts").select("user_id, phone"),
     ]);
     setProfiles((p.data ?? []) as ProfileRow[]);
-    setWorkers((w.data ?? []) as WorkerRow[]);
+    const phoneByUser: Record<string, string> = {};
+    (wc.data ?? []).forEach((row) => {
+      phoneByUser[row.user_id as string] = (row.phone as string) ?? "";
+    });
+    setWorkers(((w.data ?? []) as WorkerRow[]).map((row) => ({
+      ...row,
+      phone: phoneByUser[row.user_id] ?? "",
+    })));
     setBusinesses((b.data ?? []) as BusinessRow[]);
     setJobs((j.data ?? []) as JobRow[]);
     setApps((a.data ?? []) as AppRow[]);
