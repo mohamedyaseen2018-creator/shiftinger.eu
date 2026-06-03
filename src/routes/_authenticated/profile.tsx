@@ -81,13 +81,15 @@ function WorkerEdit({ userId }: { userId: string }) {
 
   const save = async () => {
     setBusy(true);
+    const { error: cErr } = await supabase
+      .from("worker_contacts")
+      .upsert({ user_id: userId, phone: (data.phone as string) ?? "" }, { onConflict: "user_id" });
     const { error } = await supabase
       .from("worker_profiles")
       .update({
         name: data.name as string,
         city: data.city as string,
         nationality: (data.nationality as string) || null,
-        phone: data.phone as string,
         main_role: data.main_role as string,
         main_role_years: Number(data.main_role_years) || 0,
         min_rate: Number(data.min_rate) || 0,
@@ -99,7 +101,7 @@ function WorkerEdit({ userId }: { userId: string }) {
       })
       .eq("user_id", userId);
     setBusy(false);
-    if (error) toast.error("Could not save changes.");
+    if (error || cErr) toast.error("Could not save changes.");
     else toast.success("Profile updated.");
   };
 
