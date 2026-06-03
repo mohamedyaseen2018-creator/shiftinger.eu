@@ -449,6 +449,7 @@ export type Database = {
           created_at: string
           experience: Json
           id: string
+          id_document_url: string | null
           languages: Json
           looking_for: Json
           main_role: string | null
@@ -478,6 +479,7 @@ export type Database = {
           created_at?: string
           experience?: Json
           id?: string
+          id_document_url?: string | null
           languages?: Json
           looking_for?: Json
           main_role?: string | null
@@ -507,6 +509,7 @@ export type Database = {
           created_at?: string
           experience?: Json
           id?: string
+          id_document_url?: string | null
           languages?: Json
           looking_for?: Json
           main_role?: string | null
