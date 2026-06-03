@@ -506,6 +506,27 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_contacts: {
+        Row: {
+          created_at: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       worker_profiles: {
         Row: {
           atividade: boolean
@@ -526,7 +547,6 @@ export type Database = {
           min_rate: number | null
           name: string | null
           nationality: string | null
-          phone: string | null
           rating: number
           rating_count: number
           residence: string | null
@@ -556,7 +576,6 @@ export type Database = {
           min_rate?: number | null
           name?: string | null
           nationality?: string | null
-          phone?: string | null
           rating?: number
           rating_count?: number
           residence?: string | null
@@ -586,7 +605,6 @@ export type Database = {
           min_rate?: number | null
           name?: string | null
           nationality?: string | null
-          phone?: string | null
           rating?: number
           rating_count?: number
           residence?: string | null
