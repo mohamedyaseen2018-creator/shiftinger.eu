@@ -20,7 +20,7 @@ function Wordmark({ className = "" }: { className?: string }) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-ink/5 bg-canvas/80 backdrop-blur-md">
@@ -46,12 +46,22 @@ export default function Navbar() {
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
-            <Link
-              to="/dashboard"
-              className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
-            >
-              Dashboard
-            </Link>
+            <>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
+                >
+                  Admin
+                </Link>
+              )}
+              <Link
+                to="/dashboard"
+                className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+              >
+                Dashboard
+              </Link>
+            </>
           ) : (
             <>
               <Link
@@ -96,13 +106,24 @@ export default function Navbar() {
           ))}
           <div className="flex flex-col gap-3 border-t border-ink/10 pt-4">
             {user ? (
-              <Link
-                to="/dashboard"
-                className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
-                onClick={() => setOpen(false)}
-              >
-                Dashboard
-              </Link>
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
+                    onClick={() => setOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/dashboard"
+                  className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              </>
             ) : (
               <>
                 <Link

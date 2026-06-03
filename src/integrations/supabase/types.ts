@@ -90,8 +90,11 @@ export type Database = {
           area: string | null
           avatar_url: string | null
           business_name: string | null
+          categories: Json
           category: string | null
           city: string | null
+          contact_name: string | null
+          contact_position: string | null
           created_at: string
           description: string | null
           id: string
@@ -107,8 +110,11 @@ export type Database = {
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
+          categories?: Json
           category?: string | null
           city?: string | null
+          contact_name?: string | null
+          contact_position?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -124,8 +130,11 @@ export type Database = {
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
+          categories?: Json
           category?: string | null
           city?: string | null
+          contact_name?: string | null
+          contact_position?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -440,6 +449,7 @@ export type Database = {
           created_at: string
           experience: Json
           id: string
+          id_document_url: string | null
           languages: Json
           looking_for: Json
           main_role: string | null
@@ -451,6 +461,7 @@ export type Database = {
           phone: string | null
           rating: number
           rating_count: number
+          residence: string | null
           shifts_completed: number
           sub_roles: Json
           time_slots: Json
@@ -468,6 +479,7 @@ export type Database = {
           created_at?: string
           experience?: Json
           id?: string
+          id_document_url?: string | null
           languages?: Json
           looking_for?: Json
           main_role?: string | null
@@ -479,6 +491,7 @@ export type Database = {
           phone?: string | null
           rating?: number
           rating_count?: number
+          residence?: string | null
           shifts_completed?: number
           sub_roles?: Json
           time_slots?: Json
@@ -496,6 +509,7 @@ export type Database = {
           created_at?: string
           experience?: Json
           id?: string
+          id_document_url?: string | null
           languages?: Json
           looking_for?: Json
           main_role?: string | null
@@ -507,6 +521,7 @@ export type Database = {
           phone?: string | null
           rating?: number
           rating_count?: number
+          residence?: string | null
           shifts_completed?: number
           sub_roles?: Json
           time_slots?: Json
