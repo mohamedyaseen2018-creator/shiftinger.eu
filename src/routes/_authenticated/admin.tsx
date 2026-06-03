@@ -11,15 +11,20 @@ import {
   Briefcase,
   Store,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Users,
   FileText,
-  Search,
+  History,
+  ScrollText,
 } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { adminDeleteUser } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetUserStatus } from "@/lib/admin.functions";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import StatusHistoryModal from "@/components/admin/StatusHistoryModal";
 import { formatDate } from "@/data/utils";
 import type { ProfileStatus } from "@/data/types";
 
@@ -61,10 +66,53 @@ interface ConvRow {
   worker_id: string;
   business_id: string;
 }
+interface AuditRow {
+  id: string;
+  admin_email: string | null;
+  action: string;
+  target_type: string | null;
+  target_label: string | null;
+  created_at: string;
+}
 
-type Tab = "approvals" | "workers" | "businesses" | "jobs";
+interface WorkerView {
+  p: ProfileRow;
+  w: WorkerRow;
+  applied: number;
+  confirmed: number;
+  done: number;
+  rating: number;
+  ratingCount: number;
+}
+interface BusinessView {
+  p: ProfileRow;
+  b: BusinessRow;
+  posted: number;
+  confirmed: number;
+  done: number;
+  reaches: number;
+  rating: number;
+  ratingCount: number;
+}
+interface JobView {
+  j: JobRow;
+  business: string;
+  applicants: number;
+  hours: number | null;
+  income: number | null;
+}
+
+type Tab = "approvals" | "workers" | "businesses" | "jobs" | "audit";
 
 const CONFIRMED_SET = ["confirmed", "working", "completed"];
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "pending_review", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "blocked", label: "Blocked" },
+  { value: "incomplete", label: "Incomplete" },
+];
 
 // ── Helpers ──
 function shiftHours(start?: string | null, end?: string | null): number | null {
@@ -114,10 +162,10 @@ function AdminPage() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const deleteUser = useServerFn(adminDeleteUser);
+  const setUserStatus = useServerFn(adminSetUserStatus);
 
   const [tab, setTab] = useState<Tab>("approvals");
   const [busy, setBusy] = useState(true);
-  const [query, setQuery] = useState("");
 
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [workers, setWorkers] = useState<WorkerRow[]>([]);
@@ -125,17 +173,19 @@ function AdminPage() {
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [apps, setApps] = useState<AppRow[]>([]);
   const [convs, setConvs] = useState<ConvRow[]>([]);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
+  const [historyFor, setHistoryFor] = useState<{ id: string; title: string } | null>(null);
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [p, w, b, j, a, c] = await Promise.all([
+    const [p, w, b, j, a, c, au] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("worker_profiles").select("*"),
       supabase.from("business_profiles").select("*"),
       supabase.from("jobs").select("id, owner_id, role, type, rate, status, start_time, end_time, working_days, created_at").order("created_at", { ascending: false }),
       supabase.from("applications").select("worker_id, owner_id, job_id, status"),
       supabase.from("conversations").select("worker_id, business_id"),
+      supabase.from("admin_audit_log").select("id, admin_email, action, target_type, target_label, created_at").order("created_at", { ascending: false }),
     ]);
     setProfiles((p.data ?? []) as ProfileRow[]);
     setWorkers((w.data ?? []) as WorkerRow[]);
@@ -143,6 +193,7 @@ function AdminPage() {
     setJobs((j.data ?? []) as JobRow[]);
     setApps((a.data ?? []) as AppRow[]);
     setConvs((c.data ?? []) as ConvRow[]);
+    setAudit((au.data ?? []) as AuditRow[]);
     setBusy(false);
   }, []);
 
@@ -162,53 +213,96 @@ function AdminPage() {
     businesses.forEach((b) => (m[b.user_id] = (b.business_name as string) || "Business"));
     return m;
   }, [businesses]);
+  const emailById = useMemo(() => {
+    const m: Record<string, string> = {};
+    profiles.forEach((p) => (m[p.id] = p.email));
+    return m;
+  }, [profiles]);
 
-  const workerStats = useCallback(
-    (uid: string) => {
-      const mine = apps.filter((a) => a.worker_id === uid);
-      return {
-        applied: mine.length,
-        confirmed: mine.filter((a) => CONFIRMED_SET.includes(a.status)).length,
-        done: mine.filter((a) => a.status === "completed").length,
-      };
-    },
-    [apps],
+  const workerProfiles = useMemo(() => profiles.filter((p) => p.account_type === "worker"), [profiles]);
+  const businessProfiles = useMemo(() => profiles.filter((p) => p.account_type === "business"), [profiles]);
+  const pending = useMemo(() => profiles.filter((p) => p.status === "pending_review"), [profiles]);
+
+  // Enriched rows for the data tables
+  const workerViews = useMemo<WorkerView[]>(
+    () =>
+      workerProfiles.map((p) => {
+        const w = workerByUser[p.id] ?? ({ user_id: p.id } as WorkerRow);
+        const mine = apps.filter((a) => a.worker_id === p.id);
+        return {
+          p,
+          w,
+          applied: mine.length,
+          confirmed: mine.filter((a) => CONFIRMED_SET.includes(a.status)).length,
+          done: mine.filter((a) => a.status === "completed").length,
+          rating: Number(w.rating ?? 0),
+          ratingCount: Number(w.rating_count ?? 0),
+        };
+      }),
+    [workerProfiles, workerByUser, apps],
   );
-  const businessStats = useCallback(
-    (uid: string) => {
-      const mineApps = apps.filter((a) => a.owner_id === uid);
-      return {
-        posted: jobs.filter((j) => j.owner_id === uid).length,
-        confirmed: mineApps.filter((a) => CONFIRMED_SET.includes(a.status)).length,
-        done: mineApps.filter((a) => a.status === "completed").length,
-        reaches: convs.filter((c) => c.business_id === uid).length,
-      };
-    },
-    [apps, jobs, convs],
+
+  const businessViews = useMemo<BusinessView[]>(
+    () =>
+      businessProfiles.map((p) => {
+        const b = businessByUser[p.id] ?? ({ user_id: p.id } as BusinessRow);
+        const mineApps = apps.filter((a) => a.owner_id === p.id);
+        return {
+          p,
+          b,
+          posted: jobs.filter((j) => j.owner_id === p.id).length,
+          confirmed: mineApps.filter((a) => CONFIRMED_SET.includes(a.status)).length,
+          done: mineApps.filter((a) => a.status === "completed").length,
+          reaches: convs.filter((c) => c.business_id === p.id).length,
+          rating: Number(b.rating ?? 0),
+          ratingCount: Number(b.rating_count ?? 0),
+        };
+      }),
+    [businessProfiles, businessByUser, apps, jobs, convs],
+  );
+
+  const jobViews = useMemo<JobView[]>(
+    () =>
+      jobs.map((j) => {
+        const hours = jobHours(j);
+        return {
+          j,
+          business: businessNameByUser[j.owner_id] ?? "Business",
+          applicants: apps.filter((a) => a.job_id === j.id).length,
+          hours,
+          income: hours != null ? Math.round(hours * Number(j.rate)) : null,
+        };
+      }),
+    [jobs, businessNameByUser, apps],
   );
 
   // Actions
   const setStatus = async (p: ProfileRow, status: ProfileStatus) => {
-    const { error } = await supabase.from("profiles").update({ status }).eq("id", p.id);
-    if (error) return toast.error("Could not update status.");
-    const verified = status === "approved";
-    const table = p.account_type === "worker" ? "worker_profiles" : "business_profiles";
-    await supabase.from(table).update({ verified }).eq("user_id", p.id);
-    toast.success(`Marked as ${STATUS_STYLES[status]?.label ?? status}.`);
-    setProfiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, status } : x)));
+    const t = toast.loading("Updating status…");
+    try {
+      await setUserStatus({
+        data: { userId: p.id, status, accountType: p.account_type, targetLabel: p.full_name || p.email },
+      });
+      toast.success(`Marked as ${STATUS_STYLES[status]?.label ?? status}.`, { id: t });
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update status.", { id: t });
+    }
   };
 
   const remove = async (p: ProfileRow) => {
     if (!confirm(`Delete ${p.full_name || p.email}? This permanently removes the account and all their data.`)) return;
     const t = toast.loading("Deleting account…");
     try {
-      await deleteUser({ data: { userId: p.id } });
+      await deleteUser({ data: { userId: p.id, accountType: p.account_type, targetLabel: p.full_name || p.email } });
       toast.success("Account deleted.", { id: t });
-      load();
+      await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not delete.", { id: t });
     }
   };
+
+  const openHistory = (p: ProfileRow, title: string) => setHistoryFor({ id: p.id, title });
 
   if (loading || !isAdmin || busy) {
     return (
@@ -220,19 +314,96 @@ function AdminPage() {
     );
   }
 
-  const pending = profiles.filter((p) => p.status === "pending_review");
-  const workerProfiles = profiles.filter((p) => p.account_type === "worker");
-  const businessProfiles = profiles.filter((p) => p.account_type === "business");
-
-  const q = query.trim().toLowerCase();
-  const match = (...parts: (string | null | undefined)[]) =>
-    !q || parts.some((s) => (s ?? "").toLowerCase().includes(q));
-
   const tabs: { key: Tab; label: string; icon: typeof Users; count: number }[] = [
     { key: "approvals", label: "Approvals", icon: FileText, count: pending.length },
     { key: "workers", label: "Workers", icon: Briefcase, count: workerProfiles.length },
     { key: "businesses", label: "Businesses", icon: Store, count: businessProfiles.length },
     { key: "jobs", label: "Jobs", icon: Users, count: jobs.length },
+    { key: "audit", label: "Audit log", icon: ScrollText, count: audit.length },
+  ];
+
+  // ── Column definitions ──
+  const workerColumns: Column<WorkerView>[] = [
+    { key: "name", label: "Name", sortable: true, className: "font-medium text-ink", value: (r) => (r.w.name as string) || r.p.full_name || r.p.email },
+    { key: "email", label: "Email", sortable: true, value: (r) => r.p.email },
+    { key: "phone", label: "Phone", value: (r) => (r.w.phone as string) || "—" },
+    { key: "city", label: "City", sortable: true, value: (r) => (r.w.city as string) || "—" },
+    { key: "role", label: "Role", sortable: true, value: (r) => (r.w.main_role as string) || "—" },
+    { key: "rate", label: "Rate", sortable: true, value: (r) => Number(r.w.min_rate ?? 0), render: (r) => `€${Number(r.w.min_rate ?? 0)}/hr` },
+    { key: "applied", label: "Applied", sortable: true, value: (r) => r.applied },
+    { key: "confirmed", label: "Confirmed", sortable: true, value: (r) => r.confirmed },
+    { key: "done", label: "Done", sortable: true, value: (r) => r.done },
+    { key: "rating", label: "Rating", sortable: true, value: (r) => r.rating, render: (r) => `${r.rating.toFixed(1)} (${r.ratingCount})` },
+    { key: "status", label: "Status", sortable: true, value: (r) => r.p.status, render: (r) => <StatusBadge status={r.p.status} /> },
+    {
+      key: "actions",
+      label: "Actions",
+      csv: false,
+      value: () => "",
+      render: (r) => <RowActions p={r.p} title={(r.w.name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} />,
+    },
+  ];
+
+  const businessColumns: Column<BusinessView>[] = [
+    { key: "business", label: "Business", sortable: true, className: "font-medium text-ink", value: (r) => (r.b.business_name as string) || r.p.full_name || r.p.email },
+    { key: "email", label: "Email", sortable: true, value: (r) => r.p.email },
+    { key: "contact", label: "Contact", value: (r) => (r.b.contact_name as string) || "—" },
+    { key: "phone", label: "Phone", value: (r) => (r.b.phone as string) || "—" },
+    { key: "city", label: "City", sortable: true, value: (r) => (r.b.city as string) || "—" },
+    { key: "category", label: "Category", sortable: true, value: (r) => (r.b.category as string) || "—" },
+    { key: "posted", label: "Posted", sortable: true, value: (r) => r.posted },
+    { key: "confirmed", label: "Confirmed", sortable: true, value: (r) => r.confirmed },
+    { key: "done", label: "Done", sortable: true, value: (r) => r.done },
+    { key: "reaches", label: "Reaches", sortable: true, value: (r) => r.reaches },
+    { key: "rating", label: "Rating", sortable: true, value: (r) => r.rating, render: (r) => `${r.rating.toFixed(1)} (${r.ratingCount})` },
+    { key: "status", label: "Status", sortable: true, value: (r) => r.p.status, render: (r) => <StatusBadge status={r.p.status} /> },
+    {
+      key: "actions",
+      label: "Actions",
+      csv: false,
+      value: () => "",
+      render: (r) => <RowActions p={r.p} title={(r.b.business_name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} />,
+    },
+  ];
+
+  const jobColumns: Column<JobView>[] = [
+    { key: "created", label: "Created", sortable: true, value: (r) => r.j.created_at, render: (r) => formatDate(r.j.created_at) },
+    { key: "business", label: "Business", sortable: true, className: "font-medium text-ink", value: (r) => r.business },
+    { key: "role", label: "Role", sortable: true, value: (r) => r.j.role },
+    { key: "type", label: "Type", sortable: true, value: (r) => (r.j.type === "single" ? "Single" : "Part-time") },
+    { key: "applicants", label: "Applicants", sortable: true, value: (r) => r.applicants },
+    { key: "hours", label: "Hours", sortable: true, value: (r) => r.hours ?? 0, render: (r) => (r.hours != null ? `${r.hours}h` : "—") },
+    { key: "rate", label: "Rate", sortable: true, value: (r) => Number(r.j.rate), render: (r) => `€${Number(r.j.rate)}/hr` },
+    { key: "income", label: "Worker income", sortable: true, className: "font-medium text-ink", value: (r) => r.income ?? 0, render: (r) => (r.income != null ? `€${r.income}` : "—") },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      value: (r) => r.j.status,
+      render: (r) => (
+        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${r.j.status === "open" ? "bg-teal/10 text-teal" : "bg-ink/5 text-ink/60"}`}>{r.j.status}</span>
+      ),
+    },
+  ];
+
+  const auditColumns: Column<AuditRow>[] = [
+    {
+      key: "created",
+      label: "When",
+      sortable: true,
+      value: (r) => r.created_at,
+      render: (r) => new Date(r.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+    },
+    { key: "admin", label: "Admin", sortable: true, value: (r) => r.admin_email ?? "—" },
+    {
+      key: "action",
+      label: "Action",
+      sortable: true,
+      value: (r) => r.action,
+      render: (r) => <span className="rounded-full bg-ink/5 px-2 py-0.5 text-xs font-medium text-ink/70">{r.action}</span>,
+    },
+    { key: "target_type", label: "Type", sortable: true, value: (r) => r.target_type ?? "—" },
+    { key: "target_label", label: "Target", value: (r) => r.target_label ?? "—" },
   ];
 
   return (
@@ -258,7 +429,7 @@ function AdminPage() {
             {tabs.map((t) => (
               <button
                 key={t.key}
-                onClick={() => { setTab(t.key); setExpanded(null); }}
+                onClick={() => setTab(t.key)}
                 className={`-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
                   tab === t.key ? "border-teal text-teal" : "border-transparent text-ink/55 hover:text-ink"
                 }`}
@@ -269,159 +440,91 @@ function AdminPage() {
             ))}
           </div>
 
-          {/* Search */}
-          {tab !== "approvals" && (
-            <div className="mt-5 flex items-center gap-2 rounded-full bg-white px-4 py-2.5 ring-1 ring-ink/10 sm:max-w-sm">
-              <Search size={15} className="text-ink/40" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search…"
-                className="w-full bg-transparent text-sm text-ink focus:outline-none"
-              />
-            </div>
-          )}
-
-          <div className="mt-5">
+          <div className="mt-6">
             {tab === "approvals" && (
               <ApprovalsTab
                 pending={pending}
                 workerByUser={workerByUser}
                 businessByUser={businessByUser}
-                expanded={expanded}
-                setExpanded={setExpanded}
                 onApprove={(p) => setStatus(p, "approved")}
                 onReject={(p) => setStatus(p, "rejected")}
               />
             )}
 
             {tab === "workers" && (
-              <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-ink/5">
-                <table className="w-full min-w-[920px] text-left text-sm">
-                  <thead className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink/50">
-                    <tr>
-                      <Th>Name</Th><Th>Email</Th><Th>Phone</Th><Th>City</Th><Th>Role</Th>
-                      <Th>Rate</Th><Th>Applied</Th><Th>Confirmed</Th><Th>Done</Th><Th>Rating</Th>
-                      <Th>Status</Th><Th>Actions</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {workerProfiles
-                      .filter((p) => {
-                        const w = workerByUser[p.id];
-                        return match(p.full_name, p.email, w?.main_role as string, w?.city as string);
-                      })
-                      .map((p) => {
-                        const w = workerByUser[p.id] ?? {};
-                        const s = workerStats(p.id);
-                        return (
-                          <tr key={p.id} className="border-b border-ink/5 last:border-0">
-                            <Td className="font-medium text-ink">{(w.name as string) || p.full_name || "—"}</Td>
-                            <Td>{p.email}</Td>
-                            <Td>{(w.phone as string) || "—"}</Td>
-                            <Td>{(w.city as string) || "—"}</Td>
-                            <Td>{(w.main_role as string) || "—"}</Td>
-                            <Td>€{Number(w.min_rate ?? 0)}/hr</Td>
-                            <Td>{s.applied}</Td>
-                            <Td>{s.confirmed}</Td>
-                            <Td>{s.done}</Td>
-                            <Td>{Number(w.rating ?? 0).toFixed(1)} ({Number(w.rating_count ?? 0)})</Td>
-                            <Td><StatusBadge status={p.status} /></Td>
-                            <Td><RowActions p={p} onStatus={setStatus} onDelete={remove} /></Td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-                {workerProfiles.length === 0 && <Empty>No workers yet.</Empty>}
-              </div>
+              <DataTable
+                rows={workerViews}
+                columns={workerColumns}
+                getRowKey={(r) => r.p.id}
+                csvFilename="shiftinger-workers"
+                searchPlaceholder="Search workers…"
+                filter={{ label: "Status", field: (r) => r.p.status, options: STATUS_FILTER_OPTIONS }}
+                initialSort={{ key: "name", dir: "asc" }}
+                minWidth={1040}
+                emptyText="No workers yet."
+              />
             )}
 
             {tab === "businesses" && (
-              <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-ink/5">
-                <table className="w-full min-w-[980px] text-left text-sm">
-                  <thead className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink/50">
-                    <tr>
-                      <Th>Business</Th><Th>Email</Th><Th>Contact</Th><Th>Phone</Th><Th>City</Th><Th>Category</Th>
-                      <Th>Posted</Th><Th>Confirmed</Th><Th>Done</Th><Th>Reaches</Th><Th>Rating</Th>
-                      <Th>Status</Th><Th>Actions</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {businessProfiles
-                      .filter((p) => {
-                        const b = businessByUser[p.id];
-                        return match(p.full_name, p.email, b?.business_name as string, b?.category as string, b?.city as string);
-                      })
-                      .map((p) => {
-                        const b = businessByUser[p.id] ?? {};
-                        const s = businessStats(p.id);
-                        return (
-                          <tr key={p.id} className="border-b border-ink/5 last:border-0">
-                            <Td className="font-medium text-ink">{(b.business_name as string) || p.full_name || "—"}</Td>
-                            <Td>{p.email}</Td>
-                            <Td>{(b.contact_name as string) || "—"}</Td>
-                            <Td>{(b.phone as string) || "—"}</Td>
-                            <Td>{(b.city as string) || "—"}</Td>
-                            <Td>{(b.category as string) || "—"}</Td>
-                            <Td>{s.posted}</Td>
-                            <Td>{s.confirmed}</Td>
-                            <Td>{s.done}</Td>
-                            <Td>{s.reaches}</Td>
-                            <Td>{Number(b.rating ?? 0).toFixed(1)} ({Number(b.rating_count ?? 0)})</Td>
-                            <Td><StatusBadge status={p.status} /></Td>
-                            <Td><RowActions p={p} onStatus={setStatus} onDelete={remove} /></Td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-                {businessProfiles.length === 0 && <Empty>No businesses yet.</Empty>}
-              </div>
+              <DataTable
+                rows={businessViews}
+                columns={businessColumns}
+                getRowKey={(r) => r.p.id}
+                csvFilename="shiftinger-businesses"
+                searchPlaceholder="Search businesses…"
+                filter={{ label: "Status", field: (r) => r.p.status, options: STATUS_FILTER_OPTIONS }}
+                initialSort={{ key: "business", dir: "asc" }}
+                minWidth={1080}
+                emptyText="No businesses yet."
+              />
             )}
 
             {tab === "jobs" && (
-              <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-ink/5">
-                <table className="w-full min-w-[820px] text-left text-sm">
-                  <thead className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink/50">
-                    <tr>
-                      <Th>Created</Th><Th>Business</Th><Th>Role</Th><Th>Type</Th>
-                      <Th>Applicants</Th><Th>Hours</Th><Th>Rate</Th><Th>Worker income</Th><Th>Status</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {jobs
-                      .filter((j) => match(j.role, businessNameByUser[j.owner_id]))
-                      .map((j) => {
-                        const applicants = apps.filter((a) => a.job_id === j.id).length;
-                        const hours = jobHours(j);
-                        const income = hours != null ? Math.round(hours * Number(j.rate)) : null;
-                        return (
-                          <tr key={j.id} className="border-b border-ink/5 last:border-0">
-                            <Td>{formatDate(j.created_at)}</Td>
-                            <Td className="font-medium text-ink">{businessNameByUser[j.owner_id] ?? "Business"}</Td>
-                            <Td>{j.role}</Td>
-                            <Td>{j.type === "single" ? "Single" : "Part-time"}</Td>
-                            <Td>{applicants}</Td>
-                            <Td>{hours != null ? `${hours}h` : "—"}</Td>
-                            <Td>€{Number(j.rate)}/hr</Td>
-                            <Td className="font-medium text-ink">{income != null ? `€${income}` : "—"}</Td>
-                            <Td>
-                              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${j.status === "open" ? "bg-teal/10 text-teal" : "bg-ink/5 text-ink/60"}`}>
-                                {j.status}
-                              </span>
-                            </Td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-                {jobs.length === 0 && <Empty>No jobs posted yet.</Empty>}
-              </div>
+              <DataTable
+                rows={jobViews}
+                columns={jobColumns}
+                getRowKey={(r) => r.j.id}
+                csvFilename="shiftinger-jobs"
+                searchPlaceholder="Search jobs…"
+                filter={{
+                  label: "Status",
+                  field: (r) => r.j.status,
+                  options: [
+                    { value: "open", label: "Open" },
+                    { value: "closed", label: "Closed" },
+                  ],
+                }}
+                initialSort={{ key: "created", dir: "desc" }}
+                minWidth={900}
+                emptyText="No jobs posted yet."
+              />
+            )}
+
+            {tab === "audit" && (
+              <DataTable
+                rows={audit}
+                columns={auditColumns}
+                getRowKey={(r) => r.id}
+                csvFilename="shiftinger-audit-log"
+                searchPlaceholder="Search audit log…"
+                initialSort={{ key: "created", dir: "desc" }}
+                pageSize={15}
+                minWidth={760}
+                emptyText="No admin actions recorded yet."
+              />
             )}
           </div>
         </div>
       </section>
+
+      {historyFor && (
+        <StatusHistoryModal
+          profileId={historyFor.id}
+          title={historyFor.title}
+          emailById={emailById}
+          onClose={() => setHistoryFor(null)}
+        />
+      )}
     </SiteLayout>
   );
 }
@@ -439,24 +542,18 @@ function Overview({ label, value, icon: Icon, accent }: { label: string; value: 
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="whitespace-nowrap px-4 py-3 font-medium">{children}</th>;
-}
-function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <td className={`whitespace-nowrap px-4 py-3 text-ink/70 ${className}`}>{children}</td>;
-}
-function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="p-10 text-center text-sm text-ink/50">{children}</div>;
-}
-
 function RowActions({
   p,
+  title,
   onStatus,
   onDelete,
+  onHistory,
 }: {
   p: ProfileRow;
+  title: string;
   onStatus: (p: ProfileRow, status: ProfileStatus) => void;
   onDelete: (p: ProfileRow) => void;
+  onHistory: (p: ProfileRow, title: string) => void;
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -470,6 +567,14 @@ function RowActions({
           <Clock size={14} />
         </button>
       )}
+      {p.status !== "rejected" && (
+        <button onClick={() => onStatus(p, "rejected")} title="Reject" className="rounded-full bg-red-50 p-1.5 text-red-600 hover:bg-red-100">
+          <X size={14} />
+        </button>
+      )}
+      <button onClick={() => onHistory(p, title)} title="Status history" className="rounded-full bg-ink/5 p-1.5 text-ink/60 hover:bg-ink/10">
+        <History size={14} />
+      </button>
       <button onClick={() => onDelete(p)} title="Delete" className="rounded-full bg-red-50 p-1.5 text-red-600 hover:bg-red-100">
         <Trash2 size={14} />
       </button>
@@ -481,60 +586,134 @@ function ApprovalsTab({
   pending,
   workerByUser,
   businessByUser,
-  expanded,
-  setExpanded,
   onApprove,
   onReject,
 }: {
   pending: ProfileRow[];
   workerByUser: Record<string, WorkerRow>;
   businessByUser: Record<string, BusinessRow>;
-  expanded: string | null;
-  setExpanded: (id: string | null) => void;
   onApprove: (p: ProfileRow) => void;
   onReject: (p: ProfileRow) => void;
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<"all" | "worker" | "business">("all");
+  const [order, setOrder] = useState<"newest" | "oldest">("newest");
+  const [page, setPage] = useState(0);
+  const pageSize = 8;
+
+  const filtered = useMemo(() => {
+    let list = pending.filter((p) => typeFilter === "all" || p.account_type === typeFilter);
+    list = [...list].sort((a, b) => {
+      const d = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return order === "newest" ? -d : d;
+    });
+    return list;
+  }, [pending, typeFilter, order]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount - 1);
+  const pageRows = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
+
   if (pending.length === 0) {
     return <div className="rounded-2xl bg-white p-10 text-center text-sm text-ink/50 ring-1 ring-ink/5">Nothing to review right now.</div>;
   }
+
   return (
-    <div className="space-y-3">
-      {pending.map((p) => {
-        const isOpen = expanded === p.id;
-        return (
-          <div key={p.id} className="rounded-2xl bg-white ring-1 ring-ink/5">
-            <div className="flex flex-wrap items-center justify-between gap-3 p-5">
-              <button onClick={() => setExpanded(isOpen ? null : p.id)} className="flex items-center gap-3 text-left">
-                <div className={`flex size-10 items-center justify-center rounded-lg ${p.account_type === "worker" ? "bg-teal/10 text-teal" : "bg-gold/10 text-gold-dark"}`}>
-                  {p.account_type === "worker" ? <Briefcase size={18} /> : <Store size={18} />}
-                </div>
-                <div>
-                  <p className="font-medium text-ink">{p.full_name || "Unnamed"}</p>
-                  <p className="text-xs text-ink/50">{p.email} · {p.account_type}</p>
-                </div>
-                <ChevronDown size={16} className={`text-ink/40 ${isOpen ? "rotate-180" : ""} transition-transform`} />
-              </button>
-              <div className="flex items-center gap-2">
-                <button onClick={() => onApprove(p)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-4 py-2 text-sm font-medium text-canvas hover:bg-teal-light">
-                  <Check size={15} /> Approve
+    <div>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <select
+          value={typeFilter}
+          onChange={(e) => {
+            setTypeFilter(e.target.value as "all" | "worker" | "business");
+            setPage(0);
+          }}
+          className="rounded-full bg-white px-4 py-2.5 text-sm text-ink ring-1 ring-ink/10 focus:outline-none"
+        >
+          <option value="all">All types</option>
+          <option value="worker">Workers</option>
+          <option value="business">Businesses</option>
+        </select>
+        <select
+          value={order}
+          onChange={(e) => setOrder(e.target.value as "newest" | "oldest")}
+          className="rounded-full bg-white px-4 py-2.5 text-sm text-ink ring-1 ring-ink/10 focus:outline-none"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </div>
+
+      <div className="space-y-3">
+        {pageRows.map((p) => {
+          const isOpen = expanded === p.id;
+          return (
+            <div key={p.id} className="rounded-2xl bg-white ring-1 ring-ink/5">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+                <button onClick={() => setExpanded(isOpen ? null : p.id)} className="flex items-center gap-3 text-left">
+                  <div className={`flex size-10 items-center justify-center rounded-lg ${p.account_type === "worker" ? "bg-teal/10 text-teal" : "bg-gold/10 text-gold-dark"}`}>
+                    {p.account_type === "worker" ? <Briefcase size={18} /> : <Store size={18} />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-ink">{p.full_name || "Unnamed"}</p>
+                    <p className="text-xs text-ink/50">
+                      {p.email} · {p.account_type} · submitted {formatDate(p.created_at)}
+                    </p>
+                  </div>
+                  <ChevronDown size={16} className={`text-ink/40 ${isOpen ? "rotate-180" : ""} transition-transform`} />
                 </button>
-                <button onClick={() => onReject(p)} className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50">
-                  <X size={15} /> Reject
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => onApprove(p)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-4 py-2 text-sm font-medium text-canvas hover:bg-teal-light">
+                    <Check size={15} /> Approve
+                  </button>
+                  <button onClick={() => onReject(p)} className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50">
+                    <X size={15} /> Reject
+                  </button>
+                </div>
               </div>
+              {isOpen && (
+                <div className="border-t border-ink/5 p-5">
+                  {p.account_type === "worker" ? (
+                    <FormDetail data={workerByUser[p.id]} kind="worker" />
+                  ) : (
+                    <FormDetail data={businessByUser[p.id]} kind="business" />
+                  )}
+                </div>
+              )}
             </div>
-            {isOpen && (
-              <div className="border-t border-ink/5 p-5">
-                {p.account_type === "worker" ? (
-                  <FormDetail data={workerByUser[p.id]} kind="worker" />
-                ) : (
-                  <FormDetail data={businessByUser[p.id]} kind="business" />
-                )}
-              </div>
-            )}
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="rounded-2xl bg-white p-10 text-center text-sm text-ink/50 ring-1 ring-ink/5">No matching submissions.</div>
+      )}
+
+      {filtered.length > pageSize && (
+        <div className="mt-4 flex items-center justify-between text-sm text-ink/60">
+          <span>
+            {safePage * pageSize + 1}–{Math.min(filtered.length, (safePage + 1) * pageSize)} of {filtered.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(Math.max(0, safePage - 1))}
+              disabled={safePage === 0}
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 ring-1 ring-ink/10 hover:bg-ink/5 disabled:opacity-40"
+            >
+              <ChevronLeft size={14} /> Prev
+            </button>
+            <span>
+              {safePage + 1} / {pageCount}
+            </span>
+            <button
+              onClick={() => setPage(Math.min(pageCount - 1, safePage + 1))}
+              disabled={safePage >= pageCount - 1}
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 ring-1 ring-ink/10 hover:bg-ink/5 disabled:opacity-40"
+            >
+              Next <ChevronRight size={14} />
+            </button>
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 }
