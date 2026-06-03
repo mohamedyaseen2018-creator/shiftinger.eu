@@ -187,7 +187,7 @@ function AdminPage() {
   );
 
   // Actions
-  const setStatus = async (p: ProfileRow, status: string) => {
+  const setStatus = async (p: ProfileRow, status: ProfileStatus) => {
     const { error } = await supabase.from("profiles").update({ status }).eq("id", p.id);
     if (error) return toast.error("Could not update status.");
     const verified = status === "approved";
