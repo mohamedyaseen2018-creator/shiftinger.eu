@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TalentRouteImport } from './routes/talent'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as ForBusinessesRouteImport } from './routes/for-businesses'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TalentRoute = TalentRouteImport.update({
@@ -23,6 +24,11 @@ const JobsRoute = JobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForBusinessesRoute = ForBusinessesRouteImport.update({
+  id: '/for-businesses',
+  path: '/for-businesses',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/talent': typeof TalentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/talent': typeof TalentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/talent': typeof TalentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/jobs' | '/talent'
+  fullPaths: '/' | '/for-businesses' | '/jobs' | '/talent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/jobs' | '/talent'
-  id: '__root__' | '/' | '/jobs' | '/talent'
+  to: '/' | '/for-businesses' | '/jobs' | '/talent'
+  id: '__root__' | '/' | '/for-businesses' | '/jobs' | '/talent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForBusinessesRoute: typeof ForBusinessesRoute
   JobsRoute: typeof JobsRoute
   TalentRoute: typeof TalentRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-businesses': {
+      id: '/for-businesses'
+      path: '/for-businesses'
+      fullPath: '/for-businesses'
+      preLoaderRoute: typeof ForBusinessesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForBusinessesRoute: ForBusinessesRoute,
   JobsRoute: JobsRoute,
   TalentRoute: TalentRoute,
 }
