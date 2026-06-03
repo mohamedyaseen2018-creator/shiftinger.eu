@@ -106,13 +106,24 @@ export default function Navbar() {
           ))}
           <div className="flex flex-col gap-3 border-t border-ink/10 pt-4">
             {user ? (
-              <Link
-                to="/dashboard"
-                className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
-                onClick={() => setOpen(false)}
-              >
-                Dashboard
-              </Link>
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
+                    onClick={() => setOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/dashboard"
+                  className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              </>
             ) : (
               <>
                 <Link
