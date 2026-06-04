@@ -235,9 +235,28 @@ function AdminPage() {
     return m;
   }, [profiles]);
 
-  const workerProfiles = useMemo(() => profiles.filter((p) => p.account_type === "worker"), [profiles]);
-  const businessProfiles = useMemo(() => profiles.filter((p) => p.account_type === "business"), [profiles]);
-  const pending = useMemo(() => profiles.filter((p) => p.status === "pending_review"), [profiles]);
+  // Exclude admin accounts — admins are admins only, never workers or businesses.
+  const workerProfiles = useMemo(
+    () => profiles.filter((p) => p.account_type === "worker" && !adminIds.has(p.id)),
+    [profiles, adminIds],
+  );
+  const businessProfiles = useMemo(
+    () => profiles.filter((p) => p.account_type === "business" && !adminIds.has(p.id)),
+    [profiles, adminIds],
+  );
+  const pending = useMemo(
+    () => profiles.filter((p) => p.status === "pending_review" && !adminIds.has(p.id)),
+    [profiles, adminIds],
+  );
+
+  const nameByUser = useMemo(() => {
+    const m: Record<string, string> = {};
+    profiles.forEach((p) => (m[p.id] = p.full_name || p.email));
+    workers.forEach((w) => {
+      if (w.name) m[w.user_id] = w.name as string;
+    });
+    return m;
+  }, [profiles, workers]);
 
   // Enriched rows for the data tables
   const workerViews = useMemo<WorkerView[]>(
