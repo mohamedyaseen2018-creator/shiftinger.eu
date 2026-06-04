@@ -104,6 +104,9 @@ function WorkerEdit({ userId }: { userId: string }) {
         languages: data.languages as { language: string; level: string }[],
         availability_visible: Boolean(data.availability_visible),
         messages_open: Boolean(data.messages_open),
+        available_days: asArr("available_days"),
+        time_slots: asArr("time_slots"),
+        looking_for: asArr("looking_for"),
       })
       .eq("user_id", userId);
     setBusy(false);
