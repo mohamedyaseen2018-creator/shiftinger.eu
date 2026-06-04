@@ -31,10 +31,16 @@ function DashboardPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && profile && profile.status === "incomplete") {
+    if (loading) return;
+    // Admins have an admin-only profile — send them straight to the admin dashboard.
+    if (isAdmin) {
+      navigate({ to: "/admin" });
+      return;
+    }
+    if (profile && profile.status === "incomplete") {
       navigate({ to: "/onboarding" });
     }
-  }, [loading, profile, navigate]);
+  }, [loading, profile, isAdmin, navigate]);
 
   if (loading || !profile) {
     return (
