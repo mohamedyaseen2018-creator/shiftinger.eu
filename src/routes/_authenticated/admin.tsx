@@ -584,6 +584,14 @@ function AdminPage() {
           onClose={() => setHistoryFor(null)}
         />
       )}
+
+      {applicantsFor && (
+        <JobApplicantsModal
+          title={applicantsFor.title}
+          applicants={applicantsFor.list}
+          onClose={() => setApplicantsFor(null)}
+        />
+      )}
     </SiteLayout>
   );
 }
