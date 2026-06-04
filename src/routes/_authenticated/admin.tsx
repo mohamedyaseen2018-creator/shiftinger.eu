@@ -620,15 +620,20 @@ function RowActions({
   onStatus,
   onDelete,
   onHistory,
+  onView,
 }: {
   p: ProfileRow;
   title: string;
   onStatus: (p: ProfileRow, status: ProfileStatus) => void;
   onDelete: (p: ProfileRow) => void;
   onHistory: (p: ProfileRow, title: string) => void;
+  onView: () => void;
 }) {
   return (
     <div className="flex items-center gap-1.5">
+      <button onClick={onView} title="View details" className="rounded-full bg-ink/5 p-1.5 text-ink/60 hover:bg-ink/10">
+        <Eye size={14} />
+      </button>
       {p.status !== "approved" && (
         <button onClick={() => onStatus(p, "approved")} title="Approve" className="rounded-full bg-teal/10 p-1.5 text-teal hover:bg-teal/20">
           <Check size={14} />
