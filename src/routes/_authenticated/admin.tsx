@@ -100,6 +100,8 @@ interface JobView {
   j: JobRow;
   business: string;
   applicants: number;
+  rejected: number;
+  applicantList: Applicant[];
   hours: number | null;
   income: number | null;
 }
