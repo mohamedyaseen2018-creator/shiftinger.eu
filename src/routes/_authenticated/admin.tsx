@@ -554,7 +554,7 @@ function AdminPage() {
                   ],
                 }}
                 initialSort={{ key: "created", dir: "desc" }}
-                minWidth={900}
+                minWidth={1080}
                 emptyText="No jobs posted yet."
               />
             )}
