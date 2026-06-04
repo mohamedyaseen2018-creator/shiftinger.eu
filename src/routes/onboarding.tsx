@@ -23,6 +23,8 @@ import {
   LANGUAGE_OPTIONS,
   LANGUAGE_LEVELS,
   LANGUAGE_FLAGS,
+  DAY_OPTIONS,
+  TIME_SLOT_OPTIONS,
   roleIcon,
 } from "@/data/utils";
 
