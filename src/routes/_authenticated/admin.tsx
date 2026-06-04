@@ -179,10 +179,12 @@ function AdminPage() {
   const [convs, setConvs] = useState<ConvRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [historyFor, setHistoryFor] = useState<{ id: string; title: string } | null>(null);
+  const [applicantsFor, setApplicantsFor] = useState<{ title: string; list: Applicant[] } | null>(null);
+  const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [p, w, b, j, a, c, au, wc] = await Promise.all([
+    const [p, w, b, j, a, c, au, wc, roles] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("worker_profiles").select("*"),
       supabase.from("business_profiles").select("*"),
@@ -191,7 +193,9 @@ function AdminPage() {
       supabase.from("conversations").select("worker_id, business_id"),
       supabase.from("admin_audit_log").select("id, admin_email, action, target_type, target_label, created_at").order("created_at", { ascending: false }),
       supabase.from("worker_contacts").select("user_id, phone"),
+      supabase.from("user_roles").select("user_id, role").eq("role", "admin"),
     ]);
+    setAdminIds(new Set((roles.data ?? []).map((r) => r.user_id as string)));
     setProfiles((p.data ?? []) as ProfileRow[]);
     const phoneByUser: Record<string, string> = {};
     (wc.data ?? []).forEach((row) => {
