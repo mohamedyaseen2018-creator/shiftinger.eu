@@ -322,6 +322,8 @@ function WorkerForm({
         min_rate: Number(minRate) || 0,
         bio: bio || null,
         looking_for: lookingFor,
+        available_days: days,
+        time_slots: timeSlots,
       })
       .eq("user_id", userId);
     if (wErr) {
