@@ -180,6 +180,7 @@ function AdminPage() {
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [historyFor, setHistoryFor] = useState<{ id: string; title: string } | null>(null);
   const [applicantsFor, setApplicantsFor] = useState<{ title: string; list: Applicant[] } | null>(null);
+  const [detailFor, setDetailFor] = useState<{ title: string; data: WorkerRow | BusinessRow | undefined; kind: "worker" | "business" } | null>(null);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
