@@ -389,7 +389,7 @@ function AdminPage() {
       label: "Actions",
       csv: false,
       value: () => "",
-      render: (r) => <RowActions p={r.p} title={(r.w.name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} />,
+      render: (r) => <RowActions p={r.p} title={(r.w.name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} onView={() => openWorkerDetail(r)} />,
     },
   ];
 
