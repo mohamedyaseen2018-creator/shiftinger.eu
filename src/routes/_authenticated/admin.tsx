@@ -348,6 +348,10 @@ function AdminPage() {
   };
 
   const openHistory = (p: ProfileRow, title: string) => setHistoryFor({ id: p.id, title });
+  const openWorkerDetail = (r: WorkerView) =>
+    setDetailFor({ title: (r.w.name as string) || r.p.full_name || r.p.email, data: workerByUser[r.p.id], kind: "worker" });
+  const openBusinessDetail = (r: BusinessView) =>
+    setDetailFor({ title: (r.b.business_name as string) || r.p.full_name || r.p.email, data: businessByUser[r.p.id], kind: "business" });
 
   if (loading || !isAdmin || busy) {
     return (
