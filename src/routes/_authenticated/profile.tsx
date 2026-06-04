@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { CITY_OPTIONS, NATIONALITY_OPTIONS, ROLE_OPTIONS, LANGUAGE_OPTIONS } from "@/data/utils";
+import { CITY_OPTIONS, NATIONALITY_OPTIONS, ROLE_OPTIONS, LANGUAGE_OPTIONS, DAY_OPTIONS, TIME_SLOT_OPTIONS, LOOKING_FOR_OPTIONS } from "@/data/utils";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "My profile — Shiftinger" }] }),
@@ -79,6 +79,12 @@ function WorkerEdit({ userId }: { userId: string }) {
     setData({ ...data, languages: next.map((x) => ({ language: x, level: "Fluent" })) });
   };
 
+  const asArr = (key: string) => (Array.isArray(data[key]) ? (data[key] as string[]) : []);
+  const toggleArr = (key: string, v: string) => {
+    const cur = asArr(key);
+    setData({ ...data, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] });
+  };
+
   const save = async () => {
     setBusy(true);
     const { error: cErr } = await supabase
@@ -98,6 +104,9 @@ function WorkerEdit({ userId }: { userId: string }) {
         languages: data.languages as { language: string; level: string }[],
         availability_visible: Boolean(data.availability_visible),
         messages_open: Boolean(data.messages_open),
+        available_days: asArr("available_days"),
+        time_slots: asArr("time_slots"),
+        looking_for: asArr("looking_for"),
       })
       .eq("user_id", userId);
     setBusy(false);
@@ -143,6 +152,37 @@ function WorkerEdit({ userId }: { userId: string }) {
       </div>
 
       <div><Label>Bio</Label><textarea rows={3} className={inputClass} value={(data.bio as string) ?? ""} onChange={(e) => setData({ ...data, bio: e.target.value })} /></div>
+
+      <div className="space-y-5 rounded-xl bg-canvas p-4">
+        <p className="text-sm font-semibold text-ink">My availability</p>
+        <div>
+          <Label>What you want to work</Label>
+          <div className="flex flex-wrap gap-2">
+            {LOOKING_FOR_OPTIONS.map((o) => (
+              <button key={o.value} type="button" onClick={() => toggleArr("looking_for", o.value)}
+                className={`rounded-full px-3 py-1.5 text-xs ring-1 transition-colors ${asArr("looking_for").includes(o.value) ? "bg-teal text-canvas ring-teal" : "ring-ink/15 text-ink/70 hover:bg-ink/5"}`}>{o.label}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Available days</Label>
+          <div className="flex flex-wrap gap-2">
+            {DAY_OPTIONS.map((d) => (
+              <button key={d} type="button" onClick={() => toggleArr("available_days", d)}
+                className={`size-10 rounded-lg text-sm font-medium ring-1 transition-colors ${asArr("available_days").includes(d) ? "bg-teal text-canvas ring-teal" : "text-ink/60 ring-ink/15 hover:ring-teal"}`}>{d}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Preferred time slots</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {TIME_SLOT_OPTIONS.map((s) => (
+              <button key={s} type="button" onClick={() => toggleArr("time_slots", s)}
+                className={`rounded-lg px-3 py-2 text-left text-sm ring-1 transition-colors ${asArr("time_slots").includes(s) ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"}`}>{s}</button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-3 rounded-xl bg-canvas p-4">
         <ToggleRow label="Visible in 'Find talent'" desc="Businesses can find and contact you." value={Boolean(data.availability_visible)} onChange={(v) => setData({ ...data, availability_visible: v })} />

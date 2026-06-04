@@ -70,6 +70,21 @@ export function roleIcon(role: string): LucideIcon {
   return ROLE_ICONS[role] ?? Briefcase;
 }
 
+// ── Availability ──
+export const DAY_OPTIONS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+export const TIME_SLOT_OPTIONS = [
+  "Morning (6–13)",
+  "Afternoon (12–18)",
+  "Evening (17–23)",
+  "Night (22–06)",
+];
+
+export const LOOKING_FOR_OPTIONS = [
+  { value: "single", label: "Single shifts" },
+  { value: "parttime", label: "Part-time" },
+];
+
 // ── Languages ──
 export const LANGUAGE_OPTIONS = [
   "Portuguese", "English", "Spanish", "French", "Arabic",
