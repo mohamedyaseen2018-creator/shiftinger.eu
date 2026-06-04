@@ -567,6 +567,28 @@ function WorkerForm({
           </div>
 
           <div>
+            <Label>Available days</Label>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {DAY_OPTIONS.map((d) => (
+                <button key={d} type="button" onClick={() => toggleDay(d)} className={`size-10 rounded-lg text-sm font-medium ring-1 transition-colors ${days.includes(d) ? "bg-teal text-canvas ring-teal" : "text-ink/60 ring-ink/15 hover:ring-teal"}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label>Preferred time slots</Label>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              {TIME_SLOT_OPTIONS.map((s) => (
+                <button key={s} type="button" onClick={() => toggleSlot(s)} className={`rounded-lg px-3 py-2 text-left text-sm ring-1 transition-colors ${timeSlots.includes(s) ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <Label>Short bio</Label>
             <textarea rows={3} className={inputClass} value={bio} placeholder="Tell businesses about your experience…" onChange={(e) => setBio(e.target.value)} />
           </div>
