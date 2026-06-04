@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { SlidersHorizontal, Loader2 } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 import WorkerCard from "@/components/features/WorkerCard";
-import { supabase } from "@/integrations/supabase/client";
+import { listVisibleWorkers } from "@/lib/talent.functions";
 import { ROLE_OPTIONS, CITY_OPTIONS } from "@/data/utils";
 import type { WorkerProfile } from "@/data/types";
 
@@ -66,15 +66,12 @@ function TalentPage() {
   const [workers, setWorkers] = useState<WorkerProfile[]>([]);
 
   useEffect(() => {
-    supabase
-      .from("worker_profiles")
-      .select("*")
-      .eq("verified", true)
-      .eq("availability_visible", true)
-      .then(({ data }) => {
-        setWorkers((data ?? []).map(mapWorker));
+    listVisibleWorkers()
+      .then((data) => {
+        setWorkers((data ?? []).map((r) => mapWorker(r as Record<string, unknown>)));
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
