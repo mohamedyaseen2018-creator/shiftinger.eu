@@ -153,6 +153,37 @@ function WorkerEdit({ userId }: { userId: string }) {
 
       <div><Label>Bio</Label><textarea rows={3} className={inputClass} value={(data.bio as string) ?? ""} onChange={(e) => setData({ ...data, bio: e.target.value })} /></div>
 
+      <div className="space-y-5 rounded-xl bg-canvas p-4">
+        <p className="text-sm font-semibold text-ink">My availability</p>
+        <div>
+          <Label>What you want to work</Label>
+          <div className="flex flex-wrap gap-2">
+            {LOOKING_FOR_OPTIONS.map((o) => (
+              <button key={o.value} type="button" onClick={() => toggleArr("looking_for", o.value)}
+                className={`rounded-full px-3 py-1.5 text-xs ring-1 transition-colors ${asArr("looking_for").includes(o.value) ? "bg-teal text-canvas ring-teal" : "ring-ink/15 text-ink/70 hover:bg-ink/5"}`}>{o.label}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Available days</Label>
+          <div className="flex flex-wrap gap-2">
+            {DAY_OPTIONS.map((d) => (
+              <button key={d} type="button" onClick={() => toggleArr("available_days", d)}
+                className={`size-10 rounded-lg text-sm font-medium ring-1 transition-colors ${asArr("available_days").includes(d) ? "bg-teal text-canvas ring-teal" : "text-ink/60 ring-ink/15 hover:ring-teal"}`}>{d}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Preferred time slots</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {TIME_SLOT_OPTIONS.map((s) => (
+              <button key={s} type="button" onClick={() => toggleArr("time_slots", s)}
+                className={`rounded-lg px-3 py-2 text-left text-sm ring-1 transition-colors ${asArr("time_slots").includes(s) ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"}`}>{s}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-3 rounded-xl bg-canvas p-4">
         <ToggleRow label="Visible in 'Find talent'" desc="Businesses can find and contact you." value={Boolean(data.availability_visible)} onChange={(v) => setData({ ...data, availability_visible: v })} />
         <ToggleRow label="Open to messages" desc="Allow businesses to start a conversation." value={Boolean(data.messages_open)} onChange={(v) => setData({ ...data, messages_open: v })} />
