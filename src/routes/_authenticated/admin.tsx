@@ -17,6 +17,7 @@ import {
   FileText,
   History,
   ScrollText,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
@@ -25,6 +26,7 @@ import { useAuth } from "@/lib/auth";
 import { adminDeleteUser, adminSetUserStatus } from "@/lib/admin.functions";
 import { DataTable, type Column } from "@/components/admin/DataTable";
 import StatusHistoryModal from "@/components/admin/StatusHistoryModal";
+import JobApplicantsModal, { type Applicant } from "@/components/admin/JobApplicantsModal";
 import { formatDate } from "@/data/utils";
 import type { ProfileStatus } from "@/data/types";
 
