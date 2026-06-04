@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { CITY_OPTIONS, NATIONALITY_OPTIONS, ROLE_OPTIONS, LANGUAGE_OPTIONS } from "@/data/utils";
+import { CITY_OPTIONS, NATIONALITY_OPTIONS, ROLE_OPTIONS, LANGUAGE_OPTIONS, DAY_OPTIONS, TIME_SLOT_OPTIONS, LOOKING_FOR_OPTIONS } from "@/data/utils";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "My profile — Shiftinger" }] }),
