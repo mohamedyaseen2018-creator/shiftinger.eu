@@ -416,6 +416,7 @@ function AdminPage() {
     { key: "role", label: "Role", sortable: true, value: (r) => r.j.role },
     { key: "type", label: "Type", sortable: true, value: (r) => (r.j.type === "single" ? "Single" : "Part-time") },
     { key: "applicants", label: "Applicants", sortable: true, value: (r) => r.applicants },
+    { key: "rejected", label: "Rejected", sortable: true, value: (r) => r.rejected, render: (r) => (r.rejected ? <span className="font-medium text-red-600">{r.rejected}</span> : "0") },
     { key: "hours", label: "Hours", sortable: true, value: (r) => r.hours ?? 0, render: (r) => (r.hours != null ? `${r.hours}h` : "—") },
     { key: "rate", label: "Rate", sortable: true, value: (r) => Number(r.j.rate), render: (r) => `€${Number(r.j.rate)}/hr` },
     { key: "income", label: "Worker income", sortable: true, className: "font-medium text-ink", value: (r) => r.income ?? 0, render: (r) => (r.income != null ? `€${r.income}` : "—") },
@@ -426,6 +427,20 @@ function AdminPage() {
       value: (r) => r.j.status,
       render: (r) => (
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${r.j.status === "open" ? "bg-teal/10 text-teal" : "bg-ink/5 text-ink/60"}`}>{r.j.status}</span>
+      ),
+    },
+    {
+      key: "view",
+      label: "Applicants",
+      csv: false,
+      value: () => "",
+      render: (r) => (
+        <button
+          onClick={() => setApplicantsFor({ title: `${r.j.role} · ${r.business}`, list: r.applicantList })}
+          className="inline-flex items-center gap-1.5 rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/70 hover:bg-ink/10"
+        >
+          <Eye size={13} /> View
+        </button>
       ),
     },
   ];
