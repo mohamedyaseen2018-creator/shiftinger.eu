@@ -17,6 +17,7 @@ import {
   FileText,
   History,
   ScrollText,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
@@ -25,6 +26,7 @@ import { useAuth } from "@/lib/auth";
 import { adminDeleteUser, adminSetUserStatus } from "@/lib/admin.functions";
 import { DataTable, type Column } from "@/components/admin/DataTable";
 import StatusHistoryModal from "@/components/admin/StatusHistoryModal";
+import JobApplicantsModal, { type Applicant } from "@/components/admin/JobApplicantsModal";
 import { formatDate } from "@/data/utils";
 import type { ProfileStatus } from "@/data/types";
 
@@ -98,6 +100,8 @@ interface JobView {
   j: JobRow;
   business: string;
   applicants: number;
+  rejected: number;
+  applicantList: Applicant[];
   hours: number | null;
   income: number | null;
 }
@@ -175,10 +179,12 @@ function AdminPage() {
   const [convs, setConvs] = useState<ConvRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [historyFor, setHistoryFor] = useState<{ id: string; title: string } | null>(null);
+  const [applicantsFor, setApplicantsFor] = useState<{ title: string; list: Applicant[] } | null>(null);
+  const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [p, w, b, j, a, c, au, wc] = await Promise.all([
+    const [p, w, b, j, a, c, au, wc, roles] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("worker_profiles").select("*"),
       supabase.from("business_profiles").select("*"),
@@ -187,7 +193,9 @@ function AdminPage() {
       supabase.from("conversations").select("worker_id, business_id"),
       supabase.from("admin_audit_log").select("id, admin_email, action, target_type, target_label, created_at").order("created_at", { ascending: false }),
       supabase.from("worker_contacts").select("user_id, phone"),
+      supabase.from("user_roles").select("user_id, role").eq("role", "admin"),
     ]);
+    setAdminIds(new Set((roles.data ?? []).map((r) => r.user_id as string)));
     setProfiles((p.data ?? []) as ProfileRow[]);
     const phoneByUser: Record<string, string> = {};
     (wc.data ?? []).forEach((row) => {
@@ -227,9 +235,28 @@ function AdminPage() {
     return m;
   }, [profiles]);
 
-  const workerProfiles = useMemo(() => profiles.filter((p) => p.account_type === "worker"), [profiles]);
-  const businessProfiles = useMemo(() => profiles.filter((p) => p.account_type === "business"), [profiles]);
-  const pending = useMemo(() => profiles.filter((p) => p.status === "pending_review"), [profiles]);
+  // Exclude admin accounts — admins are admins only, never workers or businesses.
+  const workerProfiles = useMemo(
+    () => profiles.filter((p) => p.account_type === "worker" && !adminIds.has(p.id)),
+    [profiles, adminIds],
+  );
+  const businessProfiles = useMemo(
+    () => profiles.filter((p) => p.account_type === "business" && !adminIds.has(p.id)),
+    [profiles, adminIds],
+  );
+  const pending = useMemo(
+    () => profiles.filter((p) => p.status === "pending_review" && !adminIds.has(p.id)),
+    [profiles, adminIds],
+  );
+
+  const nameByUser = useMemo(() => {
+    const m: Record<string, string> = {};
+    profiles.forEach((p) => (m[p.id] = p.full_name || p.email));
+    workers.forEach((w) => {
+      if (w.name) m[w.user_id] = w.name as string;
+    });
+    return m;
+  }, [profiles, workers]);
 
   // Enriched rows for the data tables
   const workerViews = useMemo<WorkerView[]>(
@@ -273,15 +300,24 @@ function AdminPage() {
     () =>
       jobs.map((j) => {
         const hours = jobHours(j);
+        const mine = apps.filter((a) => a.job_id === j.id);
+        const applicantList: Applicant[] = mine.map((a) => ({
+          workerId: a.worker_id,
+          name: nameByUser[a.worker_id] ?? "Worker",
+          email: emailById[a.worker_id] ?? "—",
+          status: a.status,
+        }));
         return {
           j,
           business: businessNameByUser[j.owner_id] ?? "Business",
-          applicants: apps.filter((a) => a.job_id === j.id).length,
+          applicants: mine.length,
+          rejected: mine.filter((a) => a.status === "rejected").length,
+          applicantList,
           hours,
           income: hours != null ? Math.round(hours * Number(j.rate)) : null,
         };
       }),
-    [jobs, businessNameByUser, apps],
+    [jobs, businessNameByUser, apps, nameByUser, emailById],
   );
 
   // Actions
@@ -380,6 +416,7 @@ function AdminPage() {
     { key: "role", label: "Role", sortable: true, value: (r) => r.j.role },
     { key: "type", label: "Type", sortable: true, value: (r) => (r.j.type === "single" ? "Single" : "Part-time") },
     { key: "applicants", label: "Applicants", sortable: true, value: (r) => r.applicants },
+    { key: "rejected", label: "Rejected", sortable: true, value: (r) => r.rejected, render: (r) => (r.rejected ? <span className="font-medium text-red-600">{r.rejected}</span> : "0") },
     { key: "hours", label: "Hours", sortable: true, value: (r) => r.hours ?? 0, render: (r) => (r.hours != null ? `${r.hours}h` : "—") },
     { key: "rate", label: "Rate", sortable: true, value: (r) => Number(r.j.rate), render: (r) => `€${Number(r.j.rate)}/hr` },
     { key: "income", label: "Worker income", sortable: true, className: "font-medium text-ink", value: (r) => r.income ?? 0, render: (r) => (r.income != null ? `€${r.income}` : "—") },
@@ -390,6 +427,20 @@ function AdminPage() {
       value: (r) => r.j.status,
       render: (r) => (
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${r.j.status === "open" ? "bg-teal/10 text-teal" : "bg-ink/5 text-ink/60"}`}>{r.j.status}</span>
+      ),
+    },
+    {
+      key: "view",
+      label: "Applicants",
+      csv: false,
+      value: () => "",
+      render: (r) => (
+        <button
+          onClick={() => setApplicantsFor({ title: `${r.j.role} · ${r.business}`, list: r.applicantList })}
+          className="inline-flex items-center gap-1.5 rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/70 hover:bg-ink/10"
+        >
+          <Eye size={13} /> View
+        </button>
       ),
     },
   ];
@@ -503,7 +554,7 @@ function AdminPage() {
                   ],
                 }}
                 initialSort={{ key: "created", dir: "desc" }}
-                minWidth={900}
+                minWidth={1080}
                 emptyText="No jobs posted yet."
               />
             )}
@@ -531,6 +582,14 @@ function AdminPage() {
           title={historyFor.title}
           emailById={emailById}
           onClose={() => setHistoryFor(null)}
+        />
+      )}
+
+      {applicantsFor && (
+        <JobApplicantsModal
+          title={applicantsFor.title}
+          applicants={applicantsFor.list}
+          onClose={() => setApplicantsFor(null)}
         />
       )}
     </SiteLayout>
