@@ -300,15 +300,24 @@ function AdminPage() {
     () =>
       jobs.map((j) => {
         const hours = jobHours(j);
+        const mine = apps.filter((a) => a.job_id === j.id);
+        const applicantList: Applicant[] = mine.map((a) => ({
+          workerId: a.worker_id,
+          name: nameByUser[a.worker_id] ?? "Worker",
+          email: emailById[a.worker_id] ?? "—",
+          status: a.status,
+        }));
         return {
           j,
           business: businessNameByUser[j.owner_id] ?? "Business",
-          applicants: apps.filter((a) => a.job_id === j.id).length,
+          applicants: mine.length,
+          rejected: mine.filter((a) => a.status === "rejected").length,
+          applicantList,
           hours,
           income: hours != null ? Math.round(hours * Number(j.rate)) : null,
         };
       }),
-    [jobs, businessNameByUser, apps],
+    [jobs, businessNameByUser, apps, nameByUser, emailById],
   );
 
   // Actions
