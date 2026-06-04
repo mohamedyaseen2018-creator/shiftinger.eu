@@ -79,6 +79,12 @@ function WorkerEdit({ userId }: { userId: string }) {
     setData({ ...data, languages: next.map((x) => ({ language: x, level: "Fluent" })) });
   };
 
+  const asArr = (key: string) => (Array.isArray(data[key]) ? (data[key] as string[]) : []);
+  const toggleArr = (key: string, v: string) => {
+    const cur = asArr(key);
+    setData({ ...data, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] });
+  };
+
   const save = async () => {
     setBusy(true);
     const { error: cErr } = await supabase
