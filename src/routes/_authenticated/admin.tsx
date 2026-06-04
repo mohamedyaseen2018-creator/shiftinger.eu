@@ -597,6 +597,23 @@ function AdminPage() {
           onClose={() => setApplicantsFor(null)}
         />
       )}
+
+      {detailFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" onClick={() => setDetailFor(null)}>
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 ring-1 ring-ink/10" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <h3 className="font-serif text-xl text-ink">Submitted form</h3>
+                <p className="text-sm text-ink/55">{detailFor.title}</p>
+              </div>
+              <button onClick={() => setDetailFor(null)} className="rounded-full p-1.5 text-ink/50 hover:bg-ink/5">
+                <X size={18} />
+              </button>
+            </div>
+            <FormDetail data={detailFor.data} kind={detailFor.kind} />
+          </div>
+        </div>
+      )}
     </SiteLayout>
   );
 }
