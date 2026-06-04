@@ -251,9 +251,15 @@ function WorkerForm({
   const [minRate, setMinRate] = useState("");
   const [bio, setBio] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
+  const [days, setDays] = useState<string[]>([]);
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
 
   const toggleLookingFor = (v: string) =>
     setLookingFor((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+  const toggleDay = (v: string) =>
+    setDays((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+  const toggleSlot = (v: string) =>
+    setTimeSlots((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
   const canNext = () => {
     if (step === 0) return name.trim() && city && phone.trim();
