@@ -180,6 +180,7 @@ function AdminPage() {
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [historyFor, setHistoryFor] = useState<{ id: string; title: string } | null>(null);
   const [applicantsFor, setApplicantsFor] = useState<{ title: string; list: Applicant[] } | null>(null);
+  const [detailFor, setDetailFor] = useState<{ title: string; data: WorkerRow | BusinessRow | undefined; kind: "worker" | "business" } | null>(null);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
@@ -347,6 +348,10 @@ function AdminPage() {
   };
 
   const openHistory = (p: ProfileRow, title: string) => setHistoryFor({ id: p.id, title });
+  const openWorkerDetail = (r: WorkerView) =>
+    setDetailFor({ title: (r.w.name as string) || r.p.full_name || r.p.email, data: workerByUser[r.p.id], kind: "worker" });
+  const openBusinessDetail = (r: BusinessView) =>
+    setDetailFor({ title: (r.b.business_name as string) || r.p.full_name || r.p.email, data: businessByUser[r.p.id], kind: "business" });
 
   if (loading || !isAdmin || busy) {
     return (
@@ -384,7 +389,7 @@ function AdminPage() {
       label: "Actions",
       csv: false,
       value: () => "",
-      render: (r) => <RowActions p={r.p} title={(r.w.name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} />,
+      render: (r) => <RowActions p={r.p} title={(r.w.name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} onView={() => openWorkerDetail(r)} />,
     },
   ];
 
@@ -406,7 +411,7 @@ function AdminPage() {
       label: "Actions",
       csv: false,
       value: () => "",
-      render: (r) => <RowActions p={r.p} title={(r.b.business_name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} />,
+      render: (r) => <RowActions p={r.p} title={(r.b.business_name as string) || r.p.full_name || r.p.email} onStatus={setStatus} onDelete={remove} onHistory={openHistory} onView={() => openBusinessDetail(r)} />,
     },
   ];
 
@@ -592,6 +597,23 @@ function AdminPage() {
           onClose={() => setApplicantsFor(null)}
         />
       )}
+
+      {detailFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" onClick={() => setDetailFor(null)}>
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 ring-1 ring-ink/10" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <h3 className="font-serif text-xl text-ink">Submitted form</h3>
+                <p className="text-sm text-ink/55">{detailFor.title}</p>
+              </div>
+              <button onClick={() => setDetailFor(null)} className="rounded-full p-1.5 text-ink/50 hover:bg-ink/5">
+                <X size={18} />
+              </button>
+            </div>
+            <FormDetail data={detailFor.data} kind={detailFor.kind} />
+          </div>
+        </div>
+      )}
     </SiteLayout>
   );
 }
@@ -615,15 +637,20 @@ function RowActions({
   onStatus,
   onDelete,
   onHistory,
+  onView,
 }: {
   p: ProfileRow;
   title: string;
   onStatus: (p: ProfileRow, status: ProfileStatus) => void;
   onDelete: (p: ProfileRow) => void;
   onHistory: (p: ProfileRow, title: string) => void;
+  onView: () => void;
 }) {
   return (
     <div className="flex items-center gap-1.5">
+      <button onClick={onView} title="View details" className="rounded-full bg-ink/5 p-1.5 text-ink/60 hover:bg-ink/10">
+        <Eye size={14} />
+      </button>
       {p.status !== "approved" && (
         <button onClick={() => onStatus(p, "approved")} title="Approve" className="rounded-full bg-teal/10 p-1.5 text-teal hover:bg-teal/20">
           <Check size={14} />
