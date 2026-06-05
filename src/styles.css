@@ -16,6 +16,16 @@
   --color-ink: #1A1A1A;
   --color-canvas: #F7F5F0;
   --color-canvas-dark: #E8E4DB;
+  /* Admin console palette */
+  --color-pine: #1D9E75;
+  --color-pine-dark: #168560;
+  --color-pine-soft: #E7F5EF;
+  --color-amber: #FAC775;
+  --color-amber-dark: #E0A845;
+  --color-amber-soft: #FEF3DD;
+  --color-slate: #475569;
+  --color-mist: #F1F5F4;
+  --color-line: #E2E8E5;
   --font-serif: 'DM Serif Display', Georgia, serif;
   --font-sans: 'DM Sans', system-ui, sans-serif;
 }
