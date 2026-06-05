@@ -215,12 +215,10 @@ function HomePage() {
               <div>
                 <div className="mb-4 flex items-center gap-3">
                   <Lock size={20} className="text-gold" />
-                  <h2 className="font-serif text-3xl leading-tight text-ink">Your location is never public</h2>
+                  <h2 className="font-serif text-3xl leading-tight text-ink">{c("home.privacy_title")}</h2>
                 </div>
                 <p className="max-w-[56ch] text-pretty leading-relaxed text-ink/70">
-                  We built privacy into the core of Shiftinger. Businesses post shifts without exposing where they are.
-                  Workers apply without knowing the exact address. Location is shared only in the private chat, after a
-                  worker is accepted and confirms attendance.
+                  {c("home.privacy_body")}
                 </p>
               </div>
               <div className="space-y-3">
