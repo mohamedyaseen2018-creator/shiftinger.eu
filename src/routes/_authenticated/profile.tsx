@@ -161,6 +161,35 @@ function WorkerEdit({ userId }: { userId: string }) {
       </div>
 
       <div>
+        <Label>Secondary roles you can work</Label>
+        <div className="flex flex-wrap gap-2">
+          {ROLE_OPTIONS.filter((r) => r !== (data.main_role as string)).map((r) => {
+            const active = subRoles.some((s) => s.role === r);
+            return (
+              <button key={r} type="button" onClick={() => toggleSubRole(r)}
+                className={`rounded-full px-3 py-1 text-xs ring-1 transition-colors ${active ? "bg-teal text-canvas ring-teal" : "ring-ink/15 text-ink/70 hover:bg-ink/5"}`}>{r}</button>
+            );
+          })}
+        </div>
+        {subRoles.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {subRoles.map((s) => (
+              <div key={s.role} className="flex items-center justify-between gap-3">
+                <span className="text-sm text-ink/70">{s.role}</span>
+                <div className="flex items-center gap-2">
+                  <input type="number" min={0} className="w-20 rounded-md border-0 bg-canvas px-2 py-1.5 text-sm text-ink ring-1 ring-ink/10 focus:outline-none focus:ring-2 focus:ring-teal"
+                    value={s.years} onChange={(e) => setSubRoleYears(s.role, Number(e.target.value))} />
+                  <span className="text-xs text-ink/40">yrs</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div><Label>CV / portfolio link</Label><input type="url" placeholder="https://..." className={inputClass} value={(data.portfolio_url as string) ?? ""} onChange={(e) => setData({ ...data, portfolio_url: e.target.value })} /></div>
+
+      <div>
         <Label>Languages</Label>
         <div className="flex flex-wrap gap-2">
           {LANGUAGE_OPTIONS.map((l) => (
