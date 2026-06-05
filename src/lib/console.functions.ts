@@ -114,6 +114,9 @@ export const getConsoleData = createServerFn({ method: "GET" })
         bio: w.bio ?? "",
         adminNotes: w.admin_notes ?? "",
         atividadeNumber: w.atividade_number ?? "",
+        hasCv: !!(w.portfolio_url && String(w.portfolio_url).trim()),
+        hasDocuments: !!(docByUser.get(w.user_id) ?? "").toString().trim(),
+        idDocumentPath: (docByUser.get(w.user_id) ?? "") as string,
       };
     });
 
