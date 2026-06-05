@@ -15,9 +15,17 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ForBusinessesRouteImport } from './routes/for-businesses'
+import { Route as ConsoleRouteImport } from './routes/console'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConsoleIndexRouteImport } from './routes/console.index'
+import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
+import { Route as ConsoleShiftsRouteImport } from './routes/console.shifts'
+import { Route as ConsoleSettingsRouteImport } from './routes/console.settings'
+import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
+import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
+import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
 import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated/my-jobs'
@@ -56,6 +64,11 @@ const ForBusinessesRoute = ForBusinessesRouteImport.update({
   path: '/for-businesses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsoleRoute = ConsoleRouteImport.update({
+  id: '/console',
+  path: '/console',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -69,6 +82,41 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ConsoleIndexRoute = ConsoleIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsoleRoute,
+} as any)
+const ConsoleWorkersRoute = ConsoleWorkersRouteImport.update({
+  id: '/workers',
+  path: '/workers',
+  getParentRoute: () => ConsoleRoute,
+} as any)
+const ConsoleShiftsRoute = ConsoleShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
+  getParentRoute: () => ConsoleRoute,
+} as any)
+const ConsoleSettingsRoute = ConsoleSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ConsoleRoute,
+} as any)
+const ConsoleMatchesRoute = ConsoleMatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => ConsoleRoute,
+} as any)
+const ConsoleDisputesRoute = ConsoleDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => ConsoleRoute,
+} as any)
+const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
+  id: '/businesses',
+  path: '/businesses',
+  getParentRoute: () => ConsoleRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
@@ -110,6 +158,7 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/console': typeof ConsoleRouteWithChildren
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
@@ -123,6 +172,13 @@ export interface FileRoutesByFullPath {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/disputes': typeof ConsoleDisputesRoute
+  '/console/matches': typeof ConsoleMatchesRoute
+  '/console/settings': typeof ConsoleSettingsRoute
+  '/console/shifts': typeof ConsoleShiftsRoute
+  '/console/workers': typeof ConsoleWorkersRoute
+  '/console/': typeof ConsoleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,12 +196,20 @@ export interface FileRoutesByTo {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/disputes': typeof ConsoleDisputesRoute
+  '/console/matches': typeof ConsoleMatchesRoute
+  '/console/settings': typeof ConsoleSettingsRoute
+  '/console/shifts': typeof ConsoleShiftsRoute
+  '/console/workers': typeof ConsoleWorkersRoute
+  '/console': typeof ConsoleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/console': typeof ConsoleRouteWithChildren
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
@@ -159,12 +223,20 @@ export interface FileRoutesById {
   '/_authenticated/my-jobs': typeof AuthenticatedMyJobsRoute
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/disputes': typeof ConsoleDisputesRoute
+  '/console/matches': typeof ConsoleMatchesRoute
+  '/console/settings': typeof ConsoleSettingsRoute
+  '/console/shifts': typeof ConsoleShiftsRoute
+  '/console/workers': typeof ConsoleWorkersRoute
+  '/console/': typeof ConsoleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/console'
     | '/for-businesses'
     | '/jobs'
     | '/login'
@@ -178,6 +250,13 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/businesses'
+    | '/console/disputes'
+    | '/console/matches'
+    | '/console/settings'
+    | '/console/shifts'
+    | '/console/workers'
+    | '/console/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -195,11 +274,19 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/businesses'
+    | '/console/disputes'
+    | '/console/matches'
+    | '/console/settings'
+    | '/console/shifts'
+    | '/console/workers'
+    | '/console'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/console'
     | '/for-businesses'
     | '/jobs'
     | '/login'
@@ -213,12 +300,20 @@ export interface FileRouteTypes {
     | '/_authenticated/my-jobs'
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
+    | '/console/businesses'
+    | '/console/disputes'
+    | '/console/matches'
+    | '/console/settings'
+    | '/console/shifts'
+    | '/console/workers'
+    | '/console/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ConsoleRoute: typeof ConsoleRouteWithChildren
   ForBusinessesRoute: typeof ForBusinessesRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
@@ -271,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForBusinessesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/console': {
+      id: '/console'
+      path: '/console'
+      fullPath: '/console'
+      preLoaderRoute: typeof ConsoleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -291,6 +393,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/console/': {
+      id: '/console/'
+      path: '/'
+      fullPath: '/console/'
+      preLoaderRoute: typeof ConsoleIndexRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
+    '/console/workers': {
+      id: '/console/workers'
+      path: '/workers'
+      fullPath: '/console/workers'
+      preLoaderRoute: typeof ConsoleWorkersRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
+    '/console/shifts': {
+      id: '/console/shifts'
+      path: '/shifts'
+      fullPath: '/console/shifts'
+      preLoaderRoute: typeof ConsoleShiftsRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
+    '/console/settings': {
+      id: '/console/settings'
+      path: '/settings'
+      fullPath: '/console/settings'
+      preLoaderRoute: typeof ConsoleSettingsRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
+    '/console/matches': {
+      id: '/console/matches'
+      path: '/matches'
+      fullPath: '/console/matches'
+      preLoaderRoute: typeof ConsoleMatchesRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
+    '/console/disputes': {
+      id: '/console/disputes'
+      path: '/disputes'
+      fullPath: '/console/disputes'
+      preLoaderRoute: typeof ConsoleDisputesRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
+    '/console/businesses': {
+      id: '/console/businesses'
+      path: '/businesses'
+      fullPath: '/console/businesses'
+      preLoaderRoute: typeof ConsoleBusinessesRouteImport
+      parentRoute: typeof ConsoleRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -367,10 +518,34 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ConsoleRouteChildren {
+  ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
+  ConsoleDisputesRoute: typeof ConsoleDisputesRoute
+  ConsoleMatchesRoute: typeof ConsoleMatchesRoute
+  ConsoleSettingsRoute: typeof ConsoleSettingsRoute
+  ConsoleShiftsRoute: typeof ConsoleShiftsRoute
+  ConsoleWorkersRoute: typeof ConsoleWorkersRoute
+  ConsoleIndexRoute: typeof ConsoleIndexRoute
+}
+
+const ConsoleRouteChildren: ConsoleRouteChildren = {
+  ConsoleBusinessesRoute: ConsoleBusinessesRoute,
+  ConsoleDisputesRoute: ConsoleDisputesRoute,
+  ConsoleMatchesRoute: ConsoleMatchesRoute,
+  ConsoleSettingsRoute: ConsoleSettingsRoute,
+  ConsoleShiftsRoute: ConsoleShiftsRoute,
+  ConsoleWorkersRoute: ConsoleWorkersRoute,
+  ConsoleIndexRoute: ConsoleIndexRoute,
+}
+
+const ConsoleRouteWithChildren =
+  ConsoleRoute._addFileChildren(ConsoleRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ConsoleRoute: ConsoleRouteWithChildren,
   ForBusinessesRoute: ForBusinessesRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
