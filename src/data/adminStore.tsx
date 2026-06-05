@@ -224,6 +224,35 @@ export interface ListOption {
   sortOrder: number;
 }
 
+export interface NewWorkerInput {
+  name: string;
+  email: string;
+  phone?: string;
+  nationality?: string;
+  city?: string;
+  mainRole?: string;
+  subRoles?: string[];
+  languages?: string[];
+  atividade?: boolean;
+  atividadeNumber?: string;
+  adminNotes?: string;
+}
+
+export interface NewBusinessInput {
+  name: string;
+  email: string;
+  displayInitials?: string;
+  city?: string;
+  category?: string;
+  subSector?: string;
+  contactName?: string;
+  contactPhone?: string;
+  nif?: string;
+  languagesRequired?: string[];
+  preferredRoles?: string[];
+  adminNotes?: string;
+}
+
 const EMPTY_METRICS: Metrics = {
   workers: 0,
   businesses: 0,
