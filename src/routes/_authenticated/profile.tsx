@@ -85,6 +85,23 @@ function WorkerEdit({ userId }: { userId: string }) {
     setData({ ...data, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] });
   };
 
+  const subRoles = Array.isArray(data.sub_roles)
+    ? (data.sub_roles as { role: string; years: number }[])
+    : [];
+  const toggleSubRole = (role: string) => {
+    const exists = subRoles.some((s) => s.role === role);
+    const next = exists
+      ? subRoles.filter((s) => s.role !== role)
+      : [...subRoles, { role, years: 0 }];
+    setData({ ...data, sub_roles: next });
+  };
+  const setSubRoleYears = (role: string, years: number) => {
+    setData({
+      ...data,
+      sub_roles: subRoles.map((s) => (s.role === role ? { ...s, years } : s)),
+    });
+  };
+
   const save = async () => {
     setBusy(true);
     const { error: cErr } = await supabase
