@@ -320,7 +320,6 @@ function WorkerForm({
         experience: experiences.filter((x) => x.position || x.employer) as unknown as Json,
         languages: languages.filter((l) => l.language) as unknown as Json,
         atividade: atividade === "yes",
-        id_document_url: docPath,
         min_rate: Number(minRate) || 0,
         bio: bio || null,
         looking_for: lookingFor,
@@ -328,6 +327,11 @@ function WorkerForm({
         time_slots: timeSlots,
       })
       .eq("user_id", userId);
+    if (!wErr && docPath) {
+      await supabase
+        .from("worker_documents")
+        .upsert({ user_id: userId, id_document_url: docPath }, { onConflict: "user_id" });
+    }
     if (wErr) {
       setBusy(false);
       toast.error("Could not save your profile. Please try again.");
