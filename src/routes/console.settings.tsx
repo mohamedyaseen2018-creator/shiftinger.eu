@@ -139,7 +139,15 @@ function SettingsPage() {
         </div>
       </Panel>
 
+      <Panel title="Platform lists" action={<Pill tone="slate">Dropdown options</Pill>}>
+        <p className="mb-4 text-sm text-slate">
+          Manage the options behind every dropdown across the console. Changes apply immediately to all forms.
+        </p>
+        <PlatformListsPanel />
+      </Panel>
+
       <Panel title="Audit log" action={<Shield size={16} className="text-slate" />}>
+
         {store.audit.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate">No admin activity recorded yet.</p>
         ) : (
