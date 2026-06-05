@@ -273,9 +273,9 @@ function HomePage() {
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Available workers</span>
               <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
-                Talent available <span className="italic">today</span>
+                {c("home.talent_title")}
               </h2>
-              <p className="mt-2 text-ink/60">Verified, skill-matched workers ready for shifts across Portugal.</p>
+              <p className="mt-2 text-ink/60">{c("home.talent_subtitle")}</p>
             </div>
             <Link
               to="/talent"
