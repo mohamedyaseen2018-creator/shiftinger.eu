@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   GitMerge,
+  ShieldAlert,
   Settings,
   Zap,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const NAV = [
   { to: "/console/businesses", label: "Businesses", icon: Building2 },
   { to: "/console/shifts", label: "Shifts", icon: CalendarClock },
   { to: "/console/matches", label: "Matches", icon: GitMerge },
+  { to: "/console/disputes", label: "Disputes", icon: ShieldAlert },
   { to: "/console/settings", label: "Settings", icon: Settings },
 ] as const;
 
