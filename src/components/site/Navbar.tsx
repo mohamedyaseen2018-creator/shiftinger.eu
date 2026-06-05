@@ -133,14 +133,14 @@ export default function Navbar() {
                   className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
                   onClick={() => setOpen(false)}
                 >
-                  Sign in
+                  {c("header.cta_signin")}
                 </Link>
                 <Link
                   to="/register"
                   className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
                   onClick={() => setOpen(false)}
                 >
-                  Get started
+                  {c("header.cta_register")}
                 </Link>
               </>
             )}
