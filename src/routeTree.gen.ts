@@ -20,6 +20,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConsoleIndexRouteImport } from './routes/console.index'
+import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
 import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated/my-jobs'
@@ -82,6 +83,11 @@ const ConsoleIndexRoute = ConsoleIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleWorkersRoute = ConsoleWorkersRouteImport.update({
+  id: '/workers',
+  path: '/workers',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
 }
 export interface FileRoutesByTo {
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/workers': typeof ConsoleWorkersRoute
   '/console': typeof ConsoleIndexRoute
 }
 export interface FileRoutesById {
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/_authenticated/my-jobs': typeof AuthenticatedMyJobsRoute
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
 }
 export interface FileRouteTypes {
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/workers'
     | '/console/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/workers'
     | '/console'
   id:
     | '__root__'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-jobs'
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
+    | '/console/workers'
     | '/console/'
   fileRoutesById: FileRoutesById
 }
@@ -329,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleIndexRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/workers': {
+      id: '/console/workers'
+      path: '/workers'
+      fullPath: '/console/workers'
+      preLoaderRoute: typeof ConsoleWorkersRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -405,10 +424,12 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ConsoleRouteChildren {
+  ConsoleWorkersRoute: typeof ConsoleWorkersRoute
   ConsoleIndexRoute: typeof ConsoleIndexRoute
 }
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
+  ConsoleWorkersRoute: ConsoleWorkersRoute,
   ConsoleIndexRoute: ConsoleIndexRoute,
 }
 
@@ -430,3 +451,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
