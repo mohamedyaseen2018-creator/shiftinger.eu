@@ -58,11 +58,12 @@ export const getConsoleData = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesR, workersR, wContactsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
+    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
       await Promise.all([
         supabaseAdmin.from("profiles").select("*"),
         supabaseAdmin.from("worker_profiles").select("*"),
         supabaseAdmin.from("worker_contacts").select("user_id, phone"),
+        supabaseAdmin.from("worker_documents").select("user_id, id_document_url"),
         supabaseAdmin.from("business_profiles").select("*"),
         supabaseAdmin.from("business_contacts").select("*"),
         supabaseAdmin.from("jobs").select("*"),
@@ -74,6 +75,9 @@ export const getConsoleData = createServerFn({ method: "GET" })
     const profiles = profilesR.data ?? [];
     const profileById = new Map(profiles.map((p) => [p.id, p]));
     const phoneByUser = new Map((wContactsR.data ?? []).map((c) => [c.user_id, c.phone]));
+    const docByUser = new Map(
+      (wDocsR.data ?? []).map((d) => [d.user_id, d.id_document_url as string | null]),
+    );
     const bContactByUser = new Map((bContactsR.data ?? []).map((c) => [c.user_id, c]));
     const businessByOwner = new Map((businessesR.data ?? []).map((b) => [b.user_id, b]));
     const workerByUser = new Map((workersR.data ?? []).map((w) => [w.user_id, w]));
