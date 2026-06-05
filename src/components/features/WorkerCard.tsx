@@ -128,10 +128,28 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
         <p className="font-medium text-ink">
           <Icon size={15} className="mb-0.5 mr-1 inline text-teal" />
           {worker.mainRole}
-          {worker.subRoles.length > 0 && (
-            <span className="text-ink/50"> | {worker.subRoles.map((s) => s.role).join(" · ")}</span>
+          {worker.mainRoleYears > 0 && (
+            <span className="text-ink/50"> · {worker.mainRoleYears} yr{worker.mainRoleYears !== 1 ? "s" : ""}</span>
           )}
         </p>
+
+        {/* Secondary roles + years */}
+        {worker.subRoles.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-medium text-ink/50">Also works as</span>
+            {worker.subRoles.map((s) => (
+              <span
+                key={s.role}
+                className="inline-flex items-center gap-1 rounded-full bg-teal/8 px-2.5 py-0.5 text-xs font-medium text-teal ring-1 ring-teal/15"
+              >
+                {s.role}
+                {s.years > 0 && (
+                  <span className="text-teal/60">· {s.years}y</span>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Looking for */}
         {lookingLabels.length > 0 && (
