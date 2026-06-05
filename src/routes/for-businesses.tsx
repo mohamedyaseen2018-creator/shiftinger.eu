@@ -123,7 +123,7 @@ function ForBusinessesPage() {
               to="/register"
               className="inline-flex items-center gap-2 rounded-full bg-teal px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
             >
-              Get started — it's free <ArrowRight size={16} />
+              {c("why.features_cta")} <ArrowRight size={16} />
             </Link>
           </div>
         </div>
