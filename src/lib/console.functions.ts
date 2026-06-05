@@ -278,6 +278,8 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         rating: z.number().min(0).max(5).optional().default(0),
         portfolioUrl: z.string().max(500).optional().default(""),
         bio: z.string().max(2000).optional().default(""),
+        adminNotes: z.string().max(2000).optional().default(""),
+        atividadeNumber: z.string().max(80).optional().default(""),
       })
       .parse(i),
   )
@@ -300,6 +302,8 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         rating: data.rating,
         portfolio_url: data.portfolioUrl,
         bio: data.bio,
+        admin_notes: data.adminNotes,
+        atividade_number: data.atividadeNumber,
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);
