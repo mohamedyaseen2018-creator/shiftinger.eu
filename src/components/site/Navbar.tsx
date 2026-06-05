@@ -16,6 +16,12 @@ function Wordmark({ className = "" }: { className?: string }) {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
+  const { c } = useSiteContent();
+  const navLinks = [
+    { label: c("header.nav_jobs"), to: "/jobs" as const },
+    { label: c("header.nav_talent"), to: "/talent" as const },
+    { label: c("header.nav_business"), to: "/for-businesses" as const },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-ink/5 bg-canvas/80 backdrop-blur-md">
