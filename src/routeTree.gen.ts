@@ -21,6 +21,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConsoleIndexRouteImport } from './routes/console.index'
 import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
+import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
 import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated/my-jobs'
@@ -88,6 +89,11 @@ const ConsoleWorkersRoute = ConsoleWorkersRouteImport.update({
   path: '/workers',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
+  id: '/businesses',
+  path: '/businesses',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
 }
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console': typeof ConsoleIndexRoute
 }
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/_authenticated/my-jobs': typeof AuthenticatedMyJobsRoute
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
 }
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/businesses'
     | '/console/workers'
     | '/console/'
   fileRoutesByTo: FileRoutesByTo
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/businesses'
     | '/console/workers'
     | '/console'
   id:
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-jobs'
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
+    | '/console/businesses'
     | '/console/workers'
     | '/console/'
   fileRoutesById: FileRoutesById
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleWorkersRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/businesses': {
+      id: '/console/businesses'
+      path: '/businesses'
+      fullPath: '/console/businesses'
+      preLoaderRoute: typeof ConsoleBusinessesRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -424,11 +443,13 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ConsoleRouteChildren {
+  ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
   ConsoleWorkersRoute: typeof ConsoleWorkersRoute
   ConsoleIndexRoute: typeof ConsoleIndexRoute
 }
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
+  ConsoleBusinessesRoute: ConsoleBusinessesRoute,
   ConsoleWorkersRoute: ConsoleWorkersRoute,
   ConsoleIndexRoute: ConsoleIndexRoute,
 }
