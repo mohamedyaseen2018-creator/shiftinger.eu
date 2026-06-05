@@ -1,73 +1,97 @@
 import { useState } from "react";
-import {
-  LayoutDashboard,
-  Clock,
-  Users,
-  Building2,
-  Target,
-  ShieldAlert,
-} from "lucide-react";
-import { useAdminStore, emptyBusiness, type Business } from "@/data/adminStore";
-import { PlatformConfigModal } from "@/components/console/PlatformConfigModal";
-import { ConfirmationWindowModal } from "@/components/console/ConfirmationWindowModal";
-import { ManageWorkersDrawer } from "@/components/console/ManageWorkersDrawer";
-import { BusinessModal } from "@/components/console/BusinessModal";
-import { KpiSettingsModal } from "@/components/console/KpiSettingsModal";
-import { ManageDisputesDrawer } from "@/components/console/ManageDisputesDrawer";
-
-function ActionButton({
-  icon: Icon,
-  label,
-  description,
-  onClick,
-}: {
-  icon: typeof Users;
-  label: string;
-  description: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-start gap-3 rounded-xl border border-line px-4 py-3 text-left transition-colors hover:border-pine hover:bg-mist"
-    >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-pine-soft text-pine-dark">
-        <Icon size={17} />
-      </span>
-      <span>
-        <span className="block text-sm font-medium text-ink">{label}</span>
-        <span className="block text-[11px] text-slate">{description}</span>
-      </span>
-    </button>
-  );
-}
+import { Link } from "@tanstack/react-router";
+import { Check, X, RefreshCw, Users, Building2, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { useAdminStore } from "@/data/adminStore";
+import { Pill } from "@/components/console/ui";
 
 export function QuickControls() {
   const store = useAdminStore();
-  const [platformOpen, setPlatformOpen] = useState(false);
-  const [windowOpen, setWindowOpen] = useState(false);
-  const [workersOpen, setWorkersOpen] = useState(false);
-  const [newBusiness, setNewBusiness] = useState<Business | null>(null);
-  const [kpiOpen, setKpiOpen] = useState(false);
-  const [disputesOpen, setDisputesOpen] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const pending = [
+    ...store.workers
+      .filter((w) => w.status === "pending_review")
+      .map((w) => ({ id: w.id, name: w.name, type: "worker" as const })),
+    ...store.businesses
+      .filter((b) => b.status === "pending_review")
+      .map((b) => ({ id: b.id, name: b.name, type: "business" as const })),
+  ];
+
+  const act = async (
+    id: string,
+    type: "worker" | "business",
+    name: string,
+    status: "approved" | "rejected",
+  ) => {
+    setBusy(id + status);
+    try {
+      await store.setStatus(id, status, type, name);
+      toast.success(status === "approved" ? "Approved" : "Rejected");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
-    <>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <ActionButton icon={LayoutDashboard} label="Full dashboard prompt" description="Review and edit platform configuration" onClick={() => setPlatformOpen(true)} />
-        <ActionButton icon={Clock} label="Confirmation window" description="Edit daily confirmation window and rules" onClick={() => setWindowOpen(true)} />
-        <ActionButton icon={Users} label="Manage workers" description="Add, edit, suspend or remove workers" onClick={() => setWorkersOpen(true)} />
-        <ActionButton icon={Building2} label="Add business" description="Register a new business profile" onClick={() => setNewBusiness(emptyBusiness(store.newId()))} />
-        <ActionButton icon={Target} label="KPI settings" description="Configure KPI targets and tracking" onClick={() => setKpiOpen(true)} />
-        <ActionButton icon={ShieldAlert} label="Disputes" description="Review disputes and manage issue types" onClick={() => setDisputesOpen(true)} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <Link to="/console/workers" className="flex items-center justify-between rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-pine">
+          <span className="inline-flex items-center gap-2"><Users size={15} /> Workers</span>
+          <ArrowRight size={14} className="text-slate" />
+        </Link>
+        <Link to="/console/businesses" className="flex items-center justify-between rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-pine">
+          <span className="inline-flex items-center gap-2"><Building2 size={15} /> Businesses</span>
+          <ArrowRight size={14} className="text-slate" />
+        </Link>
+        <button
+          onClick={() => store.refresh().then(() => toast.success("Refreshed"))}
+          className="flex items-center justify-between rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-pine"
+        >
+          <span className="inline-flex items-center gap-2"><RefreshCw size={15} /> Refresh</span>
+        </button>
       </div>
 
-      <PlatformConfigModal open={platformOpen} onClose={() => setPlatformOpen(false)} />
-      <ConfirmationWindowModal open={windowOpen} onClose={() => setWindowOpen(false)} />
-      <ManageWorkersDrawer open={workersOpen} onClose={() => setWorkersOpen(false)} />
-      <BusinessModal business={newBusiness} open={!!newBusiness} onClose={() => setNewBusiness(null)} />
-      <KpiSettingsModal open={kpiOpen} onClose={() => setKpiOpen(false)} />
-      <ManageDisputesDrawer open={disputesOpen} onClose={() => setDisputesOpen(false)} />
-    </>
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-ink">Pending approvals</h3>
+          <Pill tone={pending.length ? "amber" : "pine"}>{pending.length} waiting</Pill>
+        </div>
+        {pending.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-line py-6 text-center text-sm text-slate">
+            Nothing waiting for review.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {pending.slice(0, 6).map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-line bg-white px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-ink">{p.type === "business" ? store.businessLabel(p.name) : p.name}</p>
+                  <p className="text-[11px] capitalize text-slate">{p.type}</p>
+                </div>
+                <div className="flex shrink-0 gap-1.5">
+                  <button
+                    onClick={() => act(p.id, p.type, p.name, "approved")}
+                    disabled={busy !== null}
+                    className="inline-flex items-center gap-1 rounded-lg bg-pine-soft px-2 py-1 text-xs font-medium text-pine-dark hover:bg-pine hover:text-white disabled:opacity-50"
+                  >
+                    <Check size={13} /> Approve
+                  </button>
+                  <button
+                    onClick={() => act(p.id, p.type, p.name, "rejected")}
+                    disabled={busy !== null}
+                    className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    <X size={13} /> Reject
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
