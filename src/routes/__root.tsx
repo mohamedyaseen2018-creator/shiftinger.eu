@@ -15,6 +15,7 @@ import { AuthProvider } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import OnboardingGuard from "@/components/site/OnboardingGuard";
+import { SiteContentProvider } from "@/components/site/SiteContentProvider";
 
 function NotFoundComponent() {
   return (
