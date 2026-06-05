@@ -25,6 +25,8 @@ import {
   consoleSetMatchStatus,
   consoleSetAdminRole,
   consoleDeleteUser,
+  consoleSignWorkerDoc,
+  consoleSetWorkerVerified,
   type ConsoleStatus,
 } from "@/lib/console.functions";
 import {
@@ -39,6 +41,8 @@ import {
   consoleDeleteListOption,
   consoleCreateWorker,
   consoleCreateBusiness,
+  consoleUpsertJob,
+  consoleDeleteJob,
 } from "@/lib/consoleConfig.functions";
 
 export type { ConsoleStatus };
@@ -87,6 +91,18 @@ export interface Worker {
   portfolioUrl: string;
   bio: string;
   adminNotes: string;
+  hasCv: boolean;
+  hasDocuments: boolean;
+  idDocumentPath: string;
+}
+
+export interface JobCatalogEntry {
+  id: string;
+  name: string;
+  emoji: string;
+  skills: string[];
+  sortOrder: number;
+  active: boolean;
 }
 
 export interface Business {
@@ -306,6 +322,7 @@ interface StoreValue {
   kpis: Kpi[];
   disputes: Dispute[];
   lists: ListOption[];
+  jobCatalog: JobCatalogEntry[];
 
   refresh: () => Promise<void>;
   saveWorker: (w: Worker) => Promise<void>;
@@ -332,6 +349,10 @@ interface StoreValue {
   deleteDispute: (id: string) => Promise<void>;
   upsertListOption: (o: { id?: string; listKey: ListKey; value: string; active?: boolean; sortOrder?: number }) => Promise<void>;
   deleteListOption: (id: string) => Promise<void>;
+  upsertJob: (j: { id?: string; name: string; emoji?: string; skills?: string[]; active?: boolean; sortOrder?: number }) => Promise<void>;
+  deleteJob: (id: string) => Promise<void>;
+  signWorkerDoc: (userId: string) => Promise<string | null>;
+  setWorkerVerified: (userId: string, verified: boolean, label?: string) => Promise<void>;
 
   listFor: (key: ListKey, includeInactive?: boolean) => string[];
   businessLabel: (name: string, revealed?: boolean) => string;
@@ -354,6 +375,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [lists, setLists] = useState<ListOption[]>([]);
+  const [jobCatalog, setJobCatalog] = useState<JobCatalogEntry[]>([]);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -371,6 +393,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       setKpis(cfg.kpis as Kpi[]);
       setDisputes(cfg.disputes as Dispute[]);
       setLists(cfg.lists as ListOption[]);
+      setJobCatalog(cfg.jobCatalog as JobCatalogEntry[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load console data.");
       throw e;
@@ -399,6 +422,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       kpis,
       disputes,
       lists,
+      jobCatalog,
       refresh,
       saveWorker: async (w) => {
         await consoleUpdateWorker({
@@ -555,6 +579,31 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         await consoleDeleteListOption({ data: { id } });
         await refresh();
       },
+      upsertJob: async (j) => {
+        await consoleUpsertJob({
+          data: {
+            id: j.id,
+            name: j.name,
+            emoji: j.emoji ?? "",
+            skills: j.skills ?? [],
+            active: j.active ?? true,
+            sortOrder: j.sortOrder ?? 0,
+          },
+        });
+        await refresh();
+      },
+      deleteJob: async (id) => {
+        await consoleDeleteJob({ data: { id } });
+        await refresh();
+      },
+      signWorkerDoc: async (userId) => {
+        const res = await consoleSignWorkerDoc({ data: { userId } });
+        return res.url;
+      },
+      setWorkerVerified: async (userId, verified, label) => {
+        await consoleSetWorkerVerified({ data: { userId, verified, targetLabel: label } });
+        await refresh();
+      },
       listFor: (key, includeInactive = false) =>
         lists
           .filter((l) => l.listKey === key && (includeInactive || l.active))
@@ -562,7 +611,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           .map((l) => l.value),
       businessLabel: (name, revealed = false) => maskBusiness(name, revealed),
     }),
-    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, config, confirmationWindow, kpis, disputes, lists, refresh],
+    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

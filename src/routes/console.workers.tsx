@@ -4,6 +4,7 @@ import { Pencil, Star, Loader2, BadgeCheck } from "lucide-react";
 import { PageHeader, Pill } from "@/components/console/ui";
 import { ConsoleTable, type Col } from "@/components/console/ConsoleTable";
 import { WorkerDrawer } from "@/components/console/WorkerDrawer";
+import { cn } from "@/lib/utils";
 import {
   useAdminStore,
   STATUS_LABEL,
@@ -42,6 +43,20 @@ function WorkersPage() {
           {w.rating.toFixed(1)}
         </span>
       ),
+    },
+    {
+      key: "cv",
+      label: "CV",
+      value: (w) => (w.hasCv ? "Yes" : "No"),
+      className: "text-center",
+      render: (w) => <Pill tone={w.hasCv ? "pine" : "red"}>{w.hasCv ? "Yes" : "No"}</Pill>,
+    },
+    {
+      key: "docs",
+      label: "Documents",
+      value: (w) => (w.hasDocuments ? "Yes" : "No"),
+      className: "text-center",
+      render: (w) => <Pill tone={w.hasDocuments ? "pine" : "red"}>{w.hasDocuments ? "Yes" : "No"}</Pill>,
     },
     {
       key: "status",
@@ -92,8 +107,21 @@ function WorkersPage() {
             field: (w) => STATUS_LABEL[w.status],
             options: [...new Set(store.workers.map((w) => STATUS_LABEL[w.status]))],
           },
+          {
+            key: "docs",
+            label: "Documents",
+            field: (w) => (w.hasDocuments ? "Uploaded" : "Missing"),
+            options: ["Uploaded", "Missing"],
+          },
         ]}
-        rowClassName={() => "cursor-pointer"}
+        rowClassName={(w) =>
+          cn(
+            "cursor-pointer",
+            w.hasDocuments
+              ? "bg-pine-soft/40 hover:bg-pine-soft/60"
+              : "bg-red-50 hover:bg-red-100/70",
+          )
+        }
         empty="No workers yet."
         onRowClick={(w) => setEditing(w)}
       />

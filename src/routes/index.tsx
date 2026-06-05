@@ -5,6 +5,7 @@ import SiteLayout from "@/components/site/SiteLayout";
 import JobCard from "@/components/features/JobCard";
 import WorkerCard from "@/components/features/WorkerCard";
 import { MOCK_JOBS, MOCK_WORKERS } from "@/data/mockData";
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 import cafeHero from "@/assets/cafe-hero.jpg";
 
 export const Route = createFileRoute("/")({
@@ -55,12 +56,13 @@ const PRIVACY_ITEMS = [
 
 function HomePage() {
   const [applied, setApplied] = useState<Set<string>>(new Set());
+  const { c } = useSiteContent();
 
   return (
     <SiteLayout>
       {/* Free-tier banner */}
       <div className="bg-teal px-4 py-2 text-center text-xs uppercase tracking-widest text-canvas">
-        First 500 workers &amp; 100 businesses — <span className="font-semibold italic text-gold">free of charge</span>
+        {c("home.banner")}
       </div>
 
       {/* ── HERO (asymmetric + sticky rail) ── */}
@@ -72,28 +74,27 @@ function HomePage() {
               <div className="mb-8 flex items-center gap-3">
                 <span className="h-px w-8 bg-gold/40" />
                 <span className="text-xs font-semibold uppercase tracking-widest text-gold">
-                  Portugal's flexible work platform
+                  {c("home.hero_eyebrow")}
                 </span>
               </div>
               <h1 className="max-w-[18ch] text-balance font-serif text-5xl leading-[1.1] text-ink lg:text-7xl">
-                Find shifts. <span className="italic text-gold">Find talent.</span> Build your income.
+                {c("home.hero_title")}
               </h1>
               <p className="mt-8 max-w-[52ch] text-pretty text-lg text-ink/70">
-                Shiftinger connects immigrants, students, and career-changers with restaurants, cafés,
-                and event businesses across Portugal. Work by shift, grow at your pace.
+                {c("home.hero_subtitle")}
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   to="/register"
                   className="inline-flex h-11 items-center gap-2 rounded-full bg-teal px-6 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
                 >
-                  I'm looking for work <ArrowRight size={16} />
+                  {c("home.hero_cta_primary")} <ArrowRight size={16} />
                 </Link>
                 <Link
                   to="/register"
                   className="inline-flex h-11 items-center rounded-full px-6 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
                 >
-                  I need workers
+                  {c("home.hero_cta_secondary")}
                 </Link>
               </div>
               <div className="mt-12 flex gap-10">
@@ -151,10 +152,10 @@ function HomePage() {
           <div className="mb-16 max-w-xl">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
             <h2 className="mt-3 font-serif text-4xl leading-tight">
-              Simple for both <span className="italic">sides</span>
+              {c("home.how_title")}
             </h2>
             <p className="mt-4 text-canvas/60">
-              Whether you're looking for extra income or need reliable staff on short notice — the process takes minutes.
+              {c("home.how_subtitle")}
             </p>
           </div>
           <div className="grid gap-16 lg:grid-cols-2">
@@ -214,12 +215,10 @@ function HomePage() {
               <div>
                 <div className="mb-4 flex items-center gap-3">
                   <Lock size={20} className="text-gold" />
-                  <h2 className="font-serif text-3xl leading-tight text-ink">Your location is never public</h2>
+                  <h2 className="font-serif text-3xl leading-tight text-ink">{c("home.privacy_title")}</h2>
                 </div>
                 <p className="max-w-[56ch] text-pretty leading-relaxed text-ink/70">
-                  We built privacy into the core of Shiftinger. Businesses post shifts without exposing where they are.
-                  Workers apply without knowing the exact address. Location is shared only in the private chat, after a
-                  worker is accepted and confirms attendance.
+                  {c("home.privacy_body")}
                 </p>
               </div>
               <div className="space-y-3">
@@ -242,9 +241,9 @@ function HomePage() {
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Latest shifts</span>
               <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
-                Shifts open <span className="italic">now</span>
+                {c("home.shifts_title")}
               </h2>
-              <p className="mt-2 text-ink/60">Browse the latest posted shifts across Lisbon, Porto, and beyond.</p>
+              <p className="mt-2 text-ink/60">{c("home.shifts_subtitle")}</p>
             </div>
             <Link
               to="/jobs"
@@ -274,9 +273,9 @@ function HomePage() {
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Available workers</span>
               <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
-                Talent available <span className="italic">today</span>
+                {c("home.talent_title")}
               </h2>
-              <p className="mt-2 text-ink/60">Verified, skill-matched workers ready for shifts across Portugal.</p>
+              <p className="mt-2 text-ink/60">{c("home.talent_subtitle")}</p>
             </div>
             <Link
               to="/talent"

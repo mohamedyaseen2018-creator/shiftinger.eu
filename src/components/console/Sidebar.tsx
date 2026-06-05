@@ -7,6 +7,9 @@ import {
   GitMerge,
   ShieldAlert,
   Settings,
+  FileCheck2,
+  PencilRuler,
+  Home,
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -16,9 +19,11 @@ const NAV = [
   { to: "/console", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/console/workers", label: "Workers", icon: Users },
   { to: "/console/businesses", label: "Businesses", icon: Building2 },
+  { to: "/console/documents", label: "Documents", icon: FileCheck2 },
   { to: "/console/shifts", label: "Shifts", icon: CalendarClock },
   { to: "/console/matches", label: "Matches", icon: GitMerge },
   { to: "/console/disputes", label: "Disputes", icon: ShieldAlert },
+  { to: "/console/content", label: "Site content", icon: PencilRuler },
   { to: "/console/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -39,7 +44,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-pine-dark text-white">
-      <div className="flex items-center gap-2 px-5 py-5">
+      <Link
+        to="/"
+        onClick={onNavigate}
+        title="Back to website"
+        className="flex items-center gap-2 px-5 py-5 transition-colors hover:bg-white/5"
+      >
         <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber text-pine-dark">
           <Zap size={18} />
         </div>
@@ -47,7 +57,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <p className="font-sans text-sm font-bold leading-tight">Shiftinger</p>
           <p className="text-[11px] leading-tight text-white/60">Admin console</p>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex-1 space-y-1 px-3 py-2">
         {NAV.map((item) => (
@@ -65,7 +75,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             {item.label}
           </Link>
         ))}
+
+        <Link
+          to="/"
+          onClick={onNavigate}
+          className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <Home size={18} />
+          Back to website
+        </Link>
       </nav>
+
 
       <div className="border-t border-white/10 px-5 py-4">
         <div className="flex items-center gap-3">

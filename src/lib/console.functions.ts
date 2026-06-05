@@ -58,11 +58,12 @@ export const getConsoleData = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesR, workersR, wContactsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
+    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
       await Promise.all([
         supabaseAdmin.from("profiles").select("*"),
         supabaseAdmin.from("worker_profiles").select("*"),
         supabaseAdmin.from("worker_contacts").select("user_id, phone"),
+        supabaseAdmin.from("worker_documents").select("user_id, id_document_url"),
         supabaseAdmin.from("business_profiles").select("*"),
         supabaseAdmin.from("business_contacts").select("*"),
         supabaseAdmin.from("jobs").select("*"),
@@ -74,6 +75,9 @@ export const getConsoleData = createServerFn({ method: "GET" })
     const profiles = profilesR.data ?? [];
     const profileById = new Map(profiles.map((p) => [p.id, p]));
     const phoneByUser = new Map((wContactsR.data ?? []).map((c) => [c.user_id, c.phone]));
+    const docByUser = new Map(
+      (wDocsR.data ?? []).map((d) => [d.user_id, d.id_document_url as string | null]),
+    );
     const bContactByUser = new Map((bContactsR.data ?? []).map((c) => [c.user_id, c]));
     const businessByOwner = new Map((businessesR.data ?? []).map((b) => [b.user_id, b]));
     const workerByUser = new Map((workersR.data ?? []).map((w) => [w.user_id, w]));
@@ -110,6 +114,9 @@ export const getConsoleData = createServerFn({ method: "GET" })
         bio: w.bio ?? "",
         adminNotes: w.admin_notes ?? "",
         atividadeNumber: w.atividade_number ?? "",
+        hasCv: !!(w.portfolio_url && String(w.portfolio_url).trim()),
+        hasDocuments: !!(docByUser.get(w.user_id) ?? "").toString().trim(),
+        idDocumentPath: (docByUser.get(w.user_id) ?? "") as string,
       };
     });
 
@@ -526,5 +533,63 @@ export const consoleDeleteUser = createServerFn({ method: "POST" })
 
     const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (delErr) throw new Error(delErr.message);
+    return { ok: true };
+  });
+
+// ── READ: signed URL for a worker's uploaded ID document ─────────────────────
+export const consoleSignWorkerDoc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: doc } = await supabaseAdmin
+      .from("worker_documents")
+      .select("id_document_url")
+      .eq("user_id", data.userId)
+      .maybeSingle();
+
+    const path = doc?.id_document_url;
+    if (!path) return { url: null as string | null };
+
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from("worker-docs")
+      .createSignedUrl(path, 60 * 10);
+    if (error) throw new Error(error.message);
+    return { url: signed?.signedUrl ?? null };
+  });
+
+// ── WRITE: set a worker's verification flag (document verification) ───────────
+export const consoleSetWorkerVerified = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        verified: z.boolean(),
+        targetLabel: z.string().max(200).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin
+      .from("worker_profiles")
+      .update({ verified: data.verified })
+      .eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: data.verified ? "document:verified" : "document:unverified",
+      target_type: "worker",
+      target_id: data.userId,
+      target_label: data.targetLabel ?? null,
+      details: { verified: data.verified },
+    });
     return { ok: true };
   });

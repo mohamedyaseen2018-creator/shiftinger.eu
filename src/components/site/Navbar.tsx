@@ -2,12 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-
-const NAV_LINKS = [
-  { label: "Jobs available", to: "/jobs" },
-  { label: "Find talent", to: "/talent" },
-  { label: "For businesses", to: "/for-businesses" },
-];
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
@@ -21,6 +16,12 @@ function Wordmark({ className = "" }: { className?: string }) {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
+  const { c } = useSiteContent();
+  const navLinks = [
+    { label: c("header.nav_jobs"), to: "/jobs" as const },
+    { label: c("header.nav_talent"), to: "/talent" as const },
+    { label: c("header.nav_business"), to: "/for-businesses" as const },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-ink/5 bg-canvas/80 backdrop-blur-md">
@@ -31,7 +32,7 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div className="hidden items-center gap-8 text-sm font-medium md:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -69,13 +70,13 @@ export default function Navbar() {
                 search={{ mode: "signin", role: "worker" }}
                 className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
               >
-                Sign in
+                {c("header.cta_signin")}
               </Link>
               <Link
                 to="/register"
                 className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
               >
-                Get started
+                {c("header.cta_register")}
               </Link>
             </>
           )}
@@ -94,7 +95,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="flex flex-col gap-4 border-t border-ink/5 bg-canvas px-6 py-5 md:hidden">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -132,14 +133,14 @@ export default function Navbar() {
                   className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
                   onClick={() => setOpen(false)}
                 >
-                  Sign in
+                  {c("header.cta_signin")}
                 </Link>
                 <Link
                   to="/register"
                   className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
                   onClick={() => setOpen(false)}
                 >
-                  Get started
+                  {c("header.cta_register")}
                 </Link>
               </>
             )}

@@ -46,12 +46,13 @@ export const getConsoleConfig = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [cfgR, cwR, kpisR, dispR, listsR] = await Promise.all([
+    const [cfgR, cwR, kpisR, dispR, listsR, jobsR] = await Promise.all([
       supabaseAdmin.from("platform_config").select("*").eq("id", 1).maybeSingle(),
       supabaseAdmin.from("confirmation_window").select("*").eq("id", 1).maybeSingle(),
       supabaseAdmin.from("kpi_settings").select("*").order("sort_order", { ascending: true }),
       supabaseAdmin.from("disputes").select("*").order("created_at", { ascending: false }),
       supabaseAdmin.from("platform_lists").select("*").order("sort_order", { ascending: true }),
+      supabaseAdmin.from("job_catalog").select("*").order("sort_order", { ascending: true }),
     ]);
 
     const c = cfgR.data;
@@ -106,6 +107,14 @@ export const getConsoleConfig = createServerFn({ method: "GET" })
         value: l.value,
         active: !!l.active,
         sortOrder: l.sort_order ?? 0,
+      })),
+      jobCatalog: (jobsR.data ?? []).map((j) => ({
+        id: j.id,
+        name: j.name,
+        emoji: j.emoji ?? "",
+        skills: arr(j.skills),
+        sortOrder: j.sort_order ?? 0,
+        active: !!j.active,
       })),
     };
   });
@@ -456,5 +465,51 @@ export const consoleCreateBusiness = createServerFn({ method: "POST" })
       target_label: data.name,
       details: {},
     });
+    return { ok: true };
+  });
+
+// ── WRITE: job catalog upsert (create or edit) ───────────────────────────────
+export const consoleUpsertJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        name: z.string().min(1).max(120),
+        emoji: z.string().max(16).optional().default(""),
+        skills: z.array(z.string().min(1).max(80)).max(40).optional().default([]),
+        active: z.boolean().optional().default(true),
+        sortOrder: z.number().int().min(0).max(9999).optional().default(0),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const row = {
+      name: data.name,
+      emoji: data.emoji,
+      skills: data.skills,
+      active: data.active,
+      sort_order: data.sortOrder,
+    };
+    if (data.id) {
+      const { error } = await supabaseAdmin.from("job_catalog").update(row).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin.from("job_catalog").insert(row);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const consoleDeleteJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("job_catalog").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });

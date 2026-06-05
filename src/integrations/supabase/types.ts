@@ -367,6 +367,39 @@ export type Database = {
         }
         Relationships: []
       }
+      job_catalog: {
+        Row: {
+          active: boolean
+          created_at: string
+          emoji: string
+          id: string
+          name: string
+          skills: Json
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          emoji?: string
+          id?: string
+          name: string
+          skills?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          emoji?: string
+          id?: string
+          name?: string
+          skills?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           atividade: string
@@ -715,6 +748,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_content: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

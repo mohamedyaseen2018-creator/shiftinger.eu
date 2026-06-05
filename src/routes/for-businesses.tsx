@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle, ArrowRight, Shield, Clock, MessageCircle, Star, Zap } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 
 export const Route = createFileRoute("/for-businesses")({
   head: () => ({
@@ -38,34 +39,32 @@ const STATS = [
 ];
 
 function ForBusinessesPage() {
+  const { c } = useSiteContent();
   return (
     <SiteLayout>
       {/* Hero */}
       <section className="bg-ink px-6 py-20 lg:px-12">
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-gold">For businesses</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-gold">{c("why.hero_eyebrow")}</span>
             <h1 className="mt-4 font-serif text-4xl leading-tight text-canvas sm:text-5xl">
-              Post a shift tonight.
-              <br />
-              <span className="italic text-gold">Have someone confirmed by morning.</span>
+              {c("why.hero_title")}
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-canvas/70">
-              No agencies, no long contracts, no placement fees. Shiftinger connects you directly with verified,
-              skill-matched workers across Portugal — in hours, not days.
+              {c("why.hero_subtitle")}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/register"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-gold-dark"
               >
-                Register your business <ArrowRight size={16} />
+                {c("why.hero_cta_primary")} <ArrowRight size={16} />
               </Link>
               <Link
                 to="/talent"
                 className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium text-canvas ring-1 ring-canvas/20 transition-colors hover:bg-canvas/5"
               >
-                Browse available workers
+                {c("why.hero_cta_secondary")}
               </Link>
             </div>
           </div>
@@ -86,7 +85,7 @@ function ForBusinessesPage() {
           <div className="mb-14 text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
             <h2 className="mt-2 font-serif text-4xl text-ink">
-              From post to confirmed <span className="italic">in hours</span>
+              {c("why.process_title")}
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -107,7 +106,7 @@ function ForBusinessesPage() {
           <div className="mb-12 text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">Platform features</span>
             <h2 className="mt-2 font-serif text-4xl text-ink">
-              Everything you need to <span className="italic">hire faster</span>
+              {c("why.features_title")}
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -124,7 +123,7 @@ function ForBusinessesPage() {
               to="/register"
               className="inline-flex items-center gap-2 rounded-full bg-teal px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
             >
-              Get started — it's free <ArrowRight size={16} />
+              {c("why.features_cta")} <ArrowRight size={16} />
             </Link>
           </div>
         </div>
