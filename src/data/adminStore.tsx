@@ -87,6 +87,18 @@ export interface Worker {
   portfolioUrl: string;
   bio: string;
   adminNotes: string;
+  hasCv: boolean;
+  hasDocuments: boolean;
+  idDocumentPath: string;
+}
+
+export interface JobCatalogEntry {
+  id: string;
+  name: string;
+  emoji: string;
+  skills: string[];
+  sortOrder: number;
+  active: boolean;
 }
 
 export interface Business {
