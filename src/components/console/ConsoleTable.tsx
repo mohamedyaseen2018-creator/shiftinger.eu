@@ -132,6 +132,7 @@ export function ConsoleTable<T>({
             {pageRows.map((row) => (
               <tr
                 key={rowKey(row)}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={cn(
                   "border-b border-line/70 last:border-0 hover:bg-mist/50",
                   rowClassName?.(row),
