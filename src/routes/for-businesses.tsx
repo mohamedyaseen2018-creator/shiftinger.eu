@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle, ArrowRight, Shield, Clock, MessageCircle, Star, Zap } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 
 export const Route = createFileRoute("/for-businesses")({
   head: () => ({
