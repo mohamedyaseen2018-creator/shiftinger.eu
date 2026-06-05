@@ -28,21 +28,23 @@ export function Panel({
 }
 
 // ── KPI / stat card ──
-export function StatCard({ label, value, delta }: { label: string; value: string; delta: number }) {
-  const up = delta >= 0;
+export function StatCard({ label, value, delta }: { label: string; value: string; delta?: number }) {
+  const up = (delta ?? 0) >= 0;
   return (
     <div className="rounded-2xl border border-line bg-white p-4 shadow-sm">
       <p className="text-xs font-medium text-slate">{label}</p>
       <p className="mt-2 font-sans text-2xl font-bold text-ink">{value}</p>
-      <div
-        className={cn(
-          "mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-          up ? "bg-pine-soft text-pine-dark" : "bg-red-50 text-red-600",
-        )}
-      >
-        {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-        {Math.abs(delta)}% <span className="font-normal text-slate">vs last month</span>
-      </div>
+      {delta !== undefined && (
+        <div
+          className={cn(
+            "mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+            up ? "bg-pine-soft text-pine-dark" : "bg-red-50 text-red-600",
+          )}
+        >
+          {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+          {Math.abs(delta)}% <span className="font-normal text-slate">vs last month</span>
+        </div>
+      )}
     </div>
   );
 }
