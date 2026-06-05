@@ -2,12 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-
-const NAV_LINKS = [
-  { label: "Jobs available", to: "/jobs" },
-  { label: "Find talent", to: "/talent" },
-  { label: "For businesses", to: "/for-businesses" },
-];
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
