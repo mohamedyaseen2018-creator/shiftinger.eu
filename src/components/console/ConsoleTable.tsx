@@ -30,6 +30,7 @@ interface Props<T> {
   pageSize?: number;
   empty?: string;
   rowClassName?: (row: T) => string;
+  onRowClick?: (row: T) => void;
 }
 
 export function ConsoleTable<T>({
@@ -43,6 +44,7 @@ export function ConsoleTable<T>({
   pageSize = 8,
   empty = "Nothing here yet.",
   rowClassName,
+  onRowClick,
 }: Props<T>) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<Record<string, string>>({});
