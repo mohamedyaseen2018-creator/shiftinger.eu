@@ -4,6 +4,7 @@ import { Pencil, Star, Loader2, BadgeCheck } from "lucide-react";
 import { PageHeader, Pill } from "@/components/console/ui";
 import { ConsoleTable, type Col } from "@/components/console/ConsoleTable";
 import { WorkerDrawer } from "@/components/console/WorkerDrawer";
+import { cn } from "@/lib/utils";
 import {
   useAdminStore,
   STATUS_LABEL,
