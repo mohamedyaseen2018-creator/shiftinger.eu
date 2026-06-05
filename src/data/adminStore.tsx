@@ -349,6 +349,10 @@ interface StoreValue {
   deleteDispute: (id: string) => Promise<void>;
   upsertListOption: (o: { id?: string; listKey: ListKey; value: string; active?: boolean; sortOrder?: number }) => Promise<void>;
   deleteListOption: (id: string) => Promise<void>;
+  upsertJob: (j: { id?: string; name: string; emoji?: string; skills?: string[]; active?: boolean; sortOrder?: number }) => Promise<void>;
+  deleteJob: (id: string) => Promise<void>;
+  signWorkerDoc: (userId: string) => Promise<string | null>;
+  setWorkerVerified: (userId: string, verified: boolean, label?: string) => Promise<void>;
 
   listFor: (key: ListKey, includeInactive?: boolean) => string[];
   businessLabel: (name: string, revealed?: boolean) => string;
