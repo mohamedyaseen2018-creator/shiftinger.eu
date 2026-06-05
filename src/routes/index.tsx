@@ -74,28 +74,27 @@ function HomePage() {
               <div className="mb-8 flex items-center gap-3">
                 <span className="h-px w-8 bg-gold/40" />
                 <span className="text-xs font-semibold uppercase tracking-widest text-gold">
-                  Portugal's flexible work platform
+                  {c("home.hero_eyebrow")}
                 </span>
               </div>
               <h1 className="max-w-[18ch] text-balance font-serif text-5xl leading-[1.1] text-ink lg:text-7xl">
-                Find shifts. <span className="italic text-gold">Find talent.</span> Build your income.
+                {c("home.hero_title")}
               </h1>
               <p className="mt-8 max-w-[52ch] text-pretty text-lg text-ink/70">
-                Shiftinger connects immigrants, students, and career-changers with restaurants, cafés,
-                and event businesses across Portugal. Work by shift, grow at your pace.
+                {c("home.hero_subtitle")}
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   to="/register"
                   className="inline-flex h-11 items-center gap-2 rounded-full bg-teal px-6 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
                 >
-                  I'm looking for work <ArrowRight size={16} />
+                  {c("home.hero_cta_primary")} <ArrowRight size={16} />
                 </Link>
                 <Link
                   to="/register"
                   className="inline-flex h-11 items-center rounded-full px-6 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
                 >
-                  I need workers
+                  {c("home.hero_cta_secondary")}
                 </Link>
               </div>
               <div className="mt-12 flex gap-10">
