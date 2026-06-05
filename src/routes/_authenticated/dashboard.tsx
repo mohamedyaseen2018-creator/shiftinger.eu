@@ -74,7 +74,7 @@ function DashboardPage() {
             </div>
             <div className="flex items-center gap-3">
               {isAdmin && (
-                <Link to="/admin" className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-canvas hover:bg-ink/90">
+                <Link to="/console" className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-canvas hover:bg-ink/90">
                   Admin
                 </Link>
               )}

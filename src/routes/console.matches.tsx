@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, Check, X } from "lucide-react";
+import { Check, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Pill, statusTone } from "@/components/console/ui";
 import { ConsoleTable, type Col } from "@/components/console/ConsoleTable";
-import { MATCHES, businessById, maskBusiness, type AdminMatch } from "@/data/adminMock";
+import { useAdminStore, type Match } from "@/data/adminStore";
 
 export const Route = createFileRoute("/console/matches")({
   head: () => ({ meta: [{ title: "Matches — Shiftinger admin" }] }),
@@ -11,20 +11,16 @@ export const Route = createFileRoute("/console/matches")({
 });
 
 function MatchesPage() {
-  const columns: Col<AdminMatch>[] = [
+  const store = useAdminStore();
+
+  const columns: Col<Match>[] = [
     { key: "id", label: "Match", value: (m) => m.id, render: (m) => <span className="font-mono text-xs">{m.id}</span> },
     { key: "worker", label: "Worker", value: (m) => m.workerName },
     {
       key: "business",
       label: "Business",
-      value: (m) => {
-        const b = businessById(m.businessId);
-        return b ? maskBusiness(b.name, m.status === "confirmed") : "—";
-      },
-      render: (m) => {
-        const b = businessById(m.businessId);
-        return <span className="font-mono text-ink">{b ? maskBusiness(b.name, m.status === "confirmed") : "—"}</span>;
-      },
+      value: (m) => store.businessLabel(m.businessId, m.status === "confirmed"),
+      render: (m) => <span className="font-mono text-ink">{store.businessLabel(m.businessId, m.status === "confirmed")}</span>,
     },
     { key: "role", label: "Role", value: (m) => m.role },
     { key: "date", label: "Date", value: (m) => m.date },
@@ -35,10 +31,7 @@ function MatchesPage() {
       render: (m) => (
         <span className="flex items-center gap-2">
           <span className="h-1.5 w-16 overflow-hidden rounded-full bg-mist">
-            <span
-              className="block h-full rounded-full bg-pine"
-              style={{ width: `${m.score}%` }}
-            />
+            <span className="block h-full rounded-full bg-pine" style={{ width: `${m.score}%` }} />
           </span>
           <span className="text-xs font-medium text-ink">{m.score}%</span>
         </span>
@@ -58,25 +51,25 @@ function MatchesPage() {
       render: (m) => (
         <div className="flex items-center gap-1">
           <button
-            onClick={() => toast.info(`Opening ${m.id}`)}
-            className="rounded-lg p-1.5 text-slate hover:bg-mist hover:text-ink"
-            title="View"
-          >
-            <Eye size={16} />
-          </button>
-          <button
-            onClick={() => toast.success(`${m.id} confirmed`)}
+            onClick={() => { store.upsertMatch({ ...m, status: "confirmed" }); toast.success(`${m.id} confirmed`); }}
             className="rounded-lg p-1.5 text-slate hover:bg-pine-soft hover:text-pine-dark"
             title="Confirm"
           >
             <Check size={16} />
           </button>
           <button
-            onClick={() => toast.error(`${m.id} declined`)}
-            className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600"
+            onClick={() => { store.upsertMatch({ ...m, status: "declined" }); toast.error(`${m.id} declined`); }}
+            className="rounded-lg p-1.5 text-slate hover:bg-amber-soft hover:text-amber-dark"
             title="Decline"
           >
             <X size={16} />
+          </button>
+          <button
+            onClick={() => { store.removeMatch(m.id); toast.success(`${m.id} deleted`); }}
+            className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600"
+            title="Delete"
+          >
+            <Trash2 size={16} />
           </button>
         </div>
       ),
@@ -87,15 +80,13 @@ function MatchesPage() {
     <div>
       <PageHeader title="Matches" subtitle="Worker-to-shift pairings and their match quality" />
       <ConsoleTable
-        rows={MATCHES}
+        rows={store.matches}
         columns={columns}
         rowKey={(m) => m.id}
         csvName="matches"
         searchPlaceholder="Search by worker or match…"
         search={(m) => `${m.id} ${m.workerName} ${m.role}`}
-        filters={[
-          { key: "status", label: "Status", field: (m) => m.status, options: ["pending", "confirmed", "declined"] },
-        ]}
+        filters={[{ key: "status", label: "Status", field: (m) => m.status, options: ["pending", "confirmed", "declined"] }]}
       />
     </div>
   );
