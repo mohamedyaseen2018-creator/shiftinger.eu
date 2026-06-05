@@ -5,6 +5,7 @@ import SiteLayout from "@/components/site/SiteLayout";
 import JobCard from "@/components/features/JobCard";
 import WorkerCard from "@/components/features/WorkerCard";
 import { MOCK_JOBS, MOCK_WORKERS } from "@/data/mockData";
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 import cafeHero from "@/assets/cafe-hero.jpg";
 
 export const Route = createFileRoute("/")({
