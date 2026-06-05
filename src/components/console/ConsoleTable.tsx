@@ -29,6 +29,7 @@ interface Props<T> {
   filters?: FilterSpec<T>[];
   pageSize?: number;
   empty?: string;
+  rowClassName?: (row: T) => string;
 }
 
 export function ConsoleTable<T>({
@@ -41,6 +42,7 @@ export function ConsoleTable<T>({
   filters = [],
   pageSize = 8,
   empty = "Nothing here yet.",
+  rowClassName,
 }: Props<T>) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<Record<string, string>>({});
