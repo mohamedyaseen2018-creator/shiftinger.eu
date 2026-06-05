@@ -1,35 +1,49 @@
-import {
-  UserPlus,
-  CheckCircle2,
-  Clock,
-  Flag,
-  ShieldAlert,
-  type LucideIcon,
-} from "lucide-react";
-import { ACTIVITY, type ActivityKind } from "@/data/adminMock";
+import { Activity, ShieldCheck, ShieldX, Trash2, UserCog, Ban } from "lucide-react";
+import { useAdminStore, type AuditEntry } from "@/data/adminStore";
 import { timeAgo } from "@/data/utils";
 
-const ICONS: Record<ActivityKind, { icon: LucideIcon; bg: string; fg: string }> = {
-  worker_registered: { icon: UserPlus, bg: "bg-pine-soft", fg: "text-pine-dark" },
-  shift_confirmed: { icon: CheckCircle2, bg: "bg-pine-soft", fg: "text-pine-dark" },
-  application_pending: { icon: Clock, bg: "bg-amber-soft", fg: "text-amber-dark" },
-  business_flagged: { icon: Flag, bg: "bg-red-50", fg: "text-red-600" },
-  dispute_raised: { icon: ShieldAlert, bg: "bg-red-50", fg: "text-red-600" },
-};
+function describe(a: AuditEntry): { icon: typeof Activity; label: string; tone: string } {
+  const action = a.action ?? "";
+  const who = a.targetLabel ? ` · ${a.targetLabel}` : "";
+  if (action.startsWith("status:approved"))
+    return { icon: ShieldCheck, label: `Approved ${a.targetType ?? "account"}${who}`, tone: "text-pine-dark" };
+  if (action.startsWith("status:rejected"))
+    return { icon: ShieldX, label: `Rejected ${a.targetType ?? "account"}${who}`, tone: "text-red-600" };
+  if (action.startsWith("status:blocked"))
+    return { icon: Ban, label: `Blocked ${a.targetType ?? "account"}${who}`, tone: "text-red-600" };
+  if (action.startsWith("status:"))
+    return { icon: UserCog, label: `Status changed${who}`, tone: "text-amber-dark" };
+  if (action === "role:grant_admin")
+    return { icon: ShieldCheck, label: `Granted admin${who}`, tone: "text-pine-dark" };
+  if (action === "role:revoke_admin")
+    return { icon: ShieldX, label: `Revoked admin${who}`, tone: "text-red-600" };
+  if (action === "delete")
+    return { icon: Trash2, label: `Deleted ${a.targetType ?? "user"}${who}`, tone: "text-red-600" };
+  return { icon: Activity, label: `${action}${who}`, tone: "text-slate" };
+}
 
 export function ActivityFeed() {
+  const { audit } = useAdminStore();
+
+  if (audit.length === 0) {
+    return <p className="py-8 text-center text-sm text-slate">No admin activity yet.</p>;
+  }
+
   return (
     <ul className="space-y-3">
-      {ACTIVITY.map((a) => {
-        const { icon: Icon, bg, fg } = ICONS[a.kind];
+      {audit.slice(0, 12).map((a) => {
+        const d = describe(a);
         return (
           <li key={a.id} className="flex items-start gap-3">
-            <span className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full ${bg} ${fg}`}>
-              <Icon size={15} />
+            <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-mist">
+              <d.icon size={14} className={d.tone} />
             </span>
             <div className="min-w-0">
-              <p className="text-sm leading-snug text-ink">{a.label}</p>
-              <p className="text-xs text-slate">{timeAgo(a.ts)}</p>
+              <p className="truncate text-sm text-ink">{d.label}</p>
+              <p className="text-[11px] text-slate">
+                {a.adminEmail ? `${a.adminEmail} · ` : ""}
+                {timeAgo(a.createdAt)}
+              </p>
             </div>
           </li>
         );
