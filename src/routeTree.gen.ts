@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConsoleIndexRouteImport } from './routes/console.index'
 import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
 import { Route as ConsoleShiftsRouteImport } from './routes/console.shifts'
+import { Route as ConsoleSettingsRouteImport } from './routes/console.settings'
 import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
 import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
 import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
@@ -97,6 +98,11 @@ const ConsoleShiftsRoute = ConsoleShiftsRouteImport.update({
   path: '/shifts',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleSettingsRoute = ConsoleSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const ConsoleMatchesRoute = ConsoleMatchesRouteImport.update({
   id: '/matches',
   path: '/matches',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
+  '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
+  '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console': typeof ConsoleIndexRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
+  '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/console/businesses'
     | '/console/disputes'
     | '/console/matches'
+    | '/console/settings'
     | '/console/shifts'
     | '/console/workers'
     | '/console/'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/console/businesses'
     | '/console/disputes'
     | '/console/matches'
+    | '/console/settings'
     | '/console/shifts'
     | '/console/workers'
     | '/console'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/console/businesses'
     | '/console/disputes'
     | '/console/matches'
+    | '/console/settings'
     | '/console/shifts'
     | '/console/workers'
     | '/console/'
@@ -403,6 +415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleShiftsRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/settings': {
+      id: '/console/settings'
+      path: '/settings'
+      fullPath: '/console/settings'
+      preLoaderRoute: typeof ConsoleSettingsRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/console/matches': {
       id: '/console/matches'
       path: '/matches'
@@ -503,6 +522,7 @@ interface ConsoleRouteChildren {
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
   ConsoleDisputesRoute: typeof ConsoleDisputesRoute
   ConsoleMatchesRoute: typeof ConsoleMatchesRoute
+  ConsoleSettingsRoute: typeof ConsoleSettingsRoute
   ConsoleShiftsRoute: typeof ConsoleShiftsRoute
   ConsoleWorkersRoute: typeof ConsoleWorkersRoute
   ConsoleIndexRoute: typeof ConsoleIndexRoute
@@ -512,6 +532,7 @@ const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleBusinessesRoute: ConsoleBusinessesRoute,
   ConsoleDisputesRoute: ConsoleDisputesRoute,
   ConsoleMatchesRoute: ConsoleMatchesRoute,
+  ConsoleSettingsRoute: ConsoleSettingsRoute,
   ConsoleShiftsRoute: ConsoleShiftsRoute,
   ConsoleWorkersRoute: ConsoleWorkersRoute,
   ConsoleIndexRoute: ConsoleIndexRoute,
