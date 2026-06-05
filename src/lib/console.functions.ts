@@ -44,6 +44,11 @@ function arr(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 }
 
+function maskInitials(name: string): string {
+  const initials = name.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join(".");
+  return initials ? `${initials}.***` : "—";
+}
+
 export type ConsoleStatus = (typeof PROFILE_STATUS)[number];
 
 // ── READ: full console snapshot ──────────────────────────────────────────────
