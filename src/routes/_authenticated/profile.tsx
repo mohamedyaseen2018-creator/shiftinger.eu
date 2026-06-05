@@ -115,6 +115,8 @@ function WorkerEdit({ userId }: { userId: string }) {
         nationality: (data.nationality as string) || null,
         main_role: data.main_role as string,
         main_role_years: Number(data.main_role_years) || 0,
+        sub_roles: subRoles,
+        portfolio_url: (data.portfolio_url as string) || null,
         min_rate: Number(data.min_rate) || 0,
         bio: (data.bio as string) || null,
         atividade: Boolean(data.atividade),
