@@ -237,6 +237,18 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
             <Rocket size={13} /> Available for immediate start
           </span>
         </div>
+
+        {/* CV / portfolio link */}
+        {portfolioUrl && (
+          <a
+            href={portfolioUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/10"
+          >
+            <FileText size={13} /> View CV / portfolio
+          </a>
+        )}
       </div>
 
       {/* ── Footer / contact ── */}
