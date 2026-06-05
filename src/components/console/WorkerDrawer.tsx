@@ -226,6 +226,10 @@ export function WorkerDrawer({
             <Field label="Bio">
               <TextArea value={form.bio} onChange={(e) => set({ bio: e.target.value })} />
             </Field>
+
+            <Field label="Admin notes" hint="Internal — never shown to the worker">
+              <TextArea value={form.adminNotes} onChange={(e) => set({ adminNotes: e.target.value })} />
+            </Field>
           </div>
 
           <SheetFooter className="mt-auto flex-row items-center justify-between gap-2 border-t border-line bg-white px-6 py-4">
