@@ -70,13 +70,13 @@ export default function Navbar() {
                 search={{ mode: "signin", role: "worker" }}
                 className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
               >
-                Sign in
+                {c("header.cta_signin")}
               </Link>
               <Link
                 to="/register"
                 className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
               >
-                Get started
+                {c("header.cta_register")}
               </Link>
             </>
           )}
