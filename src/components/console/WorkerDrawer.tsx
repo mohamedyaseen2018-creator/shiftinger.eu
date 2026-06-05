@@ -63,22 +63,12 @@ export function WorkerDrawer({
     setErrors({});
   }, [worker]);
 
-  const nationalityOptions = useMemo(
-    () => [...new Set(store.workers.map((w) => w.nationality).filter(Boolean))],
-    [store.workers],
-  );
-  const cityOptions = useMemo(
-    () => [...new Set(store.workers.map((w) => w.city).filter(Boolean))],
-    [store.workers],
-  );
-  const languageOptions = useMemo(
-    () => [...new Set(store.workers.flatMap((w) => w.languages))],
-    [store.workers],
-  );
-  const roleOptions = useMemo(
-    () => [...new Set(store.workers.flatMap((w) => [w.mainRole, ...w.subRoles]).filter(Boolean))],
-    [store.workers],
-  );
+  const nationalityOptions = store.listFor("nationality");
+  const cityOptions = store.listFor("city");
+  const languageOptions = store.listFor("language");
+  const roleOptions = store.listFor("skill");
+  const addOption = (listKey: ListKey) => (value: string) =>
+    store.upsertListOption({ listKey, value }).catch(() => {});
 
   if (!form) return null;
   const set = (patch: Partial<Worker>) => setForm((f) => (f ? { ...f, ...patch } : f));
