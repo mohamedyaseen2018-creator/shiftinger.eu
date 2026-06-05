@@ -108,6 +108,14 @@ export const getConsoleConfig = createServerFn({ method: "GET" })
         active: !!l.active,
         sortOrder: l.sort_order ?? 0,
       })),
+      jobCatalog: (jobsR.data ?? []).map((j) => ({
+        id: j.id,
+        name: j.name,
+        emoji: j.emoji ?? "",
+        skills: arr(j.skills),
+        sortOrder: j.sort_order ?? 0,
+        active: !!j.active,
+      })),
     };
   });
 
