@@ -322,6 +322,7 @@ interface StoreValue {
   kpis: Kpi[];
   disputes: Dispute[];
   lists: ListOption[];
+  jobCatalog: JobCatalogEntry[];
 
   refresh: () => Promise<void>;
   saveWorker: (w: Worker) => Promise<void>;
