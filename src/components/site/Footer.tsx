@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
+import { useSiteContent } from "@/components/site/SiteContentProvider";
 
 const WORKER_LINKS = [
   { label: "Browse shifts", to: "/jobs" },
@@ -14,6 +15,7 @@ const BUSINESS_LINKS = [
 ];
 
 export default function Footer() {
+  const { c } = useSiteContent();
   return (
     <footer className="border-t border-ink/5 bg-ink text-canvas/80">
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-12">
@@ -24,12 +26,12 @@ export default function Footer() {
               <span className="font-serif italic text-gold">inger</span>
             </span>
             <p className="mt-3 text-sm leading-relaxed text-canvas/60">
-              Connecting workers and businesses across Portugal. Flexible, fair, and private by design.
+              {c("footer.tagline")}
             </p>
           </div>
 
           <div>
-            <h4 className="mb-4 font-medium text-canvas">For workers</h4>
+            <h4 className="mb-4 font-medium text-canvas">{c("footer.col_workers_title")}</h4>
             <ul className="space-y-2.5">
               {WORKER_LINKS.map((l) => (
                 <li key={l.label}>
@@ -42,7 +44,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 font-medium text-canvas">For businesses</h4>
+            <h4 className="mb-4 font-medium text-canvas">{c("footer.col_business_title")}</h4>
             <ul className="space-y-2.5">
               {BUSINESS_LINKS.map((l) => (
                 <li key={l.label}>
@@ -55,7 +57,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 font-medium text-canvas">Contact us</h4>
+            <h4 className="mb-4 font-medium text-canvas">{c("footer.contact_title")}</h4>
             <a
               href="https://wa.me/351938847723"
               target="_blank"
@@ -63,20 +65,14 @@ export default function Footer() {
               className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
             >
               <MessageCircle size={16} />
-              Chat on WhatsApp
+              {c("footer.contact_cta")}
             </a>
-            <p className="mt-3 text-xs leading-relaxed text-canvas/50">
-              Available Mon–Sat, 09:00–20:00 (Lisbon time).
-              <br />
-              Response within 2 hours.
-            </p>
+            <p className="mt-3 text-xs leading-relaxed text-canvas/50">{c("footer.contact_hours")}</p>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-canvas/10 pt-8 sm:flex-row">
-          <p className="text-xs text-canvas/40">
-            © 2025 Shiftinger. All rights reserved. Built for Portugal's flexible workforce.
-          </p>
+          <p className="text-xs text-canvas/40">{c("footer.copyright")}</p>
           <div className="flex items-center gap-6">
             {["Privacy policy", "Terms of service", "Cookies"].map((item) => (
               <span key={item} className="cursor-pointer text-xs text-canvas/40 transition-colors hover:text-canvas/70">
