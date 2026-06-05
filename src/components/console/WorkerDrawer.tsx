@@ -127,16 +127,37 @@ export function WorkerDrawer({
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nationality">
-                <TextInput value={form.nationality} onChange={(e) => set({ nationality: e.target.value })} />
+                <ManagedSelect
+                  value={form.nationality}
+                  onChange={(v) => set({ nationality: v })}
+                  options={nationalityOptions}
+                  onAddOption={addOption("nationality")}
+                  placeholder="New nationality…"
+                  allowEmpty
+                />
               </Field>
               <Field label="City">
-                <TextInput value={form.city} onChange={(e) => set({ city: e.target.value })} />
+                <ManagedSelect
+                  value={form.city}
+                  onChange={(v) => set({ city: v })}
+                  options={cityOptions}
+                  onAddOption={addOption("city")}
+                  placeholder="New city…"
+                  allowEmpty
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Main role">
-                <TextInput value={form.mainRole} onChange={(e) => set({ mainRole: e.target.value })} />
+                <ManagedSelect
+                  value={form.mainRole}
+                  onChange={(v) => set({ mainRole: v })}
+                  options={roleOptions}
+                  onAddOption={addOption("skill")}
+                  placeholder="New role…"
+                  allowEmpty
+                />
               </Field>
               <Field label="Years in main role">
                 <TextInput
@@ -148,12 +169,12 @@ export function WorkerDrawer({
               </Field>
             </div>
 
-            <Field label="Secondary roles">
+            <Field label="Skills / secondary roles">
               <TagMultiSelect
                 selected={form.subRoles}
                 options={roleOptions}
                 onChange={(v) => set({ subRoles: v })}
-                onAddOption={noop}
+                onAddOption={addOption("skill")}
                 placeholder="New role…"
               />
             </Field>
@@ -163,7 +184,7 @@ export function WorkerDrawer({
                 selected={form.languages}
                 options={languageOptions}
                 onChange={(v) => set({ languages: v })}
-                onAddOption={noop}
+                onAddOption={addOption("language")}
                 placeholder="New language…"
               />
             </Field>
@@ -174,6 +195,11 @@ export function WorkerDrawer({
               checked={form.atividade}
               onChange={(v) => set({ atividade: v })}
             />
+            {form.atividade && (
+              <Field label="Atividade registration number">
+                <TextInput value={form.atividadeNumber} onChange={(e) => set({ atividadeNumber: e.target.value })} placeholder="e.g. 123456789" />
+              </Field>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Review status">
