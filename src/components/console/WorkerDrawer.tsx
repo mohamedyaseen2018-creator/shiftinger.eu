@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Star, Mail, Phone, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -30,18 +30,18 @@ import {
   TextInput,
   TextArea,
   SelectInput,
+  ManagedSelect,
   ToggleRow,
   TagMultiSelect,
   PrimaryButton,
   GhostButton,
 } from "@/components/console/forms";
+import type { ListKey } from "@/data/adminStore";
 
 const STATUS_OPTIONS = (Object.keys(STATUS_LABEL) as ConsoleStatus[]).map((value) => ({
   value,
   label: STATUS_LABEL[value],
 }));
-
-const noop = () => {};
 
 export function WorkerDrawer({
   worker,
@@ -63,22 +63,12 @@ export function WorkerDrawer({
     setErrors({});
   }, [worker]);
 
-  const nationalityOptions = useMemo(
-    () => [...new Set(store.workers.map((w) => w.nationality).filter(Boolean))],
-    [store.workers],
-  );
-  const cityOptions = useMemo(
-    () => [...new Set(store.workers.map((w) => w.city).filter(Boolean))],
-    [store.workers],
-  );
-  const languageOptions = useMemo(
-    () => [...new Set(store.workers.flatMap((w) => w.languages))],
-    [store.workers],
-  );
-  const roleOptions = useMemo(
-    () => [...new Set(store.workers.flatMap((w) => [w.mainRole, ...w.subRoles]).filter(Boolean))],
-    [store.workers],
-  );
+  const nationalityOptions = store.listFor("nationality");
+  const cityOptions = store.listFor("city");
+  const languageOptions = store.listFor("language");
+  const roleOptions = store.listFor("skill");
+  const addOption = (listKey: ListKey) => (value: string) =>
+    store.upsertListOption({ listKey, value }).catch(() => {});
 
   if (!form) return null;
   const set = (patch: Partial<Worker>) => setForm((f) => (f ? { ...f, ...patch } : f));
@@ -137,16 +127,37 @@ export function WorkerDrawer({
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nationality">
-                <TextInput value={form.nationality} onChange={(e) => set({ nationality: e.target.value })} />
+                <ManagedSelect
+                  value={form.nationality}
+                  onChange={(v) => set({ nationality: v })}
+                  options={nationalityOptions}
+                  onAddOption={addOption("nationality")}
+                  placeholder="New nationality…"
+                  allowEmpty
+                />
               </Field>
               <Field label="City">
-                <TextInput value={form.city} onChange={(e) => set({ city: e.target.value })} />
+                <ManagedSelect
+                  value={form.city}
+                  onChange={(v) => set({ city: v })}
+                  options={cityOptions}
+                  onAddOption={addOption("city")}
+                  placeholder="New city…"
+                  allowEmpty
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Main role">
-                <TextInput value={form.mainRole} onChange={(e) => set({ mainRole: e.target.value })} />
+                <ManagedSelect
+                  value={form.mainRole}
+                  onChange={(v) => set({ mainRole: v })}
+                  options={roleOptions}
+                  onAddOption={addOption("skill")}
+                  placeholder="New role…"
+                  allowEmpty
+                />
               </Field>
               <Field label="Years in main role">
                 <TextInput
@@ -158,12 +169,12 @@ export function WorkerDrawer({
               </Field>
             </div>
 
-            <Field label="Secondary roles">
+            <Field label="Skills / secondary roles">
               <TagMultiSelect
                 selected={form.subRoles}
                 options={roleOptions}
                 onChange={(v) => set({ subRoles: v })}
-                onAddOption={noop}
+                onAddOption={addOption("skill")}
                 placeholder="New role…"
               />
             </Field>
@@ -173,7 +184,7 @@ export function WorkerDrawer({
                 selected={form.languages}
                 options={languageOptions}
                 onChange={(v) => set({ languages: v })}
-                onAddOption={noop}
+                onAddOption={addOption("language")}
                 placeholder="New language…"
               />
             </Field>
@@ -184,6 +195,11 @@ export function WorkerDrawer({
               checked={form.atividade}
               onChange={(v) => set({ atividade: v })}
             />
+            {form.atividade && (
+              <Field label="Atividade registration number">
+                <TextInput value={form.atividadeNumber} onChange={(e) => set({ atividadeNumber: e.target.value })} placeholder="e.g. 123456789" />
+              </Field>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Review status">
@@ -209,6 +225,10 @@ export function WorkerDrawer({
 
             <Field label="Bio">
               <TextArea value={form.bio} onChange={(e) => set({ bio: e.target.value })} />
+            </Field>
+
+            <Field label="Admin notes" hint="Internal — never shown to the worker">
+              <TextArea value={form.adminNotes} onChange={(e) => set({ adminNotes: e.target.value })} />
             </Field>
           </div>
 

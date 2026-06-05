@@ -1,9 +1,10 @@
 // ============================================================================
-// Admin console store — now backed by REAL platform data.
+// Admin console store — backed by REAL platform data.
 //
-// On mount it loads a full snapshot via the admin-gated `getConsoleData` server
-// function and exposes typed entities plus async mutators that persist through
-// admin server functions and refresh the snapshot.
+// Loads the platform snapshot (workers/businesses/shifts/matches) plus the
+// configuration snapshot (platform config, confirmation window, KPIs, disputes,
+// editable dropdown lists) via admin-gated server functions, and exposes typed
+// entities plus async mutators that persist and refresh.
 // ============================================================================
 
 import {
@@ -26,6 +27,19 @@ import {
   consoleDeleteUser,
   type ConsoleStatus,
 } from "@/lib/console.functions";
+import {
+  getConsoleConfig,
+  consoleSaveConfig,
+  consoleSaveConfirmationWindow,
+  consoleUpsertKpi,
+  consoleDeleteKpi,
+  consoleUpsertDispute,
+  consoleDeleteDispute,
+  consoleUpsertListOption,
+  consoleDeleteListOption,
+  consoleCreateWorker,
+  consoleCreateBusiness,
+} from "@/lib/consoleConfig.functions";
 
 export type { ConsoleStatus };
 export type AccountType = "worker" | "business";
@@ -38,6 +52,17 @@ export type ApplicationStatus =
   | "working"
   | "completed"
   | "cancelled";
+
+export type ListKey =
+  | "nationality"
+  | "language"
+  | "skill"
+  | "sector"
+  | "sub_sector"
+  | "city"
+  | "dispute_issue_type"
+  | "shift_role"
+  | "admin_role";
 
 export interface Worker {
   id: string;
@@ -52,6 +77,7 @@ export interface Worker {
   subRoles: string[];
   languages: string[];
   atividade: boolean;
+  atividadeNumber: string;
   minRate: number;
   rating: number;
   ratingCount: number;
@@ -60,6 +86,7 @@ export interface Worker {
   status: ConsoleStatus;
   portfolioUrl: string;
   bio: string;
+  adminNotes: string;
 }
 
 export interface Business {
@@ -78,6 +105,12 @@ export interface Business {
   ratingCount: number;
   status: ConsoleStatus;
   description: string;
+  adminNotes: string;
+  nif: string;
+  subSector: string;
+  displayInitials: string;
+  languagesRequired: string[];
+  preferredRoles: string[];
 }
 
 export interface Shift {
@@ -137,6 +170,89 @@ export interface Metrics {
   pendingApprovals: number;
 }
 
+export interface PlatformConfig {
+  platformName: string;
+  description: string;
+  currency: string;
+  timezone: string;
+  cities: string[];
+  sectors: string[];
+}
+
+export interface ConfirmationWindow {
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  autoExpiry: boolean;
+  reminder30min: boolean;
+}
+
+export interface Kpi {
+  id: string;
+  name: string;
+  formula: string;
+  target: number;
+  unit: string;
+  frequency: string;
+  category: string;
+  enabled: boolean;
+  isCustom: boolean;
+  sortOrder: number;
+}
+
+export interface Dispute {
+  id: string;
+  title: string;
+  workerLabel: string;
+  businessLabel: string;
+  issueType: string;
+  status: string;
+  priority: string;
+  assignedAdminId: string | null;
+  assignedAdminLabel: string;
+  deadline: string | null;
+  internalNotes: string;
+  resolutionSummary: string;
+  createdAt: string;
+}
+
+export interface ListOption {
+  id: string;
+  listKey: ListKey;
+  value: string;
+  active: boolean;
+  sortOrder: number;
+}
+
+export interface NewWorkerInput {
+  name: string;
+  email: string;
+  phone?: string;
+  nationality?: string;
+  city?: string;
+  mainRole?: string;
+  subRoles?: string[];
+  languages?: string[];
+  atividade?: boolean;
+  atividadeNumber?: string;
+  adminNotes?: string;
+}
+
+export interface NewBusinessInput {
+  name: string;
+  email: string;
+  displayInitials?: string;
+  city?: string;
+  category?: string;
+  subSector?: string;
+  contactName?: string;
+  contactPhone?: string;
+  nif?: string;
+  languagesRequired?: string[];
+  preferredRoles?: string[];
+  adminNotes?: string;
+}
+
 const EMPTY_METRICS: Metrics = {
   workers: 0,
   businesses: 0,
@@ -145,6 +261,23 @@ const EMPTY_METRICS: Metrics = {
   applications: 0,
   confirmed: 0,
   pendingApprovals: 0,
+};
+
+const EMPTY_CONFIG: PlatformConfig = {
+  platformName: "Shiftinger",
+  description: "",
+  currency: "EUR",
+  timezone: "Europe/Lisbon",
+  cities: [],
+  sectors: [],
+};
+
+const EMPTY_WINDOW: ConfirmationWindow = {
+  startTime: "09:00",
+  endTime: "18:00",
+  timezone: "Europe/Lisbon",
+  autoExpiry: true,
+  reminder30min: true,
 };
 
 // Business names are masked to initials until the business is verified.
@@ -168,6 +301,11 @@ interface StoreValue {
   admins: AdminUser[];
   audit: AuditEntry[];
   metrics: Metrics;
+  config: PlatformConfig;
+  confirmationWindow: ConfirmationWindow;
+  kpis: Kpi[];
+  disputes: Dispute[];
+  lists: ListOption[];
 
   refresh: () => Promise<void>;
   saveWorker: (w: Worker) => Promise<void>;
@@ -184,6 +322,18 @@ interface StoreValue {
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
 
+  createWorker: (input: NewWorkerInput) => Promise<void>;
+  createBusiness: (input: NewBusinessInput) => Promise<void>;
+  saveConfig: (c: PlatformConfig) => Promise<void>;
+  saveConfirmationWindow: (w: ConfirmationWindow) => Promise<void>;
+  upsertKpi: (k: Partial<Kpi> & Pick<Kpi, "name" | "target" | "unit" | "frequency" | "category">) => Promise<void>;
+  deleteKpi: (id: string) => Promise<void>;
+  upsertDispute: (d: Partial<Dispute> & Pick<Dispute, "title" | "status" | "priority">) => Promise<void>;
+  deleteDispute: (id: string) => Promise<void>;
+  upsertListOption: (o: { id?: string; listKey: ListKey; value: string; active?: boolean; sortOrder?: number }) => Promise<void>;
+  deleteListOption: (id: string) => Promise<void>;
+
+  listFor: (key: ListKey, includeInactive?: boolean) => string[];
   businessLabel: (name: string, revealed?: boolean) => string;
 }
 
@@ -199,11 +349,16 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [metrics, setMetrics] = useState<Metrics>(EMPTY_METRICS);
+  const [config, setConfig] = useState<PlatformConfig>(EMPTY_CONFIG);
+  const [confirmationWindow, setConfirmationWindow] = useState<ConfirmationWindow>(EMPTY_WINDOW);
+  const [kpis, setKpis] = useState<Kpi[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [lists, setLists] = useState<ListOption[]>([]);
 
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const data = await getConsoleData();
+      const [data, cfg] = await Promise.all([getConsoleData(), getConsoleConfig()]);
       setWorkers(data.workers as Worker[]);
       setBusinesses(data.businesses as Business[]);
       setShifts(data.shifts as Shift[]);
@@ -211,6 +366,11 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       setAdmins(data.admins as AdminUser[]);
       setAudit(data.audit as AuditEntry[]);
       setMetrics(data.metrics as Metrics);
+      setConfig(cfg.config as PlatformConfig);
+      setConfirmationWindow(cfg.confirmationWindow as ConfirmationWindow);
+      setKpis(cfg.kpis as Kpi[]);
+      setDisputes(cfg.disputes as Dispute[]);
+      setLists(cfg.lists as ListOption[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load console data.");
       throw e;
@@ -234,6 +394,11 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       admins,
       audit,
       metrics,
+      config,
+      confirmationWindow,
+      kpis,
+      disputes,
+      lists,
       refresh,
       saveWorker: async (w) => {
         await consoleUpdateWorker({
@@ -252,6 +417,8 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             rating: w.rating,
             portfolioUrl: w.portfolioUrl,
             bio: w.bio,
+            adminNotes: w.adminNotes,
+            atividadeNumber: w.atividadeNumber,
           },
         });
         await refresh();
@@ -270,6 +437,12 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             contactPosition: b.contactPosition,
             rating: b.rating,
             isEarlyBird: b.isEarlyBird,
+            adminNotes: b.adminNotes,
+            nif: b.nif,
+            subSector: b.subSector,
+            displayInitials: b.displayInitials,
+            languagesRequired: b.languagesRequired,
+            preferredRoles: b.preferredRoles,
           },
         });
         await refresh();
@@ -300,9 +473,96 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         await consoleSetAdminRole({ data: { userId, makeAdmin: false } });
         await refresh();
       },
+      createWorker: async (input) => {
+        await consoleCreateWorker({ data: input });
+        await refresh();
+      },
+      createBusiness: async (input) => {
+        await consoleCreateBusiness({ data: input });
+        await refresh();
+      },
+      saveConfig: async (c) => {
+        await consoleSaveConfig({ data: c });
+        await refresh();
+      },
+      saveConfirmationWindow: async (w) => {
+        await consoleSaveConfirmationWindow({
+          data: {
+            startTime: w.startTime,
+            endTime: w.endTime,
+            autoExpiry: w.autoExpiry,
+            reminder30min: w.reminder30min,
+          },
+        });
+        await refresh();
+      },
+      upsertKpi: async (k) => {
+        await consoleUpsertKpi({
+          data: {
+            id: k.id,
+            name: k.name,
+            formula: k.formula ?? "",
+            target: k.target,
+            unit: k.unit,
+            frequency: k.frequency as "Daily" | "Weekly" | "Monthly" | "Quarterly",
+            category: k.category as "Supply" | "Demand" | "Liquidity" | "Revenue" | "Trust & Safety",
+            enabled: k.enabled ?? true,
+            sortOrder: k.sortOrder ?? 0,
+          },
+        });
+        await refresh();
+      },
+      deleteKpi: async (id) => {
+        await consoleDeleteKpi({ data: { id } });
+        await refresh();
+      },
+      upsertDispute: async (d) => {
+        await consoleUpsertDispute({
+          data: {
+            id: d.id,
+            title: d.title,
+            workerLabel: d.workerLabel ?? "",
+            businessLabel: d.businessLabel ?? "",
+            issueType: d.issueType ?? "",
+            status: d.status as "open" | "under_review" | "resolved" | "escalated" | "closed",
+            priority: d.priority as "low" | "medium" | "high",
+            assignedAdminId: d.assignedAdminId ?? null,
+            assignedAdminLabel: d.assignedAdminLabel ?? "",
+            deadline: d.deadline ?? null,
+            internalNotes: d.internalNotes ?? "",
+            resolutionSummary: d.resolutionSummary ?? "",
+          },
+        });
+        await refresh();
+      },
+      deleteDispute: async (id) => {
+        await consoleDeleteDispute({ data: { id } });
+        await refresh();
+      },
+      upsertListOption: async (o) => {
+        await consoleUpsertListOption({
+          data: {
+            id: o.id,
+            listKey: o.listKey,
+            value: o.value,
+            active: o.active ?? true,
+            sortOrder: o.sortOrder ?? 0,
+          },
+        });
+        await refresh();
+      },
+      deleteListOption: async (id) => {
+        await consoleDeleteListOption({ data: { id } });
+        await refresh();
+      },
+      listFor: (key, includeInactive = false) =>
+        lists
+          .filter((l) => l.listKey === key && (includeInactive || l.active))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((l) => l.value),
       businessLabel: (name, revealed = false) => maskBusiness(name, revealed),
     }),
-    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, refresh],
+    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, config, confirmationWindow, kpis, disputes, lists, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -332,6 +592,30 @@ export function statusToneFor(status: ConsoleStatus): "pine" | "amber" | "slate"
     case "rejected":
     case "blocked":
       return "red";
+    default:
+      return "slate";
+  }
+}
+
+export const DISPUTE_STATUS_LABEL: Record<string, string> = {
+  open: "Open",
+  under_review: "Under review",
+  resolved: "Resolved",
+  escalated: "Escalated",
+  closed: "Closed",
+};
+
+export function disputeStatusTone(status: string): "pine" | "amber" | "slate" | "red" | "blue" {
+  switch (status) {
+    case "resolved":
+    case "closed":
+      return "pine";
+    case "under_review":
+      return "amber";
+    case "escalated":
+      return "red";
+    case "open":
+      return "blue";
     default:
       return "slate";
   }

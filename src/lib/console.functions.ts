@@ -44,6 +44,11 @@ function arr(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 }
 
+function maskInitials(name: string): string {
+  const initials = name.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join(".");
+  return initials ? `${initials}.***` : "—";
+}
+
 export type ConsoleStatus = (typeof PROFILE_STATUS)[number];
 
 // ── READ: full console snapshot ──────────────────────────────────────────────
@@ -103,6 +108,8 @@ export const getConsoleData = createServerFn({ method: "GET" })
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         portfolioUrl: w.portfolio_url ?? "",
         bio: w.bio ?? "",
+        adminNotes: w.admin_notes ?? "",
+        atividadeNumber: w.atividade_number ?? "",
       };
     });
 
@@ -125,6 +132,12 @@ export const getConsoleData = createServerFn({ method: "GET" })
         ratingCount: b.rating_count ?? 0,
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         description: b.description ?? "",
+        adminNotes: b.admin_notes ?? "",
+        nif: b.nif ?? "",
+        subSector: b.sub_sector ?? "",
+        displayInitials: b.display_initials || maskInitials(b.business_name ?? ""),
+        languagesRequired: arr(b.languages_required),
+        preferredRoles: arr(b.preferred_roles),
       };
     });
 
@@ -265,6 +278,8 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         rating: z.number().min(0).max(5).optional().default(0),
         portfolioUrl: z.string().max(500).optional().default(""),
         bio: z.string().max(2000).optional().default(""),
+        adminNotes: z.string().max(2000).optional().default(""),
+        atividadeNumber: z.string().max(80).optional().default(""),
       })
       .parse(i),
   )
@@ -287,6 +302,8 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         rating: data.rating,
         portfolio_url: data.portfolioUrl,
         bio: data.bio,
+        admin_notes: data.adminNotes,
+        atividade_number: data.atividadeNumber,
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);
@@ -317,6 +334,12 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         contactPosition: z.string().max(120).optional().default(""),
         rating: z.number().min(0).max(5).optional().default(0),
         isEarlyBird: z.boolean().optional().default(false),
+        adminNotes: z.string().max(2000).optional().default(""),
+        nif: z.string().max(40).optional().default(""),
+        subSector: z.string().max(120).optional().default(""),
+        displayInitials: z.string().max(40).optional().default(""),
+        languagesRequired: z.array(z.string().max(60)).max(40).optional().default([]),
+        preferredRoles: z.array(z.string().max(60)).max(40).optional().default([]),
       })
       .parse(i),
   )
@@ -334,6 +357,12 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         description: data.description,
         rating: data.rating,
         is_early_bird: data.isEarlyBird,
+        admin_notes: data.adminNotes,
+        nif: data.nif,
+        sub_sector: data.subSector,
+        display_initials: data.displayInitials,
+        languages_required: data.languagesRequired,
+        preferred_roles: data.preferredRoles,
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);

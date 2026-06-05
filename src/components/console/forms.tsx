@@ -174,6 +174,87 @@ export function TagMultiSelect({
   );
 }
 
+// Single-select dropdown backed by a managed list. Admins can add a brand-new
+// option inline, which is pushed back into the managed list via onAddOption.
+export function ManagedSelect({
+  value,
+  onChange,
+  options,
+  onAddOption,
+  placeholder = "New option…",
+  allowEmpty,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  onAddOption?: (name: string) => void;
+  placeholder?: string;
+  allowEmpty?: boolean;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const all = value && !options.includes(value) ? [value, ...options] : options;
+
+  const add = () => {
+    const clean = draft.trim();
+    if (!clean) return;
+    onAddOption?.(clean);
+    onChange(clean);
+    setDraft("");
+    setAdding(false);
+  };
+
+  if (adding) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+            if (e.key === "Escape") setAdding(false);
+          }}
+          placeholder={placeholder}
+          className={cn(baseInput, "flex-1")}
+        />
+        <button type="button" onClick={add} className="rounded-lg bg-pine px-2 py-1.5 text-xs font-medium text-white hover:bg-pine-dark">
+          <Check size={14} />
+        </button>
+        <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-line px-2 py-1.5 text-xs text-slate hover:bg-mist">
+          <X size={14} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <select value={value} onChange={(e) => onChange(e.target.value)} className={cn(baseInput, "flex-1")}>
+        {allowEmpty && <option value="">—</option>}
+        {all.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+      {onAddOption && (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          title="Add new option"
+          className="shrink-0 rounded-xl border border-line px-2.5 py-2 text-slate hover:border-pine hover:text-pine-dark"
+        >
+          <Plus size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function PrimaryButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button

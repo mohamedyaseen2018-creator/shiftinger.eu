@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageHeader, Panel, Pill } from "@/components/console/ui";
 import { Field, TextInput, PrimaryButton } from "@/components/console/forms";
+import { PlatformListsPanel } from "@/components/console/PlatformListsPanel";
 import { useAdminStore, type AdminUser } from "@/data/adminStore";
 import { useAuth } from "@/lib/auth";
 import { timeAgo } from "@/data/utils";
@@ -138,7 +139,15 @@ function SettingsPage() {
         </div>
       </Panel>
 
+      <Panel title="Platform lists" action={<Pill tone="slate">Dropdown options</Pill>}>
+        <p className="mb-4 text-sm text-slate">
+          Manage the options behind every dropdown across the console. Changes apply immediately to all forms.
+        </p>
+        <PlatformListsPanel />
+      </Panel>
+
       <Panel title="Audit log" action={<Shield size={16} className="text-slate" />}>
+
         {store.audit.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate">No admin activity recorded yet.</p>
         ) : (

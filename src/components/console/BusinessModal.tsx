@@ -30,10 +30,13 @@ import {
   TextInput,
   TextArea,
   SelectInput,
+  ManagedSelect,
+  TagMultiSelect,
   ToggleRow,
   PrimaryButton,
   GhostButton,
 } from "@/components/console/forms";
+import type { ListKey } from "@/data/adminStore";
 
 const STATUS_OPTIONS = (Object.keys(STATUS_LABEL) as ConsoleStatus[]).map((value) => ({
   value,
@@ -59,6 +62,9 @@ export function BusinessModal({
     setForm(business);
     setErrors({});
   }, [business]);
+
+  const addOption = (listKey: ListKey) => (value: string) =>
+    store.upsertListOption({ listKey, value }).catch(() => {});
 
   if (!form) return null;
   const set = (patch: Partial<Business>) => setForm((f) => (f ? { ...f, ...patch } : f));
@@ -103,13 +109,25 @@ export function BusinessModal({
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <Field label="Business name" required error={errors.name}>
-              <TextInput value={form.name} onChange={(e) => set({ name: e.target.value })} onBlur={validate} />
-            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Business full name" required error={errors.name} hint="Stored securely, never shown publicly">
+                <TextInput value={form.name} onChange={(e) => set({ name: e.target.value })} onBlur={validate} />
+              </Field>
+              <Field label="Display initials" hint="Shown publicly until verified">
+                <TextInput value={form.displayInitials} onChange={(e) => set({ displayInitials: e.target.value })} placeholder="e.g. R.P.***" />
+              </Field>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="City">
-                <TextInput value={form.city} onChange={(e) => set({ city: e.target.value })} />
+                <ManagedSelect
+                  value={form.city}
+                  onChange={(v) => set({ city: v })}
+                  options={store.listFor("city")}
+                  onAddOption={addOption("city")}
+                  placeholder="New city…"
+                  allowEmpty
+                />
               </Field>
               <Field label="Area / address">
                 <TextInput value={form.area} onChange={(e) => set({ area: e.target.value })} />
@@ -117,11 +135,25 @@ export function BusinessModal({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Category / sector">
-                <TextInput value={form.category} onChange={(e) => set({ category: e.target.value })} />
+              <Field label="Sector">
+                <ManagedSelect
+                  value={form.category}
+                  onChange={(v) => set({ category: v })}
+                  options={store.listFor("sector")}
+                  onAddOption={addOption("sector")}
+                  placeholder="New sector…"
+                  allowEmpty
+                />
               </Field>
-              <Field label="Review status">
-                <SelectInput value={form.status} onChange={(v) => set({ status: v as ConsoleStatus })} options={STATUS_OPTIONS} />
+              <Field label="Sub-sector">
+                <ManagedSelect
+                  value={form.subSector}
+                  onChange={(v) => set({ subSector: v })}
+                  options={store.listFor("sub_sector")}
+                  onAddOption={addOption("sub_sector")}
+                  placeholder="New sub-sector…"
+                  allowEmpty
+                />
               </Field>
             </div>
 
@@ -132,14 +164,39 @@ export function BusinessModal({
               <Field label="Contact phone">
                 <TextInput value={form.contactPhone} onChange={(e) => set({ contactPhone: e.target.value })} />
               </Field>
-              <Field label="Contact position">
-                <TextInput value={form.contactPosition} onChange={(e) => set({ contactPosition: e.target.value })} />
+              <Field label="NIF (tax number)">
+                <TextInput value={form.nif} onChange={(e) => set({ nif: e.target.value })} />
               </Field>
             </div>
 
-            <Field label="Rating">
-              <TextInput type="number" min={0} max={5} step={0.1} value={form.rating} onChange={(e) => set({ rating: Number(e.target.value) })} />
+            <Field label="Languages required for workers">
+              <TagMultiSelect
+                selected={form.languagesRequired}
+                options={store.listFor("language")}
+                onChange={(v) => set({ languagesRequired: v })}
+                onAddOption={addOption("language")}
+                placeholder="New language…"
+              />
             </Field>
+
+            <Field label="Preferred worker roles">
+              <TagMultiSelect
+                selected={form.preferredRoles}
+                options={store.listFor("skill")}
+                onChange={(v) => set({ preferredRoles: v })}
+                onAddOption={addOption("skill")}
+                placeholder="New role…"
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Verification status">
+                <SelectInput value={form.status} onChange={(v) => set({ status: v as ConsoleStatus })} options={STATUS_OPTIONS} />
+              </Field>
+              <Field label="Rating">
+                <TextInput type="number" min={0} max={5} step={0.1} value={form.rating} onChange={(e) => set({ rating: Number(e.target.value) })} />
+              </Field>
+            </div>
 
             <ToggleRow
               label="Early-bird business"
@@ -150,6 +207,10 @@ export function BusinessModal({
 
             <Field label="Description">
               <TextArea value={form.description} onChange={(e) => set({ description: e.target.value })} />
+            </Field>
+
+            <Field label="Admin notes" hint="Internal — never shown publicly">
+              <TextArea value={form.adminNotes} onChange={(e) => set({ adminNotes: e.target.value })} />
             </Field>
           </div>
 

@@ -1,12 +1,38 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Check, X, RefreshCw, Users, Building2, ArrowRight } from "lucide-react";
+import {
+  SlidersHorizontal,
+  Clock,
+  Users,
+  Building2,
+  Target,
+  ShieldAlert,
+  Check,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAdminStore } from "@/data/adminStore";
 import { Pill } from "@/components/console/ui";
+import { PlatformConfigModal } from "@/components/console/PlatformConfigModal";
+import { ConfirmationWindowModal } from "@/components/console/ConfirmationWindowModal";
+import { ManageWorkersDrawer } from "@/components/console/ManageWorkersDrawer";
+import { AddBusinessModal } from "@/components/console/AddBusinessModal";
+import { KpiSettingsModal } from "@/components/console/KpiSettingsModal";
+import { ManageDisputesDrawer } from "@/components/console/ManageDisputesDrawer";
+
+type Panel = "config" | "window" | "workers" | "business" | "kpi" | "disputes" | null;
+
+const ACTIONS: { key: Panel; label: string; icon: typeof Users; hint: string }[] = [
+  { key: "config", label: "Platform configuration", icon: SlidersHorizontal, hint: "Name, cities, sectors, currency" },
+  { key: "window", label: "Confirmation window", icon: Clock, hint: "Daily match confirmation hours" },
+  { key: "workers", label: "Manage workers", icon: Users, hint: "Add, edit, suspend, delete" },
+  { key: "business", label: "Add business", icon: Building2, hint: "Register a new business" },
+  { key: "kpi", label: "KPI settings", icon: Target, hint: "Targets and tracking" },
+  { key: "disputes", label: "Disputes", icon: ShieldAlert, hint: "Review and resolve" },
+];
 
 export function QuickControls() {
   const store = useAdminStore();
+  const [panel, setPanel] = useState<Panel>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const pending = [
@@ -36,22 +62,23 @@ export function QuickControls() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Link to="/console/workers" className="flex items-center justify-between rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-pine">
-          <span className="inline-flex items-center gap-2"><Users size={15} /> Workers</span>
-          <ArrowRight size={14} className="text-slate" />
-        </Link>
-        <Link to="/console/businesses" className="flex items-center justify-between rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-pine">
-          <span className="inline-flex items-center gap-2"><Building2 size={15} /> Businesses</span>
-          <ArrowRight size={14} className="text-slate" />
-        </Link>
-        <button
-          onClick={() => store.refresh().then(() => toast.success("Refreshed"))}
-          className="flex items-center justify-between rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-pine"
-        >
-          <span className="inline-flex items-center gap-2"><RefreshCw size={15} /> Refresh</span>
-        </button>
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-2">
+        {ACTIONS.map((a) => (
+          <button
+            key={a.label}
+            onClick={() => setPanel(a.key)}
+            className="flex items-start gap-3 rounded-xl border border-line bg-white px-3 py-3 text-left transition-colors hover:border-pine"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-pine-soft text-pine-dark">
+              <a.icon size={17} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-ink">{a.label}</span>
+              <span className="block text-[11px] text-slate">{a.hint}</span>
+            </span>
+          </button>
+        ))}
       </div>
 
       <div>
@@ -92,6 +119,13 @@ export function QuickControls() {
           </ul>
         )}
       </div>
+
+      <PlatformConfigModal open={panel === "config"} onClose={() => setPanel(null)} />
+      <ConfirmationWindowModal open={panel === "window"} onClose={() => setPanel(null)} />
+      <ManageWorkersDrawer open={panel === "workers"} onClose={() => setPanel(null)} />
+      <AddBusinessModal open={panel === "business"} onClose={() => setPanel(null)} />
+      <KpiSettingsModal open={panel === "kpi"} onClose={() => setPanel(null)} />
+      <ManageDisputesDrawer open={panel === "disputes"} onClose={() => setPanel(null)} />
     </div>
   );
 }

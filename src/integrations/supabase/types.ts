@@ -150,6 +150,7 @@ export type Database = {
       }
       business_profiles: {
         Row: {
+          admin_notes: string
           area: string | null
           avatar_url: string | null
           business_name: string | null
@@ -158,15 +159,21 @@ export type Database = {
           city: string | null
           created_at: string
           description: string | null
+          display_initials: string
           id: string
           is_early_bird: boolean
+          languages_required: Json
+          nif: string
+          preferred_roles: Json
           rating: number
           rating_count: number
+          sub_sector: string
           updated_at: string
           user_id: string
           verified: boolean
         }
         Insert: {
+          admin_notes?: string
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -175,15 +182,21 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          display_initials?: string
           id?: string
           is_early_bird?: boolean
+          languages_required?: Json
+          nif?: string
+          preferred_roles?: Json
           rating?: number
           rating_count?: number
+          sub_sector?: string
           updated_at?: string
           user_id: string
           verified?: boolean
         }
         Update: {
+          admin_notes?: string
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -192,13 +205,51 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          display_initials?: string
           id?: string
           is_early_bird?: boolean
+          languages_required?: Json
+          nif?: string
+          preferred_roles?: Json
           rating?: number
           rating_count?: number
+          sub_sector?: string
           updated_at?: string
           user_id?: string
           verified?: boolean
+        }
+        Relationships: []
+      }
+      confirmation_window: {
+        Row: {
+          auto_expiry: boolean
+          created_at: string
+          end_time: string
+          id: number
+          reminder_30min: boolean
+          start_time: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          auto_expiry?: boolean
+          created_at?: string
+          end_time?: string
+          id?: number
+          reminder_30min?: boolean
+          start_time?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_expiry?: boolean
+          created_at?: string
+          end_time?: string
+          id?: number
+          reminder_30min?: boolean
+          start_time?: string
+          timezone?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -264,6 +315,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      disputes: {
+        Row: {
+          assigned_admin_id: string | null
+          assigned_admin_label: string
+          business_label: string
+          created_at: string
+          deadline: string | null
+          id: string
+          internal_notes: string
+          issue_type: string
+          priority: string
+          resolution_summary: string
+          status: string
+          title: string
+          updated_at: string
+          worker_label: string
+        }
+        Insert: {
+          assigned_admin_id?: string | null
+          assigned_admin_label?: string
+          business_label?: string
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          internal_notes?: string
+          issue_type?: string
+          priority?: string
+          resolution_summary?: string
+          status?: string
+          title: string
+          updated_at?: string
+          worker_label?: string
+        }
+        Update: {
+          assigned_admin_id?: string | null
+          assigned_admin_label?: string
+          business_label?: string
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          internal_notes?: string
+          issue_type?: string
+          priority?: string
+          resolution_summary?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          worker_label?: string
+        }
+        Relationships: []
       }
       jobs: {
         Row: {
@@ -334,6 +436,51 @@ export type Database = {
         }
         Relationships: []
       }
+      kpi_settings: {
+        Row: {
+          category: string
+          created_at: string
+          enabled: boolean
+          formula: string
+          frequency: string
+          id: string
+          is_custom: boolean
+          name: string
+          sort_order: number
+          target: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          enabled?: boolean
+          formula?: string
+          frequency?: string
+          id?: string
+          is_custom?: boolean
+          name: string
+          sort_order?: number
+          target?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          enabled?: boolean
+          formula?: string
+          frequency?: string
+          id?: string
+          is_custom?: boolean
+          name?: string
+          sort_order?: number
+          target?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string
@@ -365,6 +512,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_config: {
+        Row: {
+          cities: string[]
+          created_at: string
+          currency: string
+          description: string
+          id: number
+          platform_name: string
+          sectors: string[]
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          cities?: string[]
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: number
+          platform_name?: string
+          sectors?: string[]
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          cities?: string[]
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: number
+          platform_name?: string
+          sectors?: string[]
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_lists: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          list_key: string
+          sort_order: number
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          list_key: string
+          sort_order?: number
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          list_key?: string
+          sort_order?: number
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
       }
       profile_status_history: {
         Row: {
@@ -568,7 +781,9 @@ export type Database = {
       }
       worker_profiles: {
         Row: {
+          admin_notes: string
           atividade: boolean
+          atividade_number: string
           availability_visible: boolean
           available_days: Json
           avatar_url: string | null
@@ -597,7 +812,9 @@ export type Database = {
           verified: boolean
         }
         Insert: {
+          admin_notes?: string
           atividade?: boolean
+          atividade_number?: string
           availability_visible?: boolean
           available_days?: Json
           avatar_url?: string | null
@@ -626,7 +843,9 @@ export type Database = {
           verified?: boolean
         }
         Update: {
+          admin_notes?: string
           atividade?: boolean
+          atividade_number?: string
           availability_visible?: boolean
           available_days?: Json
           avatar_url?: string | null
