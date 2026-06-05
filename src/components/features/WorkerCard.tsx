@@ -42,6 +42,7 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
     .map((v) => LOOKING_FOR_OPTIONS.find((o) => o.value === v)?.label ?? v)
     .filter(Boolean);
   const showRating = worker.rating > 0 && worker.shiftsCompleted >= 3;
+  const portfolioUrl = worker.portfolioUrl?.trim() || null;
 
   return (
     <article className="group overflow-hidden rounded-2xl bg-white ring-1 ring-ink/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
