@@ -30,18 +30,18 @@ import {
   TextInput,
   TextArea,
   SelectInput,
+  ManagedSelect,
   ToggleRow,
   TagMultiSelect,
   PrimaryButton,
   GhostButton,
 } from "@/components/console/forms";
+import type { ListKey } from "@/data/adminStore";
 
 const STATUS_OPTIONS = (Object.keys(STATUS_LABEL) as ConsoleStatus[]).map((value) => ({
   value,
   label: STATUS_LABEL[value],
 }));
-
-const noop = () => {};
 
 export function WorkerDrawer({
   worker,
