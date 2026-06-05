@@ -106,7 +106,7 @@ function ForBusinessesPage() {
           <div className="mb-12 text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">Platform features</span>
             <h2 className="mt-2 font-serif text-4xl text-ink">
-              Everything you need to <span className="italic">hire faster</span>
+              {c("why.features_title")}
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
