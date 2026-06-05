@@ -44,6 +44,20 @@ function WorkersPage() {
       ),
     },
     {
+      key: "cv",
+      label: "CV",
+      value: (w) => (w.hasCv ? "Yes" : "No"),
+      className: "text-center",
+      render: (w) => <Pill tone={w.hasCv ? "pine" : "red"}>{w.hasCv ? "Yes" : "No"}</Pill>,
+    },
+    {
+      key: "docs",
+      label: "Documents",
+      value: (w) => (w.hasDocuments ? "Yes" : "No"),
+      className: "text-center",
+      render: (w) => <Pill tone={w.hasDocuments ? "pine" : "red"}>{w.hasDocuments ? "Yes" : "No"}</Pill>,
+    },
+    {
       key: "status",
       label: "Status",
       value: (w) => STATUS_LABEL[w.status],
