@@ -56,12 +56,13 @@ const PRIVACY_ITEMS = [
 
 function HomePage() {
   const [applied, setApplied] = useState<Set<string>>(new Set());
+  const { c } = useSiteContent();
 
   return (
     <SiteLayout>
       {/* Free-tier banner */}
       <div className="bg-teal px-4 py-2 text-center text-xs uppercase tracking-widest text-canvas">
-        First 500 workers &amp; 100 businesses — <span className="font-semibold italic text-gold">free of charge</span>
+        {c("home.banner")}
       </div>
 
       {/* ── HERO (asymmetric + sticky rail) ── */}
