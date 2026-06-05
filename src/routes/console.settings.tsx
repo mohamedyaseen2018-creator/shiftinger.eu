@@ -147,7 +147,7 @@ function SettingsPage() {
         <PlatformListsPanel />
       </Panel>
 
-      <Panel title="Jobs & skills catalog" action={<Pill tone="slate">{jobCatalogCount} jobs</Pill>}>
+      <Panel title="Jobs & skills catalog" action={<Pill tone="slate">{store.jobCatalog.length} jobs</Pill>}>
         <p className="mb-4 text-sm text-slate">
           The job roles and their skills shown in forms and on the website. Expand a job to edit its skills.
         </p>
