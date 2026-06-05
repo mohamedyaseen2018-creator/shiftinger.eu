@@ -1,62 +1,115 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Lock, Trash2, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Pill, statusTone } from "@/components/console/ui";
 import { ConsoleTable, type Col } from "@/components/console/ConsoleTable";
-import { isConfirmationWindowOpen } from "@/data/adminMock";
-import { useAdminStore, type Shift } from "@/data/adminStore";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Field, TextInput, TextArea, SelectInput, PrimaryButton, GhostButton } from "@/components/console/forms";
+import { useAdminStore, maskBusiness, type Shift, type JobStatus } from "@/data/adminStore";
 
 export const Route = createFileRoute("/console/shifts")({
   head: () => ({ meta: [{ title: "Shifts — Shiftinger admin" }] }),
   component: ShiftsPage,
 });
 
-function windowActive(s: Shift): boolean {
-  return s.status === "matched" && isConfirmationWindowOpen();
-}
+const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
+  { value: "open", label: "Open" },
+  { value: "closed", label: "Closed" },
+  { value: "filled", label: "Filled" },
+];
 
-function dateBucket(iso: string): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(iso);
-  d.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((d.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays < 0) return "Past";
-  if (diffDays === 0) return "Today";
-  if (diffDays <= 7) return "Next 7 days";
-  return "Later";
+function ShiftEditor({ shift, onClose }: { shift: Shift | null; onClose: () => void }) {
+  const store = useAdminStore();
+  const [form, setForm] = useState<Shift | null>(shift);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => setForm(shift), [shift]);
+  if (!form) return null;
+  const set = (patch: Partial<Shift>) => setForm((f) => (f ? { ...f, ...patch } : f));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await store.saveShift({
+        id: form.id,
+        role: form.role,
+        rate: form.rate,
+        spots: form.spots,
+        status: form.status,
+        note: form.note,
+      });
+      toast.success("Shift updated");
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save shift");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!shift} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-sans">Edit shift</DialogTitle>
+          <DialogDescription>{maskBusiness(form.businessName, form.businessVerified)} · {form.city || "—"}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <Field label="Role" required>
+            <TextInput value={form.role} onChange={(e) => set({ role: e.target.value })} />
+          </Field>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Rate (€/h)">
+              <TextInput type="number" min={0} step={0.5} value={form.rate} onChange={(e) => set({ rate: Number(e.target.value) })} />
+            </Field>
+            <Field label="Spots">
+              <TextInput type="number" min={0} value={form.spots} onChange={(e) => set({ spots: Number(e.target.value) })} />
+            </Field>
+            <Field label="Status">
+              <SelectInput value={form.status} onChange={(v) => set({ status: v as JobStatus })} options={STATUS_OPTIONS} />
+            </Field>
+          </div>
+          <Field label="Note">
+            <TextArea value={form.note} onChange={(e) => set({ note: e.target.value })} />
+          </Field>
+        </div>
+        <DialogFooter>
+          <GhostButton onClick={onClose}>Cancel</GhostButton>
+          <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</PrimaryButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function ShiftsPage() {
   const store = useAdminStore();
-  const open = isConfirmationWindowOpen();
+  const [editing, setEditing] = useState<Shift | null>(null);
 
   const columns: Col<Shift>[] = [
-    { key: "id", label: "Shift ID", value: (s) => s.id, render: (s) => <span className="font-mono text-xs">{s.id}</span> },
     {
       key: "business",
       label: "Business",
-      value: (s) => store.businessLabel(s.businessId, s.confirmed),
-      render: (s) => <span className="font-mono text-ink">{store.businessLabel(s.businessId, s.confirmed)}</span>,
+      value: (s) => maskBusiness(s.businessName, s.businessVerified),
+      render: (s) => <span className="font-mono text-ink">{maskBusiness(s.businessName, s.businessVerified)}</span>,
     },
-    { key: "role", label: "Role", value: (s) => s.role },
-    { key: "date", label: "Date", value: (s) => s.date },
+    { key: "role", label: "Role", value: (s) => s.role || "—" },
+    { key: "date", label: "Date", value: (s) => s.date ?? "—" },
     {
-      key: "time",
-      label: "Time",
-      value: (s) => `${s.startTime}–${s.endTime}`,
-      render: (s) => (
-        <span className="inline-flex items-center gap-2">
-          {`${s.startTime}–${s.endTime}`}
-          {windowActive(s) && (
-            <Pill tone="amber">
-              <Clock size={11} /> Window open
-            </Pill>
-          )}
-        </span>
-      ),
+      key: "rate",
+      label: "Rate",
+      value: (s) => s.rate,
+      render: (s) => <span>€{s.rate.toFixed(2)}/h</span>,
     },
-    { key: "pay", label: "Pay", value: (s) => s.pay, render: (s) => `€${s.pay}/hr` },
+    { key: "spots", label: "Spots", value: (s) => `${s.spotsRemaining}/${s.spots}`, className: "text-center" },
     { key: "applications", label: "Apps", value: (s) => s.applications, className: "text-center" },
     {
       key: "status",
@@ -66,63 +119,48 @@ function ShiftsPage() {
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "",
       value: () => "",
       csv: false,
-      render: (s) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => { store.upsertShift({ ...s, status: "confirmed", confirmed: true }); toast.success(`${s.id} confirmed`); }}
-            className="rounded-lg p-1.5 text-slate hover:bg-pine-soft hover:text-pine-dark"
-            title="Confirm"
-          >
-            <Check size={16} />
-          </button>
-          <button
-            onClick={() => { store.upsertShift({ ...s, status: "cancelled", confirmed: false }); toast.success(`${s.id} force-closed`); }}
-            className="rounded-lg p-1.5 text-slate hover:bg-amber-soft hover:text-amber-dark"
-            title="Force-close"
-          >
-            <Lock size={16} />
-          </button>
-          <button
-            onClick={() => { store.removeShift(s.id); toast.success(`${s.id} deleted`); }}
-            className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+      render: () => (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-pine-dark">
+          <Pencil size={13} /> Edit
+        </span>
       ),
     },
   ];
 
+  if (store.loading) {
+    return (
+      <div className="grid h-64 place-items-center">
+        <Loader2 className="animate-spin text-pine" />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <PageHeader
-        title="Shifts"
-        subtitle="Manage every posted shift across Lisbon and Porto"
-        action={
-          <Pill tone={open ? "amber" : "slate"}>
-            <Clock size={12} />
-            Confirmation window {open ? `open (${store.window.start}–${store.window.end} Lisbon)` : "closed"}
-          </Pill>
-        }
-      />
+      <PageHeader title="Shifts" subtitle={`${store.shifts.length} posted shifts`} />
       <ConsoleTable
         rows={store.shifts}
         columns={columns}
         rowKey={(s) => s.id}
         csvName="shifts"
-        searchPlaceholder="Search by shift ID or role…"
-        search={(s) => `${s.id} ${s.role}`}
-        rowClassName={(s) => (windowActive(s) ? "bg-amber-soft/60 hover:bg-amber-soft" : "")}
+        searchPlaceholder="Search by role, business, city…"
+        search={(s) => `${s.businessName} ${s.role} ${s.city}`}
         filters={[
-          { key: "status", label: "Status", field: (s) => s.status, options: ["open", "matched", "confirmed", "expired", "cancelled"] },
-          { key: "city", label: "City", field: (s) => s.city, options: store.activeOptions("cities") },
-          { key: "when", label: "Date", field: (s) => dateBucket(s.date), options: ["Past", "Today", "Next 7 days", "Later"] },
+          {
+            key: "status",
+            label: "Status",
+            field: (s) => s.status,
+            options: [...new Set(store.shifts.map((s) => s.status))],
+          },
         ]}
+        rowClassName={() => "cursor-pointer"}
+        empty="No shifts posted yet."
+        onRowClick={(s) => setEditing(s)}
       />
+      <ShiftEditor shift={editing} onClose={() => setEditing(null)} />
     </div>
   );
 }

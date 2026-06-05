@@ -34,7 +34,7 @@ function DashboardPage() {
     if (loading) return;
     // Admins have an admin-only profile — send them straight to the admin dashboard.
     if (isAdmin) {
-      navigate({ to: "/admin" });
+      navigate({ to: "/console" });
       return;
     }
     if (profile && profile.status === "incomplete") {

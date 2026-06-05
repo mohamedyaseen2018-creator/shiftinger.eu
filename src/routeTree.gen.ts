@@ -24,7 +24,6 @@ import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
 import { Route as ConsoleShiftsRouteImport } from './routes/console.shifts'
 import { Route as ConsoleSettingsRouteImport } from './routes/console.settings'
 import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
-import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
 import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
@@ -32,7 +31,6 @@ import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const TalentRoute = TalentRouteImport.update({
   id: '/talent',
@@ -108,11 +106,6 @@ const ConsoleMatchesRoute = ConsoleMatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => ConsoleRoute,
 } as any)
-const ConsoleDisputesRoute = ConsoleDisputesRouteImport.update({
-  id: '/disputes',
-  path: '/disputes',
-  getParentRoute: () => ConsoleRoute,
-} as any)
 const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
   id: '/businesses',
   path: '/businesses',
@@ -149,11 +142,6 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -165,7 +153,6 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
   '/talent': typeof TalentRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/messages': typeof AuthenticatedMessagesRoute
@@ -173,7 +160,6 @@ export interface FileRoutesByFullPath {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
-  '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
@@ -189,7 +175,6 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
   '/talent': typeof TalentRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/messages': typeof AuthenticatedMessagesRoute
@@ -197,7 +182,6 @@ export interface FileRoutesByTo {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
-  '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
@@ -216,7 +200,6 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
   '/talent': typeof TalentRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
@@ -224,7 +207,6 @@ export interface FileRoutesById {
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
-  '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
@@ -243,7 +225,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/register'
     | '/talent'
-    | '/admin'
     | '/applications'
     | '/dashboard'
     | '/messages'
@@ -251,7 +232,6 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
-    | '/console/disputes'
     | '/console/matches'
     | '/console/settings'
     | '/console/shifts'
@@ -267,7 +247,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/register'
     | '/talent'
-    | '/admin'
     | '/applications'
     | '/dashboard'
     | '/messages'
@@ -275,7 +254,6 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
-    | '/console/disputes'
     | '/console/matches'
     | '/console/settings'
     | '/console/shifts'
@@ -293,7 +271,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/register'
     | '/talent'
-    | '/_authenticated/admin'
     | '/_authenticated/applications'
     | '/_authenticated/dashboard'
     | '/_authenticated/messages'
@@ -301,7 +278,6 @@ export interface FileRouteTypes {
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
     | '/console/businesses'
-    | '/console/disputes'
     | '/console/matches'
     | '/console/settings'
     | '/console/shifts'
@@ -429,13 +405,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleMatchesRouteImport
       parentRoute: typeof ConsoleRoute
     }
-    '/console/disputes': {
-      id: '/console/disputes'
-      path: '/disputes'
-      fullPath: '/console/disputes'
-      preLoaderRoute: typeof ConsoleDisputesRouteImport
-      parentRoute: typeof ConsoleRoute
-    }
     '/console/businesses': {
       id: '/console/businesses'
       path: '/businesses'
@@ -485,18 +454,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
@@ -506,7 +467,6 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
@@ -520,7 +480,6 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface ConsoleRouteChildren {
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
-  ConsoleDisputesRoute: typeof ConsoleDisputesRoute
   ConsoleMatchesRoute: typeof ConsoleMatchesRoute
   ConsoleSettingsRoute: typeof ConsoleSettingsRoute
   ConsoleShiftsRoute: typeof ConsoleShiftsRoute
@@ -530,7 +489,6 @@ interface ConsoleRouteChildren {
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleBusinessesRoute: ConsoleBusinessesRoute,
-  ConsoleDisputesRoute: ConsoleDisputesRoute,
   ConsoleMatchesRoute: ConsoleMatchesRoute,
   ConsoleSettingsRoute: ConsoleSettingsRoute,
   ConsoleShiftsRoute: ConsoleShiftsRoute,

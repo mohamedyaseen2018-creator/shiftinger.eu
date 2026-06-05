@@ -5,10 +5,10 @@ import {
   Building2,
   CalendarClock,
   GitMerge,
-  ShieldAlert,
   Settings,
   Zap,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -17,11 +17,24 @@ const NAV = [
   { to: "/console/businesses", label: "Businesses", icon: Building2 },
   { to: "/console/shifts", label: "Shifts", icon: CalendarClock },
   { to: "/console/matches", label: "Matches", icon: GitMerge },
-  { to: "/console/disputes", label: "Disputes", icon: ShieldAlert },
   { to: "/console/settings", label: "Settings", icon: Settings },
 ] as const;
 
+function initials(value: string): string {
+  return value
+    .replace(/@.*/, "")
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { profile, user } = useAuth();
+  const displayName = profile?.full_name || profile?.email || user?.email || "Admin";
+  const email = profile?.email || user?.email || "";
+
   return (
     <div className="flex h-full flex-col bg-pine-dark text-white">
       <div className="flex items-center gap-2 px-5 py-5">
@@ -55,11 +68,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <div className="border-t border-white/10 px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="grid h-8 w-8 place-items-center rounded-full bg-amber text-xs font-bold text-pine-dark">
-            SM
+            {initials(displayName) || "AD"}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">Sara Marques</p>
-            <p className="truncate text-[11px] text-white/60">Super admin</p>
+            <p className="truncate text-sm font-medium">{displayName}</p>
+            <p className="truncate text-[11px] text-white/60">Super admin · {email}</p>
           </div>
         </div>
       </div>

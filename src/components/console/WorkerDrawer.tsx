@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Trash2, Star, Mail, Phone, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -19,7 +19,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAdminStore, type Worker, type AccountStatus } from "@/data/adminStore";
+import {
+  useAdminStore,
+  STATUS_LABEL,
+  type Worker,
+  type ConsoleStatus,
+} from "@/data/adminStore";
 import {
   Field,
   TextInput,
@@ -31,7 +36,12 @@ import {
   GhostButton,
 } from "@/components/console/forms";
 
-const STATUSES: AccountStatus[] = ["active", "inactive", "suspended"];
+const STATUS_OPTIONS = (Object.keys(STATUS_LABEL) as ConsoleStatus[]).map((value) => ({
+  value,
+  label: STATUS_LABEL[value],
+}));
+
+const noop = () => {};
 
 export function WorkerDrawer({
   worker,
@@ -45,6 +55,7 @@ export function WorkerDrawer({
   const store = useAdminStore();
   const [form, setForm] = useState<Worker | null>(worker);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
@@ -52,25 +63,48 @@ export function WorkerDrawer({
     setErrors({});
   }, [worker]);
 
+  const nationalityOptions = useMemo(
+    () => [...new Set(store.workers.map((w) => w.nationality).filter(Boolean))],
+    [store.workers],
+  );
+  const cityOptions = useMemo(
+    () => [...new Set(store.workers.map((w) => w.city).filter(Boolean))],
+    [store.workers],
+  );
+  const languageOptions = useMemo(
+    () => [...new Set(store.workers.flatMap((w) => w.languages))],
+    [store.workers],
+  );
+  const roleOptions = useMemo(
+    () => [...new Set(store.workers.flatMap((w) => [w.mainRole, ...w.subRoles]).filter(Boolean))],
+    [store.workers],
+  );
+
   if (!form) return null;
   const set = (patch: Partial<Worker>) => setForm((f) => (f ? { ...f, ...patch } : f));
-  const isNew = !store.workers.some((w) => w.id === form.id);
 
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Full name is required";
-    if (!form.email.trim()) e.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email";
-    if (form.atividade && !form.atividadeNumber.trim()) e.atividadeNumber = "Registration number required when Atividade is on";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const save = () => {
+  const save = async () => {
     if (!validate()) return;
-    store.upsertWorker(form);
-    toast.success(isNew ? "Worker created" : "Worker updated");
-    onClose();
+    setSaving(true);
+    try {
+      await store.saveWorker(form);
+      if (form.status !== worker?.status) {
+        await store.setStatus(form.id, form.status, "worker", form.name);
+      }
+      toast.success("Worker updated");
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save worker");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -78,11 +112,20 @@ export function WorkerDrawer({
       <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto bg-canvas p-0 sm:max-w-lg">
           <SheetHeader className="border-b border-line bg-white px-6 py-4">
-            <SheetTitle className="font-sans">{isNew ? "Add worker" : "Edit worker"}</SheetTitle>
-            <SheetDescription>All fields are editable. Changes apply immediately.</SheetDescription>
+            <SheetTitle className="font-sans">Edit worker</SheetTitle>
+            <SheetDescription>Edit profile details and review status. Changes are saved to the database.</SheetDescription>
           </SheetHeader>
 
           <div className="space-y-4 px-6 py-5">
+            <div className="rounded-xl border border-line bg-white px-4 py-3 text-xs text-slate">
+              <p className="flex items-center gap-2"><Mail size={13} /> {form.email || "—"}</p>
+              <p className="mt-1 flex items-center gap-2"><Phone size={13} /> {form.phone || "—"}</p>
+              <p className="mt-1 flex items-center gap-3">
+                <span className="inline-flex items-center gap-1"><Star size={13} className="fill-amber text-amber" /> {form.rating.toFixed(1)} ({form.ratingCount})</span>
+                <span>· {form.shiftsCompleted} shifts</span>
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Full name" required error={errors.name}>
                 <TextInput value={form.name} onChange={(e) => set({ name: e.target.value })} onBlur={validate} />
@@ -91,36 +134,47 @@ export function WorkerDrawer({
                 <TextInput value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
               </Field>
             </div>
-            <Field label="Email" required error={errors.email}>
-              <TextInput value={form.email} onChange={(e) => set({ email: e.target.value })} onBlur={validate} />
-            </Field>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nationality">
-                <SelectInput value={form.nationality} onChange={(v) => set({ nationality: v })} options={store.activeOptions("nationalities")} />
+                <TextInput value={form.nationality} onChange={(e) => set({ nationality: e.target.value })} />
               </Field>
               <Field label="City">
-                <SelectInput value={form.city} onChange={(v) => set({ city: v })} options={store.activeOptions("cities")} />
+                <TextInput value={form.city} onChange={(e) => set({ city: e.target.value })} />
               </Field>
             </div>
 
-            <Field label="Languages spoken" hint="Click to toggle, or type to add a new language">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Main role">
+                <TextInput value={form.mainRole} onChange={(e) => set({ mainRole: e.target.value })} />
+              </Field>
+              <Field label="Years in main role">
+                <TextInput
+                  type="number"
+                  min={0}
+                  value={form.mainRoleYears}
+                  onChange={(e) => set({ mainRoleYears: Number(e.target.value) })}
+                />
+              </Field>
+            </div>
+
+            <Field label="Secondary roles">
               <TagMultiSelect
-                selected={form.languages}
-                options={store.activeOptions("languages")}
-                onChange={(v) => set({ languages: v })}
-                onAddOption={(name) => store.addOption("languages", name)}
-                placeholder="New language…"
+                selected={form.subRoles}
+                options={roleOptions}
+                onChange={(v) => set({ subRoles: v })}
+                onAddOption={noop}
+                placeholder="New role…"
               />
             </Field>
 
-            <Field label="Skills / roles" hint="Click to toggle, or type to add a new skill">
+            <Field label="Languages spoken">
               <TagMultiSelect
-                selected={form.skills}
-                options={store.activeOptions("skills")}
-                onChange={(v) => set({ skills: v })}
-                onAddOption={(name) => store.addOption("skills", name)}
-                placeholder="New skill…"
+                selected={form.languages}
+                options={languageOptions}
+                onChange={(v) => set({ languages: v })}
+                onAddOption={noop}
+                placeholder="New language…"
               />
             </Field>
 
@@ -130,40 +184,44 @@ export function WorkerDrawer({
               checked={form.atividade}
               onChange={(v) => set({ atividade: v })}
             />
-            {form.atividade && (
-              <Field label="Atividade registration number" required error={errors.atividadeNumber}>
-                <TextInput value={form.atividadeNumber} onChange={(e) => set({ atividadeNumber: e.target.value })} onBlur={validate} />
-              </Field>
-            )}
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Account status">
-                <SelectInput value={form.status} onChange={(v) => set({ status: v as AccountStatus })} options={STATUSES} />
+              <Field label="Review status">
+                <SelectInput value={form.status} onChange={(v) => set({ status: v as ConsoleStatus })} options={STATUS_OPTIONS} />
               </Field>
-              <Field label="Rating">
-                <TextInput type="number" min={0} max={5} step={0.1} value={form.rating} onChange={(e) => set({ rating: Number(e.target.value) })} />
+              <Field label="Min rate (€/h)">
+                <TextInput type="number" min={0} step={0.5} value={form.minRate} onChange={(e) => set({ minRate: Number(e.target.value) })} />
               </Field>
             </div>
 
-            <Field label="Admin notes" hint="Internal only — never shown to the worker">
-              <TextArea value={form.notes} onChange={(e) => set({ notes: e.target.value })} />
+            <Field label="Rating">
+              <TextInput type="number" min={0} max={5} step={0.1} value={form.rating} onChange={(e) => set({ rating: Number(e.target.value) })} />
+            </Field>
+
+            <Field label="Portfolio / CV link" hint={form.portfolioUrl ? undefined : "Optional"}>
+              <TextInput value={form.portfolioUrl} onChange={(e) => set({ portfolioUrl: e.target.value })} placeholder="https://…" />
+            </Field>
+            {form.portfolioUrl && (
+              <a href={form.portfolioUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-pine-dark hover:underline">
+                <ExternalLink size={12} /> Open link
+              </a>
+            )}
+
+            <Field label="Bio">
+              <TextArea value={form.bio} onChange={(e) => set({ bio: e.target.value })} />
             </Field>
           </div>
 
           <SheetFooter className="mt-auto flex-row items-center justify-between gap-2 border-t border-line bg-white px-6 py-4">
-            {!isNew ? (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-              >
-                <Trash2 size={15} /> Delete
-              </button>
-            ) : (
-              <span />
-            )}
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={15} /> Delete
+            </button>
             <div className="flex gap-2">
               <GhostButton onClick={onClose}>Cancel</GhostButton>
-              <PrimaryButton onClick={save}>{isNew ? "Create worker" : "Save changes"}</PrimaryButton>
+              <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</PrimaryButton>
             </div>
           </SheetFooter>
         </SheetContent>
@@ -173,16 +231,22 @@ export function WorkerDrawer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-sans">Delete {form.name || "this worker"}?</AlertDialogTitle>
-            <AlertDialogDescription>This permanently removes the worker and all associated records.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This permanently removes the worker account and all associated records. This cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                store.removeWorker(form.id);
-                toast.success("Worker deleted");
-                setConfirmDelete(false);
-                onClose();
+              onClick={async () => {
+                try {
+                  await store.deleteUser(form.id, "worker", form.name);
+                  toast.success("Worker deleted");
+                  setConfirmDelete(false);
+                  onClose();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not delete worker");
+                }
               }}
               className="rounded-xl bg-red-600 hover:bg-red-700"
             >

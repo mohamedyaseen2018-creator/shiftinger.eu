@@ -1,19 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Shield, Plus, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Shield, ShieldCheck, Trash2, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader, Panel, Pill } from "@/components/console/ui";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ManagedList } from "@/components/console/ManagedList";
-import { Field, TextInput, SelectInput, PrimaryButton, GhostButton } from "@/components/console/forms";
-import { useAdminStore, LIST_META, type AdminUser } from "@/data/adminStore";
+import { PageHeader, Panel, Pill } from "@/components/console/ui";
+import { Field, TextInput, PrimaryButton } from "@/components/console/forms";
+import { useAdminStore, type AdminUser } from "@/data/adminStore";
+import { useAuth } from "@/lib/auth";
 import { timeAgo } from "@/data/utils";
 
 export const Route = createFileRoute("/console/settings")({
@@ -34,260 +23,171 @@ export const Route = createFileRoute("/console/settings")({
   component: SettingsPage,
 });
 
-const WEIGHT_KEYS = [
-  { key: "skills", label: "Skills match" },
-  { key: "availability", label: "Availability" },
-  { key: "rating", label: "Rating" },
-  { key: "location", label: "Location" },
-] as const;
-
-const EVENTS = [
-  "New worker registration",
-  "Shift confirmed",
-  "Application nearing expiry",
-  "Dispute raised",
-  "Business verification",
-] as const;
-
 function SettingsPage() {
   const store = useAdminStore();
-  const [start, setStart] = useState(store.window.start);
-  const [end, setEnd] = useState(store.window.end);
+  const { user } = useAuth();
+  const [email, setEmail] = useState("");
+  const [granting, setGranting] = useState(false);
+  const [revoking, setRevoking] = useState<AdminUser | null>(null);
 
-  useEffect(() => {
-    setStart(store.window.start);
-    setEnd(store.window.end);
-  }, [store.window.start, store.window.end]);
+  const grant = async () => {
+    const clean = email.trim();
+    if (!clean) return;
+    setGranting(true);
+    try {
+      await store.grantAdmin(clean);
+      toast.success("Admin access granted");
+      setEmail("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not grant admin access");
+    } finally {
+      setGranting(false);
+    }
+  };
 
-  const [weights, setWeights] = useState<Record<string, number>>({ skills: 40, availability: 25, rating: 20, location: 15 });
-  const [alerts, setAlerts] = useState<Record<string, { email: boolean; sms: boolean }>>(
-    Object.fromEntries(EVENTS.map((e) => [e, { email: true, sms: false }])),
-  );
-
-  const [editUser, setEditUser] = useState<AdminUser | null>(null);
-  const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
+  if (store.loading) {
+    return (
+      <div className="grid h-64 place-items-center">
+        <Loader2 className="animate-spin text-pine" />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <PageHeader title="Settings" subtitle="Platform configuration, lists, and admin management" />
+    <div className="space-y-6">
+      <PageHeader title="Settings" subtitle="Admin access and platform activity" />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Confirmation window */}
-        <Panel title="Confirmation window">
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Window opens (Lisbon)">
-              <TextInput type="time" value={start} onChange={(e) => setStart(e.target.value)} />
-            </Field>
-            <Field label="Window closes (Lisbon)">
-              <TextInput type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
-            </Field>
-          </div>
-          <PrimaryButton
-            className="mt-4"
-            onClick={() => {
-              if (start >= end) return toast.error("End time must be after start time");
-              store.setWindow({ start, end });
-              toast.success("Confirmation window saved");
-            }}
-          >
-            Save changes
+      <Panel title="Super admin">
+        <p className="text-sm text-slate">
+          You are signed in as <span className="font-medium text-ink">{user?.email}</span>. Super admins have full
+          access to every section of this console and can grant or revoke admin access for other accounts.
+        </p>
+      </Panel>
+
+      <Panel
+        title="Admin users"
+        action={<Pill tone="pine">{store.admins.length} admins</Pill>}
+      >
+        <div className="mb-4 flex flex-wrap items-end gap-2">
+          <Field label="Grant admin access by email" className="min-w-[240px] flex-1">
+            <TextInput
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="person@example.com"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") grant();
+              }}
+            />
+          </Field>
+          <PrimaryButton onClick={grant} disabled={granting}>
+            <UserPlus size={15} /> {granting ? "Granting…" : "Grant admin"}
           </PrimaryButton>
-        </Panel>
+        </div>
 
-        {/* Match scoring weights */}
-        <Panel title="Match scoring weights">
-          <div className="space-y-5">
-            {WEIGHT_KEYS.map((w) => (
-              <div key={w.key}>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-ink">{w.label}</span>
-                  <span className="font-semibold text-pine-dark">{weights[w.key]}%</span>
-                </div>
-                <Slider value={[weights[w.key]]} min={0} max={100} step={5} onValueChange={(v) => setWeights((p) => ({ ...p, [w.key]: v[0] }))} />
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-slate">
-            Total: <span className="font-semibold text-ink">{Object.values(weights).reduce((a, b) => a + b, 0)}%</span>
-            {Object.values(weights).reduce((a, b) => a + b, 0) !== 100 && " — should sum to 100%"}
-          </p>
-        </Panel>
-
-        {/* Platform lists */}
-        <Panel title="Platform lists" className="lg:col-span-2">
-          <p className="mb-3 text-xs text-slate">
-            Edit, reorder, and hide options. Changes apply immediately to every dropdown across the console.
-          </p>
-          <Accordion type="single" collapsible className="w-full">
-            {LIST_META.map((m) => (
-              <AccordionItem key={m.key} value={m.key}>
-                <AccordionTrigger className="text-sm">
-                  <span className="flex items-center gap-2">
-                    {m.label}
-                    <span className="rounded-full bg-mist px-2 py-0.5 text-[11px] font-normal text-slate">
-                      {store.lists[m.key].filter((o) => o.active).length} active
-                    </span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <p className="mb-3 text-[11px] text-slate">{m.help}</p>
-                  <ManagedList listKey={m.key} label={m.label.toLowerCase()} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </Panel>
-
-        {/* Notification settings */}
-        <Panel title="Notification settings" className="lg:col-span-2">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate">
-                <tr>
-                  <th className="py-2 font-semibold">Event</th>
-                  <th className="py-2 text-center font-semibold">Email</th>
-                  <th className="py-2 text-center font-semibold">SMS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {EVENTS.map((e) => (
-                  <tr key={e} className="border-t border-line">
-                    <td className="py-3 text-ink">{e}</td>
-                    <td className="py-3 text-center">
-                      <Switch checked={alerts[e].email} onCheckedChange={(v) => setAlerts((p) => ({ ...p, [e]: { ...p[e], email: v } }))} />
-                    </td>
-                    <td className="py-3 text-center">
-                      <Switch checked={alerts[e].sms} onCheckedChange={(v) => setAlerts((p) => ({ ...p, [e]: { ...p[e], sms: v } }))} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-
-        {/* Admin users */}
-        <Panel
-          title="Admin users"
-          className="lg:col-span-2"
-          action={
-            <button
-              onClick={() => setEditUser({ id: store.newId(), name: "", email: "", role: store.activeOptions("adminRoles")[0] ?? "Support", lastActive: new Date().toISOString() })}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-pine px-3 py-2 text-sm font-medium text-white hover:bg-pine-dark"
-            >
-              <Plus size={15} /> Add admin
-            </button>
-          }
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate">
-                <tr>
-                  <th className="py-2 font-semibold">Name</th>
-                  <th className="py-2 font-semibold">Email</th>
-                  <th className="py-2 font-semibold">Role</th>
-                  <th className="py-2 font-semibold">Last active</th>
-                  <th className="py-2 font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {store.adminUsers.map((u) => (
-                  <tr key={u.id} className="border-t border-line">
-                    <td className="py-3 font-medium text-ink">
-                      <span className="inline-flex items-center gap-2">
-                        <Shield size={14} className="text-pine" />
-                        {u.name}
+        <div className="overflow-x-auto rounded-xl border border-line">
+          <table className="w-full min-w-[520px] text-left text-sm">
+            <thead className="border-b border-line bg-mist text-xs uppercase tracking-wide text-slate">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Name</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Role</th>
+                <th className="px-4 py-3 font-semibold text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {store.admins.map((a) => {
+                const isSelf = a.id === user?.id;
+                return (
+                  <tr key={a.id} className="border-b border-line/70 last:border-0">
+                    <td className="px-4 py-3 font-medium text-ink">
+                      <span className="inline-flex items-center gap-1.5">
+                        <ShieldCheck size={14} className="text-pine" />
+                        {a.name}
+                        {isSelf && <span className="text-[11px] text-slate">(you)</span>}
                       </span>
                     </td>
-                    <td className="py-3 text-slate">{u.email}</td>
-                    <td className="py-3">
-                      <Pill tone={u.role === "Super admin" ? "pine" : "slate"}>{u.role}</Pill>
+                    <td className="px-4 py-3 text-ink/80">{a.email}</td>
+                    <td className="px-4 py-3">
+                      <Pill tone="pine">{a.role === "admin" ? "Super admin" : a.role}</Pill>
                     </td>
-                    <td className="py-3 text-slate">{timeAgo(u.lastActive)}</td>
-                    <td className="py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setEditUser(u)} className="rounded-lg p-1.5 text-slate hover:bg-mist hover:text-ink" title="Edit">
-                          <Pencil size={15} />
+                    <td className="px-4 py-3 text-right">
+                      {isSelf ? (
+                        <span className="text-xs text-slate">—</span>
+                      ) : (
+                        <button
+                          onClick={() => setRevoking(a)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 size={13} /> Revoke
                         </button>
-                        <button onClick={() => setDeleteUser(u)} className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600" title="Delete">
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
+                      )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-      </div>
+                );
+              })}
+              {store.admins.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate">
+                    No admin users.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
-      <AdminUserDialog user={editUser} onClose={() => setEditUser(null)} />
+      <Panel title="Audit log" action={<Shield size={16} className="text-slate" />}>
+        {store.audit.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate">No admin activity recorded yet.</p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {store.audit.map((a) => (
+              <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <span className="min-w-0 truncate text-ink">
+                  <span className="font-medium">{a.action}</span>
+                  {a.targetLabel ? ` · ${a.targetLabel}` : ""}
+                </span>
+                <span className="shrink-0 text-[11px] text-slate">
+                  {a.adminEmail ? `${a.adminEmail} · ` : ""}
+                  {timeAgo(a.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
 
-      <AlertDialog open={!!deleteUser} onOpenChange={(o) => !o && setDeleteUser(null)}>
+      <AlertDialog open={!!revoking} onOpenChange={(o) => !o && setRevoking(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-sans">Remove {deleteUser?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>This admin will lose access to the console.</AlertDialogDescription>
+            <AlertDialogTitle className="font-sans">Revoke admin access?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {revoking?.name} ({revoking?.email}) will lose access to the admin console. Their account is not deleted.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (deleteUser) store.removeAdminUser(deleteUser.id);
-                toast.success("Admin removed");
-                setDeleteUser(null);
+              onClick={async () => {
+                if (!revoking) return;
+                try {
+                  await store.revokeAdmin(revoking.id);
+                  toast.success("Admin access revoked");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not revoke admin access");
+                } finally {
+                  setRevoking(null);
+                }
               }}
               className="rounded-xl bg-red-600 hover:bg-red-700"
             >
-              Remove
+              Revoke
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-}
-
-function AdminUserDialog({ user, onClose }: { user: AdminUser | null; onClose: () => void }) {
-  const store = useAdminStore();
-  const [form, setForm] = useState<AdminUser | null>(user);
-  useEffect(() => setForm(user), [user]);
-  if (!form) return null;
-  const isNew = !store.adminUsers.some((u) => u.id === form.id);
-
-  return (
-    <Dialog open={!!user} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-sans">{isNew ? "Add admin user" : "Edit admin user"}</DialogTitle>
-          <DialogDescription>Admin users can access the console.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Field label="Name" required>
-            <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          </Field>
-          <Field label="Email" required>
-            <TextInput value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          </Field>
-          <Field label="Role">
-            <SelectInput value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={store.activeOptions("adminRoles")} />
-          </Field>
-        </div>
-        <DialogFooter>
-          <GhostButton onClick={onClose}>Cancel</GhostButton>
-          <PrimaryButton
-            onClick={() => {
-              if (!form.name.trim() || !form.email.trim()) return toast.error("Name and email are required");
-              store.upsertAdminUser(form);
-              toast.success(isNew ? "Admin added" : "Admin updated");
-              onClose();
-            }}
-          >
-            Save
-          </PrimaryButton>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

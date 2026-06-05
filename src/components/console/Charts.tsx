@@ -1,115 +1,97 @@
+import { useMemo } from "react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
-  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
+  Tooltip,
+  CartesianGrid,
 } from "recharts";
-import {
-  SHIFTS_BY_MONTH,
-  NATIONALITY_SPLIT,
-  REGISTRATIONS_BY_WEEK,
-  TOP_SECTORS,
-} from "@/data/adminMock";
+import { useAdminStore } from "@/data/adminStore";
 
-const PINE = "#1D9E75";
-const AMBER = "#FAC775";
-const SLATE = "#475569";
-const DONUT = ["#1D9E75", "#FAC775", "#475569", "#CBD5E1"];
+const COLORS = ["#1D9E75", "#FAC775", "#0f766e", "#94a3b8", "#0ea5e9", "#f97316"];
 
-const axisStyle = { fontSize: 12, fill: SLATE };
-const tooltipStyle = {
-  borderRadius: 12,
-  border: "1px solid #E2E8E5",
-  fontSize: 12,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-};
+function countBy<T>(rows: T[], key: (r: T) => string): { name: string; value: number }[] {
+  const map = new Map<string, number>();
+  rows.forEach((r) => {
+    const k = key(r) || "—";
+    map.set(k, (map.get(k) ?? 0) + 1);
+  });
+  return [...map.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+}
 
-export function ShiftsBarChart() {
-  return (
-    <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={SHIFTS_BY_MONTH} barGap={4}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF2F0" />
-        <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
-        <YAxis tick={axisStyle} axisLine={false} tickLine={false} width={32} />
-        <Tooltip contentStyle={tooltipStyle} />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="confirmed" name="Confirmed" fill={PINE} radius={[4, 4, 0, 0]} />
-        <Bar dataKey="unmatched" name="Unmatched" fill={AMBER} radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
+function Empty() {
+  return <div className="grid h-[220px] place-items-center text-sm text-slate">No data yet.</div>;
 }
 
 export function NationalityDonut() {
+  const { workers } = useAdminStore();
+  const data = useMemo(() => countBy(workers, (w) => w.nationality), [workers]);
+  if (data.length === 0) return <Empty />;
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={220}>
       <PieChart>
-        <Pie
-          data={NATIONALITY_SPLIT}
-          dataKey="value"
-          nameKey="name"
-          innerRadius={55}
-          outerRadius={90}
-          paddingAngle={3}
-        >
-          {NATIONALITY_SPLIT.map((_, i) => (
-            <Cell key={i} fill={DONUT[i % DONUT.length]} />
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip contentStyle={tooltipStyle} />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Tooltip />
       </PieChart>
     </ResponsiveContainer>
   );
 }
 
-export function RegistrationsLine() {
+export function BusinessCategoryBar() {
+  const { businesses } = useAdminStore();
+  const data = useMemo(() => countBy(businesses, (b) => b.category), [businesses]);
+  if (data.length === 0) return <Empty />;
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={REGISTRATIONS_BY_WEEK}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF2F0" />
-        <XAxis dataKey="week" tick={axisStyle} axisLine={false} tickLine={false} />
-        <YAxis tick={axisStyle} axisLine={false} tickLine={false} width={32} />
-        <Tooltip contentStyle={tooltipStyle} />
-        <Line
-          type="monotone"
-          dataKey="count"
-          name="New workers"
-          stroke={PINE}
-          strokeWidth={2.5}
-          dot={{ r: 3, fill: PINE }}
-          activeDot={{ r: 5 }}
-        />
-      </LineChart>
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#eef0f2" vertical={false} />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Bar dataKey="value" fill="#1D9E75" radius={[6, 6, 0, 0]} />
+      </BarChart>
     </ResponsiveContainer>
   );
 }
 
-export function SectorsBar() {
+export function MatchStatusBar() {
+  const { matches } = useAdminStore();
+  const data = useMemo(() => countBy(matches, (m) => m.status), [matches]);
+  if (data.length === 0) return <Empty />;
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={TOP_SECTORS} layout="vertical" margin={{ left: 12 }}>
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EEF2F0" />
-        <XAxis type="number" tick={axisStyle} axisLine={false} tickLine={false} />
-        <YAxis
-          type="category"
-          dataKey="sector"
-          tick={axisStyle}
-          axisLine={false}
-          tickLine={false}
-          width={90}
-        />
-        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F1F5F4" }} />
-        <Bar dataKey="count" name="Businesses" fill={SLATE} radius={[0, 4, 4, 0]} barSize={18} />
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#eef0f2" vertical={false} />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Bar dataKey="value" fill="#FAC775" radius={[6, 6, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function ShiftStatusBar() {
+  const { shifts } = useAdminStore();
+  const data = useMemo(() => countBy(shifts, (s) => s.status), [shifts]);
+  if (data.length === 0) return <Empty />;
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#eef0f2" vertical={false} />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Bar dataKey="value" fill="#0f766e" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
