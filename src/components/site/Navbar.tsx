@@ -32,7 +32,7 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div className="hidden items-center gap-8 text-sm font-medium md:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -95,7 +95,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="flex flex-col gap-4 border-t border-ink/5 bg-canvas px-6 py-5 md:hidden">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
