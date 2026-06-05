@@ -19,6 +19,7 @@ import { Route as ConsoleRouteImport } from './routes/console'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConsoleIndexRouteImport } from './routes/console.index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
 import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated/my-jobs'
@@ -76,6 +77,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsoleIndexRoute = ConsoleIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -116,7 +122,7 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/console': typeof ConsoleRoute
+  '/console': typeof ConsoleRouteWithChildren
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
@@ -130,11 +136,11 @@ export interface FileRoutesByFullPath {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/': typeof ConsoleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/console': typeof ConsoleRoute
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
@@ -148,13 +154,14 @@ export interface FileRoutesByTo {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console': typeof ConsoleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/console': typeof ConsoleRoute
+  '/console': typeof ConsoleRouteWithChildren
   '/for-businesses': typeof ForBusinessesRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
@@ -168,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/my-jobs': typeof AuthenticatedMyJobsRoute
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/console/': typeof ConsoleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -188,11 +196,11 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/console'
     | '/for-businesses'
     | '/jobs'
     | '/login'
@@ -206,6 +214,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console'
   id:
     | '__root__'
     | '/'
@@ -225,13 +234,14 @@ export interface FileRouteTypes {
     | '/_authenticated/my-jobs'
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
+    | '/console/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ConsoleRoute: typeof ConsoleRoute
+  ConsoleRoute: typeof ConsoleRouteWithChildren
   ForBusinessesRoute: typeof ForBusinessesRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
@@ -312,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/console/': {
+      id: '/console/'
+      path: '/'
+      fullPath: '/console/'
+      preLoaderRoute: typeof ConsoleIndexRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -387,11 +404,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ConsoleRouteChildren {
+  ConsoleIndexRoute: typeof ConsoleIndexRoute
+}
+
+const ConsoleRouteChildren: ConsoleRouteChildren = {
+  ConsoleIndexRoute: ConsoleIndexRoute,
+}
+
+const ConsoleRouteWithChildren =
+  ConsoleRoute._addFileChildren(ConsoleRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ConsoleRoute: ConsoleRoute,
+  ConsoleRoute: ConsoleRouteWithChildren,
   ForBusinessesRoute: ForBusinessesRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
@@ -402,3 +430,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
