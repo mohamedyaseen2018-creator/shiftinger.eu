@@ -185,7 +185,7 @@ function AdminPage() {
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [p, w, b, j, a, c, au, wc, roles] = await Promise.all([
+    const [p, w, b, j, a, c, au, wc, bc, wd, roles] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("worker_profiles").select("*"),
       supabase.from("business_profiles").select("*"),
@@ -194,6 +194,8 @@ function AdminPage() {
       supabase.from("conversations").select("worker_id, business_id"),
       supabase.from("admin_audit_log").select("id, admin_email, action, target_type, target_label, created_at").order("created_at", { ascending: false }),
       supabase.from("worker_contacts").select("user_id, phone"),
+      supabase.from("business_contacts").select("user_id, phone, contact_name, contact_position"),
+      supabase.from("worker_documents").select("user_id, id_document_url"),
       supabase.from("user_roles").select("user_id, role").eq("role", "admin"),
     ]);
     setAdminIds(new Set((roles.data ?? []).map((r) => r.user_id as string)));
@@ -202,11 +204,27 @@ function AdminPage() {
     (wc.data ?? []).forEach((row) => {
       phoneByUser[row.user_id as string] = (row.phone as string) ?? "";
     });
+    const docByUser: Record<string, string> = {};
+    (wd.data ?? []).forEach((row) => {
+      docByUser[row.user_id as string] = (row.id_document_url as string) ?? "";
+    });
+    const contactByUser: Record<string, { phone: string; contact_name: string; contact_position: string }> = {};
+    (bc.data ?? []).forEach((row) => {
+      contactByUser[row.user_id as string] = {
+        phone: (row.phone as string) ?? "",
+        contact_name: (row.contact_name as string) ?? "",
+        contact_position: (row.contact_position as string) ?? "",
+      };
+    });
     setWorkers(((w.data ?? []) as WorkerRow[]).map((row) => ({
       ...row,
       phone: phoneByUser[row.user_id] ?? "",
+      id_document_url: docByUser[row.user_id] ?? "",
     })));
-    setBusinesses((b.data ?? []) as BusinessRow[]);
+    setBusinesses(((b.data ?? []) as BusinessRow[]).map((row) => ({
+      ...row,
+      ...(contactByUser[row.user_id] ?? { phone: "", contact_name: "", contact_position: "" }),
+    })));
     setJobs((j.data ?? []) as JobRow[]);
     setApps((a.data ?? []) as AppRow[]);
     setConvs((c.data ?? []) as ConvRow[]);
