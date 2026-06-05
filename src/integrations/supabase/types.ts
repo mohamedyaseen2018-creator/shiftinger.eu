@@ -100,6 +100,33 @@ export type Database = {
           },
         ]
       }
+      business_contacts: {
+        Row: {
+          contact_name: string | null
+          contact_position: string | null
+          created_at: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          contact_position?: string | null
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          contact_position?: string | null
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_locations: {
         Row: {
           address: string | null
@@ -129,13 +156,10 @@ export type Database = {
           categories: Json
           category: string | null
           city: string | null
-          contact_name: string | null
-          contact_position: string | null
           created_at: string
           description: string | null
           id: string
           is_early_bird: boolean
-          phone: string | null
           rating: number
           rating_count: number
           updated_at: string
@@ -149,13 +173,10 @@ export type Database = {
           categories?: Json
           category?: string | null
           city?: string | null
-          contact_name?: string | null
-          contact_position?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_early_bird?: boolean
-          phone?: string | null
           rating?: number
           rating_count?: number
           updated_at?: string
@@ -169,13 +190,10 @@ export type Database = {
           categories?: Json
           category?: string | null
           city?: string | null
-          contact_name?: string | null
-          contact_position?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_early_bird?: boolean
-          phone?: string | null
           rating?: number
           rating_count?: number
           updated_at?: string
@@ -527,6 +545,27 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_documents: {
+        Row: {
+          created_at: string
+          id_document_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id_document_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id_document_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       worker_profiles: {
         Row: {
           atividade: boolean
@@ -538,7 +577,6 @@ export type Database = {
           created_at: string
           experience: Json
           id: string
-          id_document_url: string | null
           languages: Json
           looking_for: Json
           main_role: string | null
@@ -568,7 +606,6 @@ export type Database = {
           created_at?: string
           experience?: Json
           id?: string
-          id_document_url?: string | null
           languages?: Json
           looking_for?: Json
           main_role?: string | null
@@ -598,7 +635,6 @@ export type Database = {
           created_at?: string
           experience?: Json
           id?: string
-          id_document_url?: string | null
           languages?: Json
           looking_for?: Json
           main_role?: string | null
