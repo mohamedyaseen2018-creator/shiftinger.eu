@@ -152,10 +152,10 @@ function HomePage() {
           <div className="mb-16 max-w-xl">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
             <h2 className="mt-3 font-serif text-4xl leading-tight">
-              Simple for both <span className="italic">sides</span>
+              {c("home.how_title")}
             </h2>
             <p className="mt-4 text-canvas/60">
-              Whether you're looking for extra income or need reliable staff on short notice — the process takes minutes.
+              {c("home.how_subtitle")}
             </p>
           </div>
           <div className="grid gap-16 lg:grid-cols-2">
