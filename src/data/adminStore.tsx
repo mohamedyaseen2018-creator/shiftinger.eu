@@ -25,6 +25,8 @@ import {
   consoleSetMatchStatus,
   consoleSetAdminRole,
   consoleDeleteUser,
+  consoleSignWorkerDoc,
+  consoleSetWorkerVerified,
   type ConsoleStatus,
 } from "@/lib/console.functions";
 import {
@@ -39,6 +41,8 @@ import {
   consoleDeleteListOption,
   consoleCreateWorker,
   consoleCreateBusiness,
+  consoleUpsertJob,
+  consoleDeleteJob,
 } from "@/lib/consoleConfig.functions";
 
 export type { ConsoleStatus };
