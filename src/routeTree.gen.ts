@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConsoleIndexRouteImport } from './routes/console.index'
 import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
 import { Route as ConsoleShiftsRouteImport } from './routes/console.shifts'
+import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
 import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
@@ -95,6 +96,11 @@ const ConsoleShiftsRoute = ConsoleShiftsRouteImport.update({
   path: '/shifts',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleMatchesRoute = ConsoleMatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
   id: '/businesses',
   path: '/businesses',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/matches': typeof ConsoleMatchesRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/matches': typeof ConsoleMatchesRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console': typeof ConsoleIndexRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/matches': typeof ConsoleMatchesRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
   '/console/': typeof ConsoleIndexRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
+    | '/console/matches'
     | '/console/shifts'
     | '/console/workers'
     | '/console/'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
+    | '/console/matches'
     | '/console/shifts'
     | '/console/workers'
     | '/console'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
     | '/console/businesses'
+    | '/console/matches'
     | '/console/shifts'
     | '/console/workers'
     | '/console/'
@@ -379,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleShiftsRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/matches': {
+      id: '/console/matches'
+      path: '/matches'
+      fullPath: '/console/matches'
+      preLoaderRoute: typeof ConsoleMatchesRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/console/businesses': {
       id: '/console/businesses'
       path: '/businesses'
@@ -463,6 +482,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface ConsoleRouteChildren {
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
+  ConsoleMatchesRoute: typeof ConsoleMatchesRoute
   ConsoleShiftsRoute: typeof ConsoleShiftsRoute
   ConsoleWorkersRoute: typeof ConsoleWorkersRoute
   ConsoleIndexRoute: typeof ConsoleIndexRoute
@@ -470,6 +490,7 @@ interface ConsoleRouteChildren {
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleBusinessesRoute: ConsoleBusinessesRoute,
+  ConsoleMatchesRoute: ConsoleMatchesRoute,
   ConsoleShiftsRoute: ConsoleShiftsRoute,
   ConsoleWorkersRoute: ConsoleWorkersRoute,
   ConsoleIndexRoute: ConsoleIndexRoute,
@@ -493,3 +514,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
