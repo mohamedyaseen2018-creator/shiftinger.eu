@@ -1,0 +1,1 @@
+ALTER TABLE public.worker_profiles ADD COLUMN IF NOT EXISTS portfolio_url text;
