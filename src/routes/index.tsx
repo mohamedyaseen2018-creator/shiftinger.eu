@@ -241,9 +241,9 @@ function HomePage() {
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Latest shifts</span>
               <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
-                Shifts open <span className="italic">now</span>
+                {c("home.shifts_title")}
               </h2>
-              <p className="mt-2 text-ink/60">Browse the latest posted shifts across Lisbon, Porto, and beyond.</p>
+              <p className="mt-2 text-ink/60">{c("home.shifts_subtitle")}</p>
             </div>
             <Link
               to="/jobs"
