@@ -293,8 +293,8 @@ interface StoreValue {
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
 
-  createWorker: (input: Parameters<typeof consoleCreateWorker>[0]["data"]) => Promise<void>;
-  createBusiness: (input: Parameters<typeof consoleCreateBusiness>[0]["data"]) => Promise<void>;
+  createWorker: (input: NewWorkerInput) => Promise<void>;
+  createBusiness: (input: NewBusinessInput) => Promise<void>;
   saveConfig: (c: PlatformConfig) => Promise<void>;
   saveConfirmationWindow: (w: ConfirmationWindow) => Promise<void>;
   upsertKpi: (k: Partial<Kpi> & Pick<Kpi, "name" | "target" | "unit" | "frequency" | "category">) => Promise<void>;
