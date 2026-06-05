@@ -375,6 +375,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [lists, setLists] = useState<ListOption[]>([]);
+  const [jobCatalog, setJobCatalog] = useState<JobCatalogEntry[]>([]);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -392,6 +393,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       setKpis(cfg.kpis as Kpi[]);
       setDisputes(cfg.disputes as Dispute[]);
       setLists(cfg.lists as ListOption[]);
+      setJobCatalog(cfg.jobCatalog as JobCatalogEntry[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load console data.");
       throw e;
