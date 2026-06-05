@@ -26,6 +26,7 @@ import { Route as ConsoleSettingsRouteImport } from './routes/console.settings'
 import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
 import { Route as ConsoleDocumentsRouteImport } from './routes/console.documents'
 import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
+import { Route as ConsoleContentRouteImport } from './routes/console.content'
 import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
@@ -118,6 +119,11 @@ const ConsoleDisputesRoute = ConsoleDisputesRouteImport.update({
   path: '/disputes',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleContentRoute = ConsoleContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
   id: '/businesses',
   path: '/businesses',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/documents': typeof ConsoleDocumentsRoute
   '/console/matches': typeof ConsoleMatchesRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/documents': typeof ConsoleDocumentsRoute
   '/console/matches': typeof ConsoleMatchesRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/documents': typeof ConsoleDocumentsRoute
   '/console/matches': typeof ConsoleMatchesRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
+    | '/console/content'
     | '/console/disputes'
     | '/console/documents'
     | '/console/matches'
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
+    | '/console/content'
     | '/console/disputes'
     | '/console/documents'
     | '/console/matches'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
     | '/console/businesses'
+    | '/console/content'
     | '/console/disputes'
     | '/console/documents'
     | '/console/matches'
@@ -443,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleDisputesRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/content': {
+      id: '/console/content'
+      path: '/content'
+      fullPath: '/console/content'
+      preLoaderRoute: typeof ConsoleContentRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/console/businesses': {
       id: '/console/businesses'
       path: '/businesses'
@@ -518,6 +537,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface ConsoleRouteChildren {
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
+  ConsoleContentRoute: typeof ConsoleContentRoute
   ConsoleDisputesRoute: typeof ConsoleDisputesRoute
   ConsoleDocumentsRoute: typeof ConsoleDocumentsRoute
   ConsoleMatchesRoute: typeof ConsoleMatchesRoute
@@ -529,6 +549,7 @@ interface ConsoleRouteChildren {
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleBusinessesRoute: ConsoleBusinessesRoute,
+  ConsoleContentRoute: ConsoleContentRoute,
   ConsoleDisputesRoute: ConsoleDisputesRoute,
   ConsoleDocumentsRoute: ConsoleDocumentsRoute,
   ConsoleMatchesRoute: ConsoleMatchesRoute,
