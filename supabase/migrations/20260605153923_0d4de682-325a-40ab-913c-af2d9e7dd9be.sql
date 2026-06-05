@@ -1,0 +1,1 @@
+UPDATE public.platform_lists SET sort_order = 9999 WHERE list_key = 'city' AND value = 'Other';
