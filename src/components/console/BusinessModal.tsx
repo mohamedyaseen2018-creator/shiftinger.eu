@@ -63,6 +63,9 @@ export function BusinessModal({
     setErrors({});
   }, [business]);
 
+  const addOption = (listKey: ListKey) => (value: string) =>
+    store.upsertListOption({ listKey, value }).catch(() => {});
+
   if (!form) return null;
   const set = (patch: Partial<Business>) => setForm((f) => (f ? { ...f, ...patch } : f));
 
