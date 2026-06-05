@@ -103,6 +103,8 @@ export const getConsoleData = createServerFn({ method: "GET" })
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         portfolioUrl: w.portfolio_url ?? "",
         bio: w.bio ?? "",
+        adminNotes: w.admin_notes ?? "",
+        atividadeNumber: w.atividade_number ?? "",
       };
     });
 
