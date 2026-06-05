@@ -547,6 +547,7 @@ export type Database = {
           min_rate: number | null
           name: string | null
           nationality: string | null
+          portfolio_url: string | null
           rating: number
           rating_count: number
           residence: string | null
@@ -576,6 +577,7 @@ export type Database = {
           min_rate?: number | null
           name?: string | null
           nationality?: string | null
+          portfolio_url?: string | null
           rating?: number
           rating_count?: number
           residence?: string | null
@@ -605,6 +607,7 @@ export type Database = {
           min_rate?: number | null
           name?: string | null
           nationality?: string | null
+          portfolio_url?: string | null
           rating?: number
           rating_count?: number
           residence?: string | null

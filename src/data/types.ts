@@ -57,6 +57,7 @@ export interface WorkerProfile {
   phone: string;
   nationality: string;
   avatarUrl?: string | null;
+  portfolioUrl?: string | null;
 }
 
 export interface Job {

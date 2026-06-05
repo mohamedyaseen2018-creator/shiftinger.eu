@@ -85,6 +85,23 @@ function WorkerEdit({ userId }: { userId: string }) {
     setData({ ...data, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] });
   };
 
+  const subRoles = Array.isArray(data.sub_roles)
+    ? (data.sub_roles as { role: string; years: number }[])
+    : [];
+  const toggleSubRole = (role: string) => {
+    const exists = subRoles.some((s) => s.role === role);
+    const next = exists
+      ? subRoles.filter((s) => s.role !== role)
+      : [...subRoles, { role, years: 0 }];
+    setData({ ...data, sub_roles: next });
+  };
+  const setSubRoleYears = (role: string, years: number) => {
+    setData({
+      ...data,
+      sub_roles: subRoles.map((s) => (s.role === role ? { ...s, years } : s)),
+    });
+  };
+
   const save = async () => {
     setBusy(true);
     const { error: cErr } = await supabase
@@ -98,6 +115,8 @@ function WorkerEdit({ userId }: { userId: string }) {
         nationality: (data.nationality as string) || null,
         main_role: data.main_role as string,
         main_role_years: Number(data.main_role_years) || 0,
+        sub_roles: subRoles,
+        portfolio_url: (data.portfolio_url as string) || null,
         min_rate: Number(data.min_rate) || 0,
         bio: (data.bio as string) || null,
         atividade: Boolean(data.atividade),
@@ -140,6 +159,35 @@ function WorkerEdit({ userId }: { userId: string }) {
         <div><Label>Years of experience</Label><input type="number" className={inputClass} value={(data.main_role_years as number) ?? 0} onChange={(e) => setData({ ...data, main_role_years: Number(e.target.value) })} /></div>
         <div><Label>Minimum rate (€/hr)</Label><input type="number" className={inputClass} value={(data.min_rate as number) ?? 0} onChange={(e) => setData({ ...data, min_rate: Number(e.target.value) })} /></div>
       </div>
+
+      <div>
+        <Label>Secondary roles you can work</Label>
+        <div className="flex flex-wrap gap-2">
+          {ROLE_OPTIONS.filter((r) => r !== (data.main_role as string)).map((r) => {
+            const active = subRoles.some((s) => s.role === r);
+            return (
+              <button key={r} type="button" onClick={() => toggleSubRole(r)}
+                className={`rounded-full px-3 py-1 text-xs ring-1 transition-colors ${active ? "bg-teal text-canvas ring-teal" : "ring-ink/15 text-ink/70 hover:bg-ink/5"}`}>{r}</button>
+            );
+          })}
+        </div>
+        {subRoles.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {subRoles.map((s) => (
+              <div key={s.role} className="flex items-center justify-between gap-3">
+                <span className="text-sm text-ink/70">{s.role}</span>
+                <div className="flex items-center gap-2">
+                  <input type="number" min={0} className="w-20 rounded-md border-0 bg-canvas px-2 py-1.5 text-sm text-ink ring-1 ring-ink/10 focus:outline-none focus:ring-2 focus:ring-teal"
+                    value={s.years} onChange={(e) => setSubRoleYears(s.role, Number(e.target.value))} />
+                  <span className="text-xs text-ink/40">yrs</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div><Label>CV / portfolio link</Label><input type="url" placeholder="https://..." className={inputClass} value={(data.portfolio_url as string) ?? ""} onChange={(e) => setData({ ...data, portfolio_url: e.target.value })} /></div>
 
       <div>
         <Label>Languages</Label>

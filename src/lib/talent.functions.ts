@@ -13,7 +13,7 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
   const { data: profiles, error } = await supabaseAdmin
     .from("worker_profiles")
     .select(
-      "id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, atividade, bio, min_rate, looking_for, available_days, time_slots, verified, rating, rating_count, shifts_completed, avatar_url",
+      "id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, atividade, bio, min_rate, looking_for, available_days, time_slots, verified, rating, rating_count, shifts_completed, avatar_url, portfolio_url",
     )
     .eq("verified", true)
     .eq("availability_visible", true);
