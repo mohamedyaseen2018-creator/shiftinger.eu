@@ -126,6 +126,12 @@ function ShiftsPage() {
             options: ["open", "matched", "confirmed", "expired", "cancelled"],
           },
           { key: "city", label: "City", field: (s) => s.city, options: CITY_FILTER },
+          {
+            key: "when",
+            label: "Date",
+            field: (s) => dateBucket(s.date),
+            options: ["Past", "Today", "Next 7 days", "Later"],
+          },
         ]}
       />
     </div>
