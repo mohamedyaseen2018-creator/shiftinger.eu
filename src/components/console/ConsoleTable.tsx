@@ -128,7 +128,13 @@ export function ConsoleTable<T>({
           </thead>
           <tbody>
             {pageRows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-line/70 last:border-0 hover:bg-mist/50">
+              <tr
+                key={rowKey(row)}
+                className={cn(
+                  "border-b border-line/70 last:border-0 hover:bg-mist/50",
+                  rowClassName?.(row),
+                )}
+              >
                 {columns.map((c) => (
                   <td key={c.key} className={cn("whitespace-nowrap px-4 py-3 text-ink/80", c.className)}>
                     {c.render ? c.render(row) : c.value(row)}
