@@ -106,8 +106,21 @@ function WorkersPage() {
             field: (w) => STATUS_LABEL[w.status],
             options: [...new Set(store.workers.map((w) => STATUS_LABEL[w.status]))],
           },
+          {
+            key: "docs",
+            label: "Documents",
+            field: (w) => (w.hasDocuments ? "Uploaded" : "Missing"),
+            options: ["Uploaded", "Missing"],
+          },
         ]}
-        rowClassName={() => "cursor-pointer"}
+        rowClassName={(w) =>
+          cn(
+            "cursor-pointer",
+            w.hasDocuments
+              ? "bg-pine-soft/40 hover:bg-pine-soft/60"
+              : "bg-red-50 hover:bg-red-100/70",
+          )
+        }
         empty="No workers yet."
         onRowClick={(w) => setEditing(w)}
       />
