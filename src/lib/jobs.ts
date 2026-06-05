@@ -10,7 +10,6 @@ interface BusinessLite {
   rating: number;
   rating_count: number;
   is_early_bird: boolean;
-  phone: string | null;
 }
 
 export interface JobRow {
@@ -81,7 +80,7 @@ export async function fetchOpenJobs(): Promise<{ jobs: JobRow[]; businesses: Rec
   if (ownerIds.length) {
     const { data: bps } = await supabase
       .from("business_profiles")
-      .select("user_id, business_name, category, city, area, rating, rating_count, is_early_bird, phone")
+      .select("user_id, business_name, category, city, area, rating, rating_count, is_early_bird")
       .in("user_id", ownerIds);
     (bps ?? []).forEach((b) => (businesses[(b as BusinessLite).user_id] = b as BusinessLite));
   }

@@ -268,8 +268,12 @@ function BusinessEdit({ userId }: { userId: string }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle()
-      .then(({ data }) => setData(data));
+    Promise.all([
+      supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("business_contacts").select("phone").eq("user_id", userId).maybeSingle(),
+    ]).then(([bp, bc]) => {
+      if (bp.data) setData({ ...bp.data, phone: (bc.data?.phone as string) ?? "" });
+    });
     supabase.from("business_locations").select("address").eq("business_id", userId).maybeSingle()
       .then(({ data }) => setAddress((data?.address as string) ?? ""));
   }, [userId]);
@@ -285,13 +289,15 @@ function BusinessEdit({ userId }: { userId: string }) {
         category: data.category as string,
         city: data.city as string,
         area: (data.area as string) || null,
-        phone: data.phone as string,
         description: (data.description as string) || null,
       })
       .eq("user_id", userId);
+    const { error: cErr } = await supabase
+      .from("business_contacts")
+      .upsert({ user_id: userId, phone: (data.phone as string) ?? "" }, { onConflict: "user_id" });
     await supabase.from("business_locations").upsert({ business_id: userId, address });
     setBusy(false);
-    if (error) toast.error("Could not save changes.");
+    if (error || cErr) toast.error("Could not save changes.");
     else toast.success("Business profile updated.");
   };
 
