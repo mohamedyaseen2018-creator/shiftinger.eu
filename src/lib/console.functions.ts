@@ -334,6 +334,12 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         contactPosition: z.string().max(120).optional().default(""),
         rating: z.number().min(0).max(5).optional().default(0),
         isEarlyBird: z.boolean().optional().default(false),
+        adminNotes: z.string().max(2000).optional().default(""),
+        nif: z.string().max(40).optional().default(""),
+        subSector: z.string().max(120).optional().default(""),
+        displayInitials: z.string().max(40).optional().default(""),
+        languagesRequired: z.array(z.string().max(60)).max(40).optional().default([]),
+        preferredRoles: z.array(z.string().max(60)).max(40).optional().default([]),
       })
       .parse(i),
   )
@@ -351,6 +357,12 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         description: data.description,
         rating: data.rating,
         is_early_bird: data.isEarlyBird,
+        admin_notes: data.adminNotes,
+        nif: data.nif,
+        sub_sector: data.subSector,
+        display_initials: data.displayInitials,
+        languages_required: data.languagesRequired,
+        preferred_roles: data.preferredRoles,
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);
