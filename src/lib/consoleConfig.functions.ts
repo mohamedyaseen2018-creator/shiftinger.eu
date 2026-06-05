@@ -467,3 +467,49 @@ export const consoleCreateBusiness = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+// ── WRITE: job catalog upsert (create or edit) ───────────────────────────────
+export const consoleUpsertJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        name: z.string().min(1).max(120),
+        emoji: z.string().max(16).optional().default(""),
+        skills: z.array(z.string().min(1).max(80)).max(40).optional().default([]),
+        active: z.boolean().optional().default(true),
+        sortOrder: z.number().int().min(0).max(9999).optional().default(0),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const row = {
+      name: data.name,
+      emoji: data.emoji,
+      skills: data.skills,
+      active: data.active,
+      sort_order: data.sortOrder,
+    };
+    if (data.id) {
+      const { error } = await supabaseAdmin.from("job_catalog").update(row).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin.from("job_catalog").insert(row);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const consoleDeleteJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("job_catalog").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
