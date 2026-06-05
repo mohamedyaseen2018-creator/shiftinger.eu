@@ -55,6 +55,7 @@ function mapWorker(r: Record<string, unknown>): WorkerProfile {
     minRate: Number(r.min_rate) || 0,
     phone: (r.phone as string) ?? "",
     nationality: (r.nationality as string) ?? "",
+    portfolioUrl: (r.portfolio_url as string) ?? null,
   };
 }
 
