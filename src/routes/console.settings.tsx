@@ -15,6 +15,7 @@ import {
 import { PageHeader, Panel, Pill } from "@/components/console/ui";
 import { Field, TextInput, PrimaryButton } from "@/components/console/forms";
 import { PlatformListsPanel } from "@/components/console/PlatformListsPanel";
+import { JobCatalogPanel } from "@/components/console/JobCatalogPanel";
 import { useAdminStore, type AdminUser } from "@/data/adminStore";
 import { useAuth } from "@/lib/auth";
 import { timeAgo } from "@/data/utils";
