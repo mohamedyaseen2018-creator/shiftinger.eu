@@ -579,6 +579,31 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         await consoleDeleteListOption({ data: { id } });
         await refresh();
       },
+      upsertJob: async (j) => {
+        await consoleUpsertJob({
+          data: {
+            id: j.id,
+            name: j.name,
+            emoji: j.emoji ?? "",
+            skills: j.skills ?? [],
+            active: j.active ?? true,
+            sortOrder: j.sortOrder ?? 0,
+          },
+        });
+        await refresh();
+      },
+      deleteJob: async (id) => {
+        await consoleDeleteJob({ data: { id } });
+        await refresh();
+      },
+      signWorkerDoc: async (userId) => {
+        const res = await consoleSignWorkerDoc({ data: { userId } });
+        return res.url;
+      },
+      setWorkerVerified: async (userId, verified, label) => {
+        await consoleSetWorkerVerified({ data: { userId, verified, targetLabel: label } });
+        await refresh();
+      },
       listFor: (key, includeInactive = false) =>
         lists
           .filter((l) => l.listKey === key && (includeInactive || l.active))
