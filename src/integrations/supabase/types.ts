@@ -150,6 +150,7 @@ export type Database = {
       }
       business_profiles: {
         Row: {
+          admin_notes: string
           area: string | null
           avatar_url: string | null
           business_name: string | null
@@ -158,15 +159,21 @@ export type Database = {
           city: string | null
           created_at: string
           description: string | null
+          display_initials: string
           id: string
           is_early_bird: boolean
+          languages_required: Json
+          nif: string
+          preferred_roles: Json
           rating: number
           rating_count: number
+          sub_sector: string
           updated_at: string
           user_id: string
           verified: boolean
         }
         Insert: {
+          admin_notes?: string
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -175,15 +182,21 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          display_initials?: string
           id?: string
           is_early_bird?: boolean
+          languages_required?: Json
+          nif?: string
+          preferred_roles?: Json
           rating?: number
           rating_count?: number
+          sub_sector?: string
           updated_at?: string
           user_id: string
           verified?: boolean
         }
         Update: {
+          admin_notes?: string
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -192,10 +205,15 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          display_initials?: string
           id?: string
           is_early_bird?: boolean
+          languages_required?: Json
+          nif?: string
+          preferred_roles?: Json
           rating?: number
           rating_count?: number
+          sub_sector?: string
           updated_at?: string
           user_id?: string
           verified?: boolean
@@ -763,7 +781,9 @@ export type Database = {
       }
       worker_profiles: {
         Row: {
+          admin_notes: string
           atividade: boolean
+          atividade_number: string
           availability_visible: boolean
           available_days: Json
           avatar_url: string | null
@@ -792,7 +812,9 @@ export type Database = {
           verified: boolean
         }
         Insert: {
+          admin_notes?: string
           atividade?: boolean
+          atividade_number?: string
           availability_visible?: boolean
           available_days?: Json
           avatar_url?: string | null
@@ -821,7 +843,9 @@ export type Database = {
           verified?: boolean
         }
         Update: {
+          admin_notes?: string
           atividade?: boolean
+          atividade_number?: string
           availability_visible?: boolean
           available_days?: Json
           avatar_url?: string | null
