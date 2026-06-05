@@ -1,4 +1,4 @@
-import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star } from "lucide-react";
+import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star, FileText } from "lucide-react";
 import type { WorkerProfile } from "@/data/types";
 import {
   getInitials,
