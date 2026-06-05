@@ -46,12 +46,13 @@ export const getConsoleConfig = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [cfgR, cwR, kpisR, dispR, listsR] = await Promise.all([
+    const [cfgR, cwR, kpisR, dispR, listsR, jobsR] = await Promise.all([
       supabaseAdmin.from("platform_config").select("*").eq("id", 1).maybeSingle(),
       supabaseAdmin.from("confirmation_window").select("*").eq("id", 1).maybeSingle(),
       supabaseAdmin.from("kpi_settings").select("*").order("sort_order", { ascending: true }),
       supabaseAdmin.from("disputes").select("*").order("created_at", { ascending: false }),
       supabaseAdmin.from("platform_lists").select("*").order("sort_order", { ascending: true }),
+      supabaseAdmin.from("job_catalog").select("*").order("sort_order", { ascending: true }),
     ]);
 
     const c = cfgR.data;
