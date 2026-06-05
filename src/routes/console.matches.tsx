@@ -1,29 +1,53 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, X, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Pill, statusTone } from "@/components/console/ui";
 import { ConsoleTable, type Col } from "@/components/console/ConsoleTable";
-import { useAdminStore, type Match } from "@/data/adminStore";
+import { SelectInput } from "@/components/console/forms";
+import {
+  useAdminStore,
+  maskBusiness,
+  type Match,
+  type ApplicationStatus,
+} from "@/data/adminStore";
 
 export const Route = createFileRoute("/console/matches")({
   head: () => ({ meta: [{ title: "Matches — Shiftinger admin" }] }),
   component: MatchesPage,
 });
 
+const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
+  { value: "applied", label: "Applied" },
+  { value: "matched", label: "Matched" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "working", label: "Working" },
+  { value: "completed", label: "Completed" },
+  { value: "rejected", label: "Rejected" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 function MatchesPage() {
   const store = useAdminStore();
 
+  const change = async (id: string, status: ApplicationStatus) => {
+    try {
+      await store.setMatchStatus(id, status);
+      toast.success("Status updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update status");
+    }
+  };
+
   const columns: Col<Match>[] = [
-    { key: "id", label: "Match", value: (m) => m.id, render: (m) => <span className="font-mono text-xs">{m.id}</span> },
     { key: "worker", label: "Worker", value: (m) => m.workerName },
     {
       key: "business",
       label: "Business",
-      value: (m) => store.businessLabel(m.businessId, m.status === "confirmed"),
-      render: (m) => <span className="font-mono text-ink">{store.businessLabel(m.businessId, m.status === "confirmed")}</span>,
+      value: (m) => maskBusiness(m.businessName, m.businessVerified),
+      render: (m) => <span className="font-mono text-ink">{maskBusiness(m.businessName, m.businessVerified)}</span>,
     },
-    { key: "role", label: "Role", value: (m) => m.role },
-    { key: "date", label: "Date", value: (m) => m.date },
+    { key: "role", label: "Role", value: (m) => m.role || "—" },
+    { key: "date", label: "Date", value: (m) => m.date ?? "—" },
     {
       key: "score",
       label: "Match score",
@@ -45,48 +69,49 @@ function MatchesPage() {
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "Set status",
       value: () => "",
       csv: false,
       render: (m) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => { store.upsertMatch({ ...m, status: "confirmed" }); toast.success(`${m.id} confirmed`); }}
-            className="rounded-lg p-1.5 text-slate hover:bg-pine-soft hover:text-pine-dark"
-            title="Confirm"
-          >
-            <Check size={16} />
-          </button>
-          <button
-            onClick={() => { store.upsertMatch({ ...m, status: "declined" }); toast.error(`${m.id} declined`); }}
-            className="rounded-lg p-1.5 text-slate hover:bg-amber-soft hover:text-amber-dark"
-            title="Decline"
-          >
-            <X size={16} />
-          </button>
-          <button
-            onClick={() => { store.removeMatch(m.id); toast.success(`${m.id} deleted`); }}
-            className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
+        <div onClick={(e) => e.stopPropagation()}>
+          <SelectInput
+            value={m.status}
+            onChange={(v) => change(m.id, v as ApplicationStatus)}
+            options={STATUS_OPTIONS}
+            className="py-1 text-xs"
+          />
         </div>
       ),
     },
   ];
 
+  if (store.loading) {
+    return (
+      <div className="grid h-64 place-items-center">
+        <Loader2 className="animate-spin text-pine" />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <PageHeader title="Matches" subtitle="Worker-to-shift pairings and their match quality" />
+      <PageHeader title="Matches" subtitle={`${store.matches.length} applications`} />
       <ConsoleTable
         rows={store.matches}
         columns={columns}
         rowKey={(m) => m.id}
         csvName="matches"
-        searchPlaceholder="Search by worker or match…"
-        search={(m) => `${m.id} ${m.workerName} ${m.role}`}
-        filters={[{ key: "status", label: "Status", field: (m) => m.status, options: ["pending", "confirmed", "declined"] }]}
+        searchPlaceholder="Search by worker, business, role…"
+        search={(m) => `${m.workerName} ${m.businessName} ${m.role}`}
+        filters={[
+          {
+            key: "status",
+            label: "Status",
+            field: (m) => m.status,
+            options: [...new Set(store.matches.map((m) => m.status))],
+          },
+        ]}
+        empty="No applications yet."
       />
     </div>
   );
