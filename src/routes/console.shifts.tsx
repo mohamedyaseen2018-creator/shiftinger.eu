@@ -23,6 +23,18 @@ function windowActive(s: AdminShift): boolean {
   return s.status === "matched" && isConfirmationWindowOpen();
 }
 
+function dateBucket(iso: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(iso);
+  d.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays < 0) return "Past";
+  if (diffDays === 0) return "Today";
+  if (diffDays <= 7) return "Next 7 days";
+  return "Later";
+}
+
 function ShiftsPage() {
   const open = isConfirmationWindowOpen();
 
