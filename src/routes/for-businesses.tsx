@@ -85,7 +85,7 @@ function ForBusinessesPage() {
           <div className="mb-14 text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
             <h2 className="mt-2 font-serif text-4xl text-ink">
-              From post to confirmed <span className="italic">in hours</span>
+              {c("why.process_title")}
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
