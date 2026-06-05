@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, Ban, Trash2, Star } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { Pencil, Star, Plus } from "lucide-react";
 import { PageHeader, Pill, statusTone } from "@/components/console/ui";
 import { ConsoleTable, type Col } from "@/components/console/ConsoleTable";
-import { WORKERS, NATIONALITY_FILTER, type AdminWorker } from "@/data/adminMock";
+import { WorkerDrawer } from "@/components/console/WorkerDrawer";
+import { useAdminStore, emptyWorker, type Worker } from "@/data/adminStore";
 
 export const Route = createFileRoute("/console/workers")({
   head: () => ({ meta: [{ title: "Workers — Shiftinger admin" }] }),
@@ -11,7 +12,10 @@ export const Route = createFileRoute("/console/workers")({
 });
 
 function WorkersPage() {
-  const columns: Col<AdminWorker>[] = [
+  const store = useAdminStore();
+  const [editing, setEditing] = useState<Worker | null>(null);
+
+  const columns: Col<Worker>[] = [
     {
       key: "name",
       label: "Name",
@@ -69,48 +73,44 @@ function WorkersPage() {
       value: () => "",
       csv: false,
       render: (w) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => toast.info(`Viewing ${w.name}`)}
-            className="rounded-lg p-1.5 text-slate hover:bg-mist hover:text-ink"
-            title="View"
-          >
-            <Eye size={16} />
-          </button>
-          <button
-            onClick={() => toast.success(`${w.name} suspended`)}
-            className="rounded-lg p-1.5 text-slate hover:bg-amber-soft hover:text-amber-dark"
-            title="Suspend"
-          >
-            <Ban size={16} />
-          </button>
-          <button
-            onClick={() => toast.error(`${w.name} deleted`)}
-            className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+        <button
+          onClick={() => setEditing(w)}
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate hover:bg-mist hover:text-ink"
+          title="Edit"
+        >
+          <Pencil size={15} /> Edit
+        </button>
       ),
     },
   ];
 
   return (
     <div>
-      <PageHeader title="Workers" subtitle={`${WORKERS.length} registered workers`} />
+      <PageHeader
+        title="Workers"
+        subtitle={`${store.workers.length} registered workers`}
+        action={
+          <button
+            onClick={() => setEditing(emptyWorker(store.newId()))}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-dark"
+          >
+            <Plus size={15} /> Add worker
+          </button>
+        }
+      />
       <ConsoleTable
-        rows={WORKERS}
+        rows={store.workers}
         columns={columns}
         rowKey={(w) => w.id}
         csvName="workers"
         searchPlaceholder="Search by name or skill…"
         search={(w) => `${w.name} ${w.skills.join(" ")} ${w.nationality}`}
         filters={[
-          { key: "nat", label: "Nationality", field: (w) => w.nationality, options: NATIONALITY_FILTER },
-          { key: "status", label: "Status", field: (w) => w.status, options: ["active", "inactive"] },
+          { key: "nat", label: "Nationality", field: (w) => w.nationality, options: store.activeOptions("nationalities") },
+          { key: "status", label: "Status", field: (w) => w.status, options: ["active", "inactive", "suspended"] },
         ]}
       />
+      <WorkerDrawer worker={editing} open={!!editing} onClose={() => setEditing(null)} />
     </div>
   );
 }

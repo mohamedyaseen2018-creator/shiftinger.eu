@@ -49,7 +49,7 @@ export default function Navbar() {
             <>
               {isAdmin && (
                 <Link
-                  to="/admin"
+                  to="/console"
                   className="rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/5"
                 >
                   Admin
@@ -109,7 +109,7 @@ export default function Navbar() {
               <>
                 {isAdmin && (
                   <Link
-                    to="/admin"
+                    to="/console"
                     className="rounded-full px-4 py-2 text-center text-sm font-medium text-ink ring-1 ring-ink/10"
                     onClick={() => setOpen(false)}
                   >

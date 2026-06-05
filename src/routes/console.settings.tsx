@@ -1,11 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Shield, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Shield, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Panel, Pill } from "@/components/console/ui";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ADMIN_USERS } from "@/data/adminMock";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ManagedList } from "@/components/console/ManagedList";
+import { Field, TextInput, SelectInput, PrimaryButton, GhostButton } from "@/components/console/forms";
+import { useAdminStore, LIST_META, type AdminUser } from "@/data/adminStore";
 import { timeAgo } from "@/data/utils";
 
 export const Route = createFileRoute("/console/settings")({
@@ -29,60 +50,48 @@ const EVENTS = [
 ] as const;
 
 function SettingsPage() {
-  const [windowStart, setWindowStart] = useState("07:00");
-  const [windowEnd, setWindowEnd] = useState("12:00");
-  const [windowHours, setWindowHours] = useState(2);
-  const [weights, setWeights] = useState<Record<string, number>>({
-    skills: 40,
-    availability: 25,
-    rating: 20,
-    location: 15,
-  });
+  const store = useAdminStore();
+  const [start, setStart] = useState(store.window.start);
+  const [end, setEnd] = useState(store.window.end);
+
+  useEffect(() => {
+    setStart(store.window.start);
+    setEnd(store.window.end);
+  }, [store.window.start, store.window.end]);
+
+  const [weights, setWeights] = useState<Record<string, number>>({ skills: 40, availability: 25, rating: 20, location: 15 });
   const [alerts, setAlerts] = useState<Record<string, { email: boolean; sms: boolean }>>(
     Object.fromEntries(EVENTS.map((e) => [e, { email: true, sms: false }])),
   );
 
+  const [editUser, setEditUser] = useState<AdminUser | null>(null);
+  const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
+
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Platform configuration and admin management" />
+      <PageHeader title="Settings" subtitle="Platform configuration, lists, and admin management" />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Platform settings */}
+        {/* Confirmation window */}
         <Panel title="Confirmation window">
           <div className="grid grid-cols-2 gap-4">
             <Field label="Window opens (Lisbon)">
-              <input
-                type="time"
-                value={windowStart}
-                onChange={(e) => setWindowStart(e.target.value)}
-                className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-pine"
-              />
+              <TextInput type="time" value={start} onChange={(e) => setStart(e.target.value)} />
             </Field>
             <Field label="Window closes (Lisbon)">
-              <input
-                type="time"
-                value={windowEnd}
-                onChange={(e) => setWindowEnd(e.target.value)}
-                className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-pine"
-              />
-            </Field>
-            <Field label="Confirmation hours">
-              <input
-                type="number"
-                min={1}
-                max={6}
-                value={windowHours}
-                onChange={(e) => setWindowHours(Number(e.target.value))}
-                className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-pine"
-              />
+              <TextInput type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </Field>
           </div>
-          <button
-            onClick={() => toast.success("Confirmation window saved")}
-            className="mt-4 rounded-xl bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-dark"
+          <PrimaryButton
+            className="mt-4"
+            onClick={() => {
+              if (start >= end) return toast.error("End time must be after start time");
+              store.setWindow({ start, end });
+              toast.success("Confirmation window saved");
+            }}
           >
             Save changes
-          </button>
+          </PrimaryButton>
         </Panel>
 
         {/* Match scoring weights */}
@@ -94,13 +103,7 @@ function SettingsPage() {
                   <span className="text-ink">{w.label}</span>
                   <span className="font-semibold text-pine-dark">{weights[w.key]}%</span>
                 </div>
-                <Slider
-                  value={[weights[w.key]]}
-                  min={0}
-                  max={100}
-                  step={5}
-                  onValueChange={(v) => setWeights((p) => ({ ...p, [w.key]: v[0] }))}
-                />
+                <Slider value={[weights[w.key]]} min={0} max={100} step={5} onValueChange={(v) => setWeights((p) => ({ ...p, [w.key]: v[0] }))} />
               </div>
             ))}
           </div>
@@ -108,6 +111,31 @@ function SettingsPage() {
             Total: <span className="font-semibold text-ink">{Object.values(weights).reduce((a, b) => a + b, 0)}%</span>
             {Object.values(weights).reduce((a, b) => a + b, 0) !== 100 && " — should sum to 100%"}
           </p>
+        </Panel>
+
+        {/* Platform lists */}
+        <Panel title="Platform lists" className="lg:col-span-2">
+          <p className="mb-3 text-xs text-slate">
+            Edit, reorder, and hide options. Changes apply immediately to every dropdown across the console.
+          </p>
+          <Accordion type="single" collapsible className="w-full">
+            {LIST_META.map((m) => (
+              <AccordionItem key={m.key} value={m.key}>
+                <AccordionTrigger className="text-sm">
+                  <span className="flex items-center gap-2">
+                    {m.label}
+                    <span className="rounded-full bg-mist px-2 py-0.5 text-[11px] font-normal text-slate">
+                      {store.lists[m.key].filter((o) => o.active).length} active
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="mb-3 text-[11px] text-slate">{m.help}</p>
+                  <ManagedList listKey={m.key} label={m.label.toLowerCase()} />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </Panel>
 
         {/* Notification settings */}
@@ -126,16 +154,10 @@ function SettingsPage() {
                   <tr key={e} className="border-t border-line">
                     <td className="py-3 text-ink">{e}</td>
                     <td className="py-3 text-center">
-                      <Switch
-                        checked={alerts[e].email}
-                        onCheckedChange={(v) => setAlerts((p) => ({ ...p, [e]: { ...p[e], email: v } }))}
-                      />
+                      <Switch checked={alerts[e].email} onCheckedChange={(v) => setAlerts((p) => ({ ...p, [e]: { ...p[e], email: v } }))} />
                     </td>
                     <td className="py-3 text-center">
-                      <Switch
-                        checked={alerts[e].sms}
-                        onCheckedChange={(v) => setAlerts((p) => ({ ...p, [e]: { ...p[e], sms: v } }))}
-                      />
+                      <Switch checked={alerts[e].sms} onCheckedChange={(v) => setAlerts((p) => ({ ...p, [e]: { ...p[e], sms: v } }))} />
                     </td>
                   </tr>
                 ))}
@@ -144,31 +166,32 @@ function SettingsPage() {
           </div>
         </Panel>
 
-        {/* Admin user management */}
+        {/* Admin users */}
         <Panel
           title="Admin users"
           className="lg:col-span-2"
           action={
             <button
-              onClick={() => toast.success("Invite sent")}
+              onClick={() => setEditUser({ id: store.newId(), name: "", email: "", role: store.activeOptions("adminRoles")[0] ?? "Support", lastActive: new Date().toISOString() })}
               className="inline-flex items-center gap-1.5 rounded-xl bg-pine px-3 py-2 text-sm font-medium text-white hover:bg-pine-dark"
             >
-              <Plus size={15} /> Invite admin
+              <Plus size={15} /> Add admin
             </button>
           }
         >
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px] text-left text-sm">
+            <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="text-xs uppercase tracking-wide text-slate">
                 <tr>
                   <th className="py-2 font-semibold">Name</th>
                   <th className="py-2 font-semibold">Email</th>
                   <th className="py-2 font-semibold">Role</th>
                   <th className="py-2 font-semibold">Last active</th>
+                  <th className="py-2 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {ADMIN_USERS.map((u) => (
+                {store.adminUsers.map((u) => (
                   <tr key={u.id} className="border-t border-line">
                     <td className="py-3 font-medium text-ink">
                       <span className="inline-flex items-center gap-2">
@@ -181,6 +204,16 @@ function SettingsPage() {
                       <Pill tone={u.role === "Super admin" ? "pine" : "slate"}>{u.role}</Pill>
                     </td>
                     <td className="py-3 text-slate">{timeAgo(u.lastActive)}</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setEditUser(u)} className="rounded-lg p-1.5 text-slate hover:bg-mist hover:text-ink" title="Edit">
+                          <Pencil size={15} />
+                        </button>
+                        <button onClick={() => setDeleteUser(u)} className="rounded-lg p-1.5 text-slate hover:bg-red-50 hover:text-red-600" title="Delete">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -188,15 +221,73 @@ function SettingsPage() {
           </div>
         </Panel>
       </div>
+
+      <AdminUserDialog user={editUser} onClose={() => setEditUser(null)} />
+
+      <AlertDialog open={!!deleteUser} onOpenChange={(o) => !o && setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-sans">Remove {deleteUser?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>This admin will lose access to the console.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteUser) store.removeAdminUser(deleteUser.id);
+                toast.success("Admin removed");
+                setDeleteUser(null);
+              }}
+              className="rounded-xl bg-red-600 hover:bg-red-700"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function AdminUserDialog({ user, onClose }: { user: AdminUser | null; onClose: () => void }) {
+  const store = useAdminStore();
+  const [form, setForm] = useState<AdminUser | null>(user);
+  useEffect(() => setForm(user), [user]);
+  if (!form) return null;
+  const isNew = !store.adminUsers.some((u) => u.id === form.id);
+
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-slate">{label}</span>
-      {children}
-    </label>
+    <Dialog open={!!user} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-sans">{isNew ? "Add admin user" : "Edit admin user"}</DialogTitle>
+          <DialogDescription>Admin users can access the console.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Field label="Name" required>
+            <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </Field>
+          <Field label="Email" required>
+            <TextInput value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </Field>
+          <Field label="Role">
+            <SelectInput value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={store.activeOptions("adminRoles")} />
+          </Field>
+        </div>
+        <DialogFooter>
+          <GhostButton onClick={onClose}>Cancel</GhostButton>
+          <PrimaryButton
+            onClick={() => {
+              if (!form.name.trim() || !form.email.trim()) return toast.error("Name and email are required");
+              store.upsertAdminUser(form);
+              toast.success(isNew ? "Admin added" : "Admin updated");
+              onClose();
+            }}
+          >
+            Save
+          </PrimaryButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
