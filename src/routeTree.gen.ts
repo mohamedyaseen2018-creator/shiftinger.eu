@@ -23,6 +23,7 @@ import { Route as ConsoleIndexRouteImport } from './routes/console.index'
 import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
 import { Route as ConsoleShiftsRouteImport } from './routes/console.shifts'
 import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
+import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
 import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
@@ -101,6 +102,11 @@ const ConsoleMatchesRoute = ConsoleMatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleDisputesRoute = ConsoleDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
   id: '/businesses',
   path: '/businesses',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
+  '/console/disputes': typeof ConsoleDisputesRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/shifts': typeof ConsoleShiftsRoute
   '/console/workers': typeof ConsoleWorkersRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
+    | '/console/disputes'
     | '/console/matches'
     | '/console/shifts'
     | '/console/workers'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/post-job'
     | '/profile'
     | '/console/businesses'
+    | '/console/disputes'
     | '/console/matches'
     | '/console/shifts'
     | '/console/workers'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
     | '/console/businesses'
+    | '/console/disputes'
     | '/console/matches'
     | '/console/shifts'
     | '/console/workers'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleMatchesRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/disputes': {
+      id: '/console/disputes'
+      path: '/disputes'
+      fullPath: '/console/disputes'
+      preLoaderRoute: typeof ConsoleDisputesRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/console/businesses': {
       id: '/console/businesses'
       path: '/businesses'
@@ -482,6 +501,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface ConsoleRouteChildren {
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
+  ConsoleDisputesRoute: typeof ConsoleDisputesRoute
   ConsoleMatchesRoute: typeof ConsoleMatchesRoute
   ConsoleShiftsRoute: typeof ConsoleShiftsRoute
   ConsoleWorkersRoute: typeof ConsoleWorkersRoute
@@ -490,6 +510,7 @@ interface ConsoleRouteChildren {
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleBusinessesRoute: ConsoleBusinessesRoute,
+  ConsoleDisputesRoute: ConsoleDisputesRoute,
   ConsoleMatchesRoute: ConsoleMatchesRoute,
   ConsoleShiftsRoute: ConsoleShiftsRoute,
   ConsoleWorkersRoute: ConsoleWorkersRoute,
