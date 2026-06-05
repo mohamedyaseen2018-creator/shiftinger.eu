@@ -105,7 +105,9 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     await supabaseAdmin.from("jobs").delete().eq("owner_id", data.userId);
     await supabaseAdmin.from("conversations").delete().or(`worker_id.eq.${data.userId},business_id.eq.${data.userId}`);
     await supabaseAdmin.from("worker_contacts").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("worker_documents").delete().eq("user_id", data.userId);
     await supabaseAdmin.from("worker_profiles").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("business_contacts").delete().eq("user_id", data.userId);
     await supabaseAdmin.from("business_profiles").delete().eq("user_id", data.userId);
     await supabaseAdmin.from("business_locations").delete().eq("business_id", data.userId);
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
