@@ -535,3 +535,61 @@ export const consoleDeleteUser = createServerFn({ method: "POST" })
     if (delErr) throw new Error(delErr.message);
     return { ok: true };
   });
+
+// ── READ: signed URL for a worker's uploaded ID document ─────────────────────
+export const consoleSignWorkerDoc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: doc } = await supabaseAdmin
+      .from("worker_documents")
+      .select("id_document_url")
+      .eq("user_id", data.userId)
+      .maybeSingle();
+
+    const path = doc?.id_document_url;
+    if (!path) return { url: null as string | null };
+
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from("worker-docs")
+      .createSignedUrl(path, 60 * 10);
+    if (error) throw new Error(error.message);
+    return { url: signed?.signedUrl ?? null };
+  });
+
+// ── WRITE: set a worker's verification flag (document verification) ───────────
+export const consoleSetWorkerVerified = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        verified: z.boolean(),
+        targetLabel: z.string().max(200).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin
+      .from("worker_profiles")
+      .update({ verified: data.verified })
+      .eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: data.verified ? "document:verified" : "document:unverified",
+      target_type: "worker",
+      target_id: data.userId,
+      target_label: data.targetLabel ?? null,
+      details: { verified: data.verified },
+    });
+    return { ok: true };
+  });
