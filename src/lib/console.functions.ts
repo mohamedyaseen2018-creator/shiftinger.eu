@@ -127,6 +127,12 @@ export const getConsoleData = createServerFn({ method: "GET" })
         ratingCount: b.rating_count ?? 0,
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         description: b.description ?? "",
+        adminNotes: b.admin_notes ?? "",
+        nif: b.nif ?? "",
+        subSector: b.sub_sector ?? "",
+        displayInitials: b.display_initials || maskInitials(b.business_name ?? ""),
+        languagesRequired: arr(b.languages_required),
+        preferredRoles: arr(b.preferred_roles),
       };
     });
 
