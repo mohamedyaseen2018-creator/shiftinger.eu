@@ -422,6 +422,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       kpis,
       disputes,
       lists,
+      jobCatalog,
       refresh,
       saveWorker: async (w) => {
         await consoleUpdateWorker({
