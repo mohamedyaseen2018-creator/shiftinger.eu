@@ -52,7 +52,7 @@ function MyJobsPage() {
     setApps(rows);
     const workerIds = [...new Set(rows.map((r) => r.worker_id))];
     if (workerIds.length) {
-      const { data: wp } = await supabase.from("worker_profiles").select("user_id, name").in("user_id", workerIds);
+      const { data: wp } = await supabase.from("applicant_worker_profiles").select("user_id, name").in("user_id", workerIds);
       const names: Record<string, string> = {};
       (wp ?? []).forEach((w) => (names[w.user_id as string] = maskWorkerName((w.name as string) ?? "Worker")));
       setWorkerNames(names);

@@ -79,7 +79,7 @@ export async function fetchOpenJobs(): Promise<{ jobs: JobRow[]; businesses: Rec
   const businesses: Record<string, BusinessLite> = {};
   if (ownerIds.length) {
     const { data: bps } = await supabase
-      .from("business_profiles")
+      .from("business_profiles_public")
       .select("user_id, business_name, category, city, area, rating, rating_count, is_early_bird")
       .in("user_id", ownerIds);
     (bps ?? []).forEach((b) => (businesses[(b as BusinessLite).user_id] = b as BusinessLite));
