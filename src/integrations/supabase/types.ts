@@ -928,7 +928,171 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      applicant_worker_profiles: {
+        Row: {
+          avatar_url: string | null
+          main_role: string | null
+          name: string | null
+          rating: number | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          main_role?: string | null
+          name?: string | null
+          rating?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          avatar_url?: string | null
+          main_role?: string | null
+          name?: string | null
+          rating?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      business_profiles_public: {
+        Row: {
+          area: string | null
+          avatar_url: string | null
+          business_name: string | null
+          categories: Json | null
+          category: string | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          display_initials: string | null
+          id: string | null
+          is_early_bird: boolean | null
+          languages_required: Json | null
+          preferred_roles: Json | null
+          rating: number | null
+          rating_count: number | null
+          sub_sector: string | null
+          updated_at: string | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          area?: string | null
+          avatar_url?: string | null
+          business_name?: string | null
+          categories?: Json | null
+          category?: string | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_initials?: string | null
+          id?: string | null
+          is_early_bird?: boolean | null
+          languages_required?: Json | null
+          preferred_roles?: Json | null
+          rating?: number | null
+          rating_count?: number | null
+          sub_sector?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          area?: string | null
+          avatar_url?: string | null
+          business_name?: string | null
+          categories?: Json | null
+          category?: string | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_initials?: string | null
+          id?: string | null
+          is_early_bird?: boolean | null
+          languages_required?: Json | null
+          preferred_roles?: Json | null
+          rating?: number | null
+          rating_count?: number | null
+          sub_sector?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      worker_profiles_public: {
+        Row: {
+          atividade: boolean | null
+          available_days: Json | null
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          id: string | null
+          languages: Json | null
+          looking_for: Json | null
+          main_role: string | null
+          main_role_years: number | null
+          min_rate: number | null
+          name: string | null
+          nationality: string | null
+          portfolio_url: string | null
+          rating: number | null
+          rating_count: number | null
+          shifts_completed: number | null
+          sub_roles: Json | null
+          time_slots: Json | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          atividade?: boolean | null
+          available_days?: Json | null
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          id?: string | null
+          languages?: Json | null
+          looking_for?: Json | null
+          main_role?: string | null
+          main_role_years?: number | null
+          min_rate?: number | null
+          name?: string | null
+          nationality?: string | null
+          portfolio_url?: string | null
+          rating?: number | null
+          rating_count?: number | null
+          shifts_completed?: number | null
+          sub_roles?: Json | null
+          time_slots?: Json | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          atividade?: boolean | null
+          available_days?: Json | null
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          id?: string | null
+          languages?: Json | null
+          looking_for?: Json | null
+          main_role?: string | null
+          main_role_years?: number | null
+          min_rate?: number | null
+          name?: string | null
+          nationality?: string | null
+          portfolio_url?: string | null
+          rating?: number | null
+          rating_count?: number | null
+          shifts_completed?: number | null
+          sub_roles?: Json | null
+          time_slots?: Json | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       confirm_application: { Args: { _app_id: string }; Returns: string }
