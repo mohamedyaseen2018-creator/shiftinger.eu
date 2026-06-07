@@ -1,5 +1,11 @@
-import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star, FileText } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star, FileText, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import type { WorkerProfile } from "@/data/types";
+import { useAuth } from "@/lib/auth";
+import { getWorkerContact } from "@/lib/talent.functions";
 import {
   getInitials,
   roleIcon,
@@ -32,11 +38,35 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
   const nationalityFlag =
     NATIONALITY_OPTIONS.find((n) => n.name === worker.nationality)?.flag ?? "🌍";
 
-  const phoneDigits = (worker.phone ?? "").replace(/\D/g, "");
-  const waMessage = encodeURIComponent(
-    `Hi ${worker.name.split(" ")[0]}, I saw your availability post on Shiftinger and I'd like to talk about a shift.`,
-  );
-  const waUrl = phoneDigits ? `https://wa.me/${phoneDigits}?text=${waMessage}` : null;
+  const { user, profile, isAdmin } = useAuth();
+  const canContact = !!user && (profile?.account_type === "business" || isAdmin);
+  const [revealing, setRevealing] = useState(false);
+  const revealContact = useServerFn(getWorkerContact);
+  const navigate = useNavigate();
+
+  const handleContact = async () => {
+    if (!user) {
+      navigate({ to: "/auth", search: { mode: "signin", role: "business" } });
+      return;
+    }
+    if (!canContact) {
+      toast.error("Sign in as a business to contact this worker");
+      return;
+    }
+    try {
+      setRevealing(true);
+      const res = await revealContact({ data: { workerId: worker.userId } });
+      if (res.whatsappUrl) {
+        window.open(res.whatsappUrl, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("This worker has not shared a contact number");
+      }
+    } catch {
+      toast.error("Could not load contact info. Try again.");
+    } finally {
+      setRevealing(false);
+    }
+  };
 
   const lookingLabels = lookingFor
     .map((v) => LOOKING_FOR_OPTIONS.find((o) => o.value === v)?.label ?? v)
@@ -102,23 +132,15 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
         </div>
 
         {/* Primary CTA */}
-        {waUrl ? (
-          <a
-            href={waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90"
-          >
-            <MessageCircle size={15} /> Hire me
-          </a>
-        ) : (
-          <button
-            onClick={() => onContact?.(worker)}
-            className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90"
-          >
-            <MessageCircle size={15} /> Hire me
-          </button>
-        )}
+        <button
+          onClick={handleContact}
+          disabled={revealing || (!!user && !canContact)}
+          title={!canContact ? "Sign in as a business to contact this worker" : undefined}
+          className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {revealing ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
+          Hire me
+        </button>
       </div>
 
       <div className="border-t border-ink/5" />
@@ -265,19 +287,21 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
           >
             <MessageCircle size={15} /> Chat
           </button>
-          {waUrl && (
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1eb858]"
-            >
+          <button
+            onClick={handleContact}
+            disabled={revealing || (!!user && !canContact)}
+            title={!canContact ? "Sign in as a business to contact this worker" : undefined}
+            className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1eb858] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {revealing ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
               <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
                 <path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.2-.5-.3zM12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2z" />
               </svg>
-              WhatsApp
-            </a>
-          )}
+            )}
+            WhatsApp
+          </button>
         </div>
       </div>
     </article>
