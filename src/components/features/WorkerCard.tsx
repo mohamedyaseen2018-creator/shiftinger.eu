@@ -1,5 +1,11 @@
-import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star, FileText } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star, FileText, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import type { WorkerProfile } from "@/data/types";
+import { useAuth } from "@/lib/auth";
+import { getWorkerContact } from "@/lib/talent.functions";
 import {
   getInitials,
   roleIcon,
