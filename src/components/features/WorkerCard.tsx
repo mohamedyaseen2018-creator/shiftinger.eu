@@ -287,19 +287,21 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
           >
             <MessageCircle size={15} /> Chat
           </button>
-          {waUrl && (
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1eb858]"
-            >
+          <button
+            onClick={handleContact}
+            disabled={revealing || (!!user && !canContact)}
+            title={!canContact ? "Sign in as a business to contact this worker" : undefined}
+            className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1eb858] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {revealing ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
               <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
                 <path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.2-.5-.3zM12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2z" />
               </svg>
-              WhatsApp
-            </a>
-          )}
+            )}
+            WhatsApp
+          </button>
         </div>
       </div>
     </article>
