@@ -140,8 +140,7 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
         >
           {revealing ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
           Hire me
-          </button>
-        )}
+        </button>
       </div>
 
       <div className="border-t border-ink/5" />
