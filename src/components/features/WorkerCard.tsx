@@ -38,11 +38,35 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
   const nationalityFlag =
     NATIONALITY_OPTIONS.find((n) => n.name === worker.nationality)?.flag ?? "🌍";
 
-  const phoneDigits = (worker.phone ?? "").replace(/\D/g, "");
-  const waMessage = encodeURIComponent(
-    `Hi ${worker.name.split(" ")[0]}, I saw your availability post on Shiftinger and I'd like to talk about a shift.`,
-  );
-  const waUrl = phoneDigits ? `https://wa.me/${phoneDigits}?text=${waMessage}` : null;
+  const { user, profile, isAdmin } = useAuth();
+  const canContact = !!user && (profile?.account_type === "business" || isAdmin);
+  const [revealing, setRevealing] = useState(false);
+  const revealContact = useServerFn(getWorkerContact);
+  const navigate = useNavigate();
+
+  const handleContact = async () => {
+    if (!user) {
+      navigate({ to: "/auth", search: { mode: "signin", role: "business" } });
+      return;
+    }
+    if (!canContact) {
+      toast.error("Sign in as a business to contact this worker");
+      return;
+    }
+    try {
+      setRevealing(true);
+      const res = await revealContact({ data: { workerId: worker.userId } });
+      if (res.whatsappUrl) {
+        window.open(res.whatsappUrl, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("This worker has not shared a contact number");
+      }
+    } catch {
+      toast.error("Could not load contact info. Try again.");
+    } finally {
+      setRevealing(false);
+    }
+  };
 
   const lookingLabels = lookingFor
     .map((v) => LOOKING_FOR_OPTIONS.find((o) => o.value === v)?.label ?? v)
