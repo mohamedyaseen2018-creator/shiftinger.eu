@@ -36,20 +36,7 @@ export const Route = createFileRoute("/console")({
 
 function ConsoleLayout() {
   const [open, setOpen] = useState(false);
-  const { isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/dashboard" });
-  }, [loading, isAdmin, navigate]);
-
-  if (loading || !isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas">
-        <Loader2 className="animate-spin text-pine" />
-      </div>
-    );
-  }
 
   return (
     <AdminStoreProvider>
