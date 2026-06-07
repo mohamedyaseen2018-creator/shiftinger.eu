@@ -48,16 +48,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         to="/"
         onClick={onNavigate}
         title="Back to website"
-        className="flex items-center gap-2 px-5 py-5 transition-colors hover:bg-white/5"
+        className="flex items-center px-5 py-5 transition-colors hover:bg-white/5"
       >
-        <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber text-pine-dark">
-          <Zap size={18} />
-        </div>
-        <div>
-          <p className="font-sans text-sm font-bold leading-tight">Shiftinger</p>
-          <p className="text-[11px] leading-tight text-white/60">Admin console</p>
-        </div>
+        <Logo variant="full" theme="dark" size={36} />
       </Link>
+
 
       <nav className="flex-1 space-y-1 px-3 py-2">
         {NAV.map((item) => (
