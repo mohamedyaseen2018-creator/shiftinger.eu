@@ -10,10 +10,10 @@ import {
   FileCheck2,
   PencilRuler,
   Home,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/brand/Logo";
 
 const NAV = [
   { to: "/console", label: "Overview", icon: LayoutDashboard, exact: true },
