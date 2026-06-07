@@ -8,6 +8,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { signInSchema, signUpSchema } from "@/lib/validation";
 import type { AccountType } from "@/data/types";
+import Logo from "@/components/brand/Logo";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
