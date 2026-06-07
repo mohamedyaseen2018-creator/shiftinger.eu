@@ -1,12 +1,29 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Menu, X, Loader2 } from "lucide-react";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 import { Sidebar } from "@/components/console/Sidebar";
 import { AdminStoreProvider } from "@/data/adminStore";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/console")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      throw redirect({ to: "/auth", search: { mode: "signin", role: "worker" } });
+    }
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) {
+      throw redirect({ to: "/dashboard" });
+    }
+    return { user: userData.user };
+  },
   head: () => ({
     meta: [
       { title: "Admin console — Shiftinger" },
@@ -19,20 +36,7 @@ export const Route = createFileRoute("/console")({
 
 function ConsoleLayout() {
   const [open, setOpen] = useState(false);
-  const { isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/dashboard" });
-  }, [loading, isAdmin, navigate]);
-
-  if (loading || !isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas">
-        <Loader2 className="animate-spin text-pine" />
-      </div>
-    );
-  }
 
   return (
     <AdminStoreProvider>
