@@ -8,6 +8,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { signInSchema, signUpSchema } from "@/lib/validation";
 import type { AccountType } from "@/data/types";
+import Logo from "@/components/brand/Logo";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -148,9 +149,8 @@ function AuthPage() {
       <section className="px-6 py-16 lg:px-12">
         <div className="mx-auto max-w-md">
           <div className="text-center">
-            <Link to="/" className="text-2xl font-medium tracking-tight">
-              <span className="text-teal">Shift</span>
-              <span className="font-serif italic text-gold">inger</span>
+            <Link to="/" className="inline-flex justify-center">
+              <Logo variant="full" theme="light" size={44} />
             </Link>
             <h1 className="mt-6 font-serif text-3xl text-ink">
               {tab === "signin" ? "Welcome back" : "Create your account"}
