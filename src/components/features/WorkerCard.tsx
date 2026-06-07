@@ -132,21 +132,14 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
         </div>
 
         {/* Primary CTA */}
-        {waUrl ? (
-          <a
-            href={waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90"
-          >
-            <MessageCircle size={15} /> Hire me
-          </a>
-        ) : (
-          <button
-            onClick={() => onContact?.(worker)}
-            className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90"
-          >
-            <MessageCircle size={15} /> Hire me
+        <button
+          onClick={handleContact}
+          disabled={revealing || (!!user && !canContact)}
+          title={!canContact ? "Sign in as a business to contact this worker" : undefined}
+          className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {revealing ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
+          Hire me
           </button>
         )}
       </div>
