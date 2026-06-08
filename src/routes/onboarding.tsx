@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Plus,
   X,
+  Check,
   Upload,
   LogOut,
 } from "lucide-react";
@@ -443,16 +444,65 @@ function WorkerForm({
                 </button>
               )}
             </div>
-            {subRoles.map((sr, i) => (
-              <div key={i} className="mb-2 flex gap-2">
-                <select className={`${inputClass} flex-1`} value={sr.role} onChange={(e) => { const u = [...subRoles]; u[i].role = e.target.value; setSubRoles(u); }}>
-                  <option value="">Select role…</option>
-                  {ROLE_OPTIONS.filter((r) => r !== mainRole).map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <input type="number" min={0} max={40} className={`${inputClass} w-20`} placeholder="Yrs" value={sr.years} onChange={(e) => { const u = [...subRoles]; u[i].years = e.target.value; setSubRoles(u); }} />
-                <button type="button" onClick={() => setSubRoles(subRoles.filter((_, j) => j !== i))} className="text-ink/40 hover:text-red-500"><X size={16} /></button>
-              </div>
-            ))}
+            {subRoles.length === 0 && (
+              <p className="rounded-lg border border-dashed border-ink/15 px-3 py-4 text-center text-xs text-ink/50">
+                No additional roles yet. Tap “Add role” to pick one.
+              </p>
+            )}
+            <div className="space-y-3">
+              {subRoles.map((sr, i) => {
+                const available = ROLE_OPTIONS.filter(
+                  (r) => r !== mainRole && !subRoles.some((s, j) => j !== i && s.role === r),
+                );
+                return (
+                  <div key={i} className="rounded-xl border border-ink/10 bg-ink/[0.02] p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-medium text-ink/60">Role {i + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSubRoles(subRoles.filter((_, j) => j !== i))}
+                        className="flex items-center gap-1 text-xs text-ink/40 hover:text-red-500"
+                      >
+                        <X size={14} /> Remove
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {available.map((r) => {
+                        const Icon = roleIcon(r);
+                        const active = sr.role === r;
+                        return (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => { const u = [...subRoles]; u[i].role = active ? "" : r; setSubRoles(u); }}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ring-1 transition-colors ${
+                              active ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"
+                            }`}
+                          >
+                            <Icon size={15} className="shrink-0" /> {r}
+                            {active && <Check size={14} className="ml-auto shrink-0 text-teal" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {sr.role && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className="text-xs font-medium text-ink/60">Years in {sr.role}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={40}
+                          className={`${inputClass} w-24`}
+                          placeholder="Yrs"
+                          value={sr.years}
+                          onChange={(e) => { const u = [...subRoles]; u[i].years = e.target.value; setSubRoles(u); }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
