@@ -100,7 +100,7 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="text-lg font-semibold text-ink">{worker.name}</h3>
+            <h3 className="text-base font-semibold text-ink">{worker.name}</h3>
             {worker.verified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
                 <CheckCircle size={11} /> Verified
