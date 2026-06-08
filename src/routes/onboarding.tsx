@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Plus,
   X,
+  Check,
   Upload,
   LogOut,
 } from "lucide-react";
