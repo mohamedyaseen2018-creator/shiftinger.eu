@@ -146,7 +146,7 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
       <div className="border-t border-ink/5" />
 
       {/* ── Body (post content) ── */}
-      <div className="space-y-3 p-5 text-sm leading-relaxed sm:p-6">
+      <div className="space-y-2.5 p-4 text-[13px] leading-relaxed">
         {/* Headline */}
         <p className="font-medium text-ink">
           <Icon size={15} className="mb-0.5 mr-1 inline text-teal" />
@@ -275,26 +275,26 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
       </div>
 
       {/* ── Footer / contact ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink/5 bg-canvas/40 px-5 py-4 sm:px-6">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-ink/5 bg-canvas/40 px-4 py-3">
         <p className="text-sm">
           <span className="font-semibold text-ink">€{worker.minRate}</span>
           <span className="text-ink/40">/hr min</span>
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center justify-end gap-2">
           <button
             onClick={() => onContact?.(worker)}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-ink ring-1 ring-ink/15 transition-colors hover:bg-ink/5"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-ink/15 transition-colors hover:bg-ink/5"
           >
-            <MessageCircle size={15} /> Chat
+            <MessageCircle size={14} /> Chat
           </button>
           <button
             onClick={handleContact}
             disabled={revealing || (!!user && !canContact)}
             title={!canContact ? "Sign in as a business to contact this worker" : undefined}
-            className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1eb858] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1eb858] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {revealing ? (
-              <Loader2 size={15} className="animate-spin" />
+              <Loader2 size={14} className="animate-spin" />
             ) : (
               <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
                 <path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.2-.5-.3zM12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2z" />
