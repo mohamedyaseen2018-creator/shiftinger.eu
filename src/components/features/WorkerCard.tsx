@@ -125,7 +125,7 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
             )}
           </div>
 
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-ink/50">
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-ink/50">
             <MapPin size={13} /> {nationalityFlag} {worker.city || "Portugal"}
             <span className="text-ink/30">· available now</span>
           </p>
@@ -136,9 +136,9 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
           onClick={handleContact}
           disabled={revealing || (!!user && !canContact)}
           title={!canContact ? "Sign in as a business to contact this worker" : undefined}
-          className="ml-auto inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-teal px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {revealing ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
+          {revealing ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} />}
           Hire me
         </button>
       </div>
