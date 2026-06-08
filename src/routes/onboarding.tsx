@@ -436,68 +436,55 @@ function WorkerForm({
             </div>
           )}
           <div>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between">
               <Label>Additional roles (optional)</Label>
-              {subRoles.length < 3 && (
-                <button type="button" onClick={() => setSubRoles([...subRoles, { role: "", years: "0" }])} className="flex items-center gap-1 text-xs text-teal hover:underline">
-                  <Plus size={12} /> Add role
-                </button>
-              )}
+              <span className="text-xs text-ink/40">{subRoles.length}/3 selected</span>
             </div>
-            {subRoles.length === 0 && (
-              <p className="rounded-lg border border-dashed border-ink/15 px-3 py-4 text-center text-xs text-ink/50">
-                No additional roles yet. Tap “Add role” to pick one.
-              </p>
-            )}
-            <div className="space-y-3">
-              {subRoles.map((sr, i) => {
-                const available = ROLE_OPTIONS.filter(
-                  (r) => r !== mainRole && !subRoles.some((s, j) => j !== i && s.role === r),
-                );
+            <p className="mb-2 text-xs text-ink/50">Tap any tile to add it as a secondary role you can work.</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {ROLE_OPTIONS.filter((r) => r !== mainRole).map((r) => {
+                const Icon = roleIcon(r);
+                const idx = subRoles.findIndex((s) => s.role === r);
+                const active = idx !== -1;
+                const atLimit = subRoles.length >= 3;
                 return (
-                  <div key={i} className="rounded-xl border border-ink/10 bg-ink/[0.02] p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-xs font-medium text-ink/60">Role {i + 1}</span>
-                      <button
-                        type="button"
-                        onClick={() => setSubRoles(subRoles.filter((_, j) => j !== i))}
-                        className="flex items-center gap-1 text-xs text-ink/40 hover:text-red-500"
-                      >
-                        <X size={14} /> Remove
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {available.map((r) => {
-                        const Icon = roleIcon(r);
-                        const active = sr.role === r;
-                        return (
-                          <button
-                            key={r}
-                            type="button"
-                            onClick={() => { const u = [...subRoles]; u[i].role = active ? "" : r; setSubRoles(u); }}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ring-1 transition-colors ${
-                              active ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"
-                            }`}
-                          >
-                            <Icon size={15} className="shrink-0" /> {r}
-                            {active && <Check size={14} className="ml-auto shrink-0 text-teal" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {sr.role && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="text-xs font-medium text-ink/60">Years in {sr.role}</span>
+                  <div
+                    key={r}
+                    className={`overflow-hidden rounded-lg ring-1 transition-colors ${
+                      active ? "bg-gold/5 ring-2 ring-gold" : "ring-ink/10 hover:ring-teal"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      disabled={!active && atLimit}
+                      onClick={() => {
+                        if (active) setSubRoles(subRoles.filter((s) => s.role !== r));
+                        else if (!atLimit) setSubRoles([...subRoles, { role: r, years: "0" }]);
+                      }}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        active ? "font-medium text-ink" : "text-ink/70"
+                      }`}
+                    >
+                      <Icon size={15} className="shrink-0" /> {r}
+                      {active && <Check size={14} className="ml-auto shrink-0 text-gold" />}
+                    </button>
+                    {active && (
+                      <label className="flex items-center gap-2 border-t border-gold/25 bg-gold/5 px-3 py-2">
+                        <span className="text-xs font-medium text-ink/60">Years</span>
                         <input
                           type="number"
                           min={0}
                           max={40}
-                          className={`${inputClass} w-24`}
-                          placeholder="Yrs"
-                          value={sr.years}
-                          onChange={(e) => { const u = [...subRoles]; u[i].years = e.target.value; setSubRoles(u); }}
+                          className="w-16 rounded-md border border-ink/15 bg-white px-2 py-1 text-sm focus:border-gold focus:outline-none"
+                          placeholder="0"
+                          value={subRoles[idx].years}
+                          onChange={(e) => {
+                            const u = [...subRoles];
+                            u[idx].years = e.target.value;
+                            setSubRoles(u);
+                          }}
                         />
-                      </div>
+                      </label>
                     )}
                   </div>
                 );
