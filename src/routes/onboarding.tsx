@@ -487,7 +487,7 @@ function WorkerForm({
                     </div>
                     {sr.role && (
                       <div className="mt-3 flex items-center gap-2">
-                        <Label className="!mb-0 text-xs text-ink/60">Years in {sr.role}</Label>
+                        <span className="text-xs font-medium text-ink/60">Years in {sr.role}</span>
                         <input
                           type="number"
                           min={0}
