@@ -75,7 +75,7 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
   const portfolioUrl = worker.portfolioUrl?.trim() || null;
 
   return (
-    <article className="group overflow-hidden rounded-2xl bg-white ring-1 ring-ink/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-ink/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start gap-3 p-4">
         <div className="relative flex-shrink-0">
