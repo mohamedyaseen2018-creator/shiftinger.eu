@@ -77,24 +77,24 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
   return (
     <article className="group overflow-hidden rounded-2xl bg-white ring-1 ring-ink/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
       {/* ── Header ── */}
-      <div className="flex flex-wrap items-start gap-4 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start gap-3 p-4">
         <div className="relative flex-shrink-0">
           {worker.avatarUrl ? (
             <img
               src={worker.avatarUrl}
               alt={worker.name}
-              className="size-16 rounded-full object-cover ring-2 ring-teal/15"
+              className="size-14 rounded-full object-cover ring-2 ring-teal/15"
             />
           ) : (
-            <div className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-teal to-teal/70 text-xl font-semibold text-canvas">
+            <div className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-teal to-teal/70 text-lg font-semibold text-canvas">
               {initials}
             </div>
           )}
           <span
-            className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-white bg-ink text-canvas"
+            className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-white bg-ink text-canvas"
             title={worker.mainRole}
           >
-            <Icon size={14} />
+            <Icon size={12} />
           </span>
         </div>
 
