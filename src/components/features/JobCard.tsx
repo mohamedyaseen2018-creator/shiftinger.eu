@@ -143,7 +143,7 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
       )}
 
       <div className="flex items-center justify-between border-t border-ink/5 pt-2">
-        <span className="text-xs text-ink/40">
+        <span className="text-xs text-ink/40" suppressHydrationWarning>
           {timeAgo(job.postedAt)} · {job.applicants} applicant{job.applicants !== 1 ? "s" : ""}
         </span>
         {action}
