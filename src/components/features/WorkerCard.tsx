@@ -145,65 +145,71 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           )}
         </div>
 
-        {/* ── Row 4: main role experience + secondary roles ── */}
-        <div className="text-[13px]">
-          <p className="font-medium text-ink">
-            {worker.mainRole}
+        {/* ── Row 4: main role experience | also works as (single line) ── */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px]">
+          <span className="inline-flex items-center gap-1 font-medium text-ink">
+            <Icon size={13} className="text-teal" /> {worker.mainRole}
             {worker.mainRoleYears > 0 && (
               <span className="font-normal text-ink/50">
-                {" "}· {worker.mainRoleYears} yr{worker.mainRoleYears !== 1 ? "s" : ""} experience
+                · {worker.mainRoleYears} yr{worker.mainRoleYears !== 1 ? "s" : ""}
               </span>
             )}
-          </p>
+          </span>
           {worker.subRoles.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <>
+              <span className="text-ink/20">|</span>
               <span className="text-xs text-ink/50">Also works as</span>
-              {worker.subRoles.map((s) => (
-                <span
-                  key={s.role}
-                  className="rounded-full bg-teal/8 px-2 py-0.5 text-[11px] font-medium text-teal ring-1 ring-teal/15"
-                >
-                  {s.role}{s.years > 0 ? ` · ${s.years}y` : ""}
-                </span>
-              ))}
-            </div>
+              {worker.subRoles.map((s) => {
+                const SubIcon = roleIcon(s.role);
+                return (
+                  <span
+                    key={s.role}
+                    className="inline-flex items-center gap-1 rounded-full bg-teal/8 px-2 py-0.5 text-[11px] font-medium text-teal ring-1 ring-teal/15"
+                  >
+                    <SubIcon size={11} /> {s.role}{s.years > 0 ? ` · ${s.years}y` : ""}
+                  </span>
+                );
+              })}
+            </>
           )}
         </div>
 
-        {/* ── Row 5: availability days + time slots ── */}
-        {days.length > 0 && (
-          <div className="flex items-start gap-2">
-            <Clock size={14} className="mt-0.5 flex-shrink-0 text-ink/40" />
-            <div>
-              <div className="flex flex-wrap gap-1">
-                {DAY_OPTIONS.map((d) => (
-                  <span
-                    key={d}
-                    className={`flex size-6 items-center justify-center rounded text-[10px] font-semibold ${
-                      days.includes(d) ? "bg-teal text-canvas" : "bg-ink/5 text-ink/25"
-                    }`}
-                  >
-                    {d[0]}
-                  </span>
-                ))}
-              </div>
-              {slots.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {slots.map((s) => (
-                    <span key={s} className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-medium text-gold">
-                      {SLOT_SHORT[s] ?? s}
-                    </span>
-                  ))}
-                </div>
-              )}
+        {/* ── Row 5: availability days + time slots (always rendered) ── */}
+        <div className="flex items-start gap-2">
+          <Clock size={14} className="mt-0.5 flex-shrink-0 text-ink/40" />
+          <div>
+            <div className="flex flex-wrap gap-1">
+              {DAY_OPTIONS.map((d) => (
+                <span
+                  key={d}
+                  className={`flex size-6 items-center justify-center rounded text-[10px] font-semibold ${
+                    days.includes(d) ? "bg-teal text-canvas" : "bg-ink/5 text-ink/25"
+                  }`}
+                >
+                  {d[0]}
+                </span>
+              ))}
+            </div>
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {TIME_SLOT_OPTIONS.map((s) => (
+                <span
+                  key={s}
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                    slots.includes(s) ? "bg-teal text-canvas" : "bg-ink/5 text-ink/25"
+                  }`}
+                >
+                  {SLOT_SHORT[s] ?? s}
+                </span>
+              ))}
             </div>
           </div>
-        )}
+        </div>
 
         {/* ── Row 7: nationality + languages (always rendered) ── */}
         <p className="flex items-center gap-2">
           <Languages size={14} className="flex-shrink-0 text-ink/40" />
           <span className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-ink/50">Nationality:</span>
             {nationality ? (
               <span className="text-xs font-medium text-ink/70">
                 {nationality.flag} {nationality.name}
