@@ -13,6 +13,7 @@ import {
   NATIONALITY_OPTIONS,
   LANGUAGE_FLAGS,
   DAY_OPTIONS,
+  TIME_SLOT_OPTIONS,
 } from "@/data/utils";
 
 interface WorkerCardProps {
