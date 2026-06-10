@@ -262,6 +262,17 @@ export const consoleSetStatus = createServerFn({ method: "POST" })
       target_label: data.targetLabel ?? null,
       details: { status: data.status, verified },
     });
+
+    // Approval email — best-effort, never blocks the status change.
+    if (data.status === "approved") {
+      try {
+        const { sendApprovalEmail } = await import("@/lib/email.server");
+        await sendApprovalEmail(data.userId, data.accountType);
+      } catch (err) {
+        console.error("Approval email failed:", err);
+      }
+    }
+
     return { ok: true };
   });
 
