@@ -6,9 +6,11 @@ import JobCard from "@/components/features/JobCard";
 import WorkerCard from "@/components/features/WorkerCard";
 import { MOCK_JOBS, MOCK_WORKERS } from "@/data/mockData";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { getPlatformStats } from "@/lib/stats.functions";
 import cafeHero from "@/assets/cafe-hero.jpg";
 
 export const Route = createFileRoute("/")({
+  loader: () => getPlatformStats(),
   head: () => ({
     meta: [
       { title: "Shiftinger — Flexible hospitality work in Portugal" },
@@ -26,12 +28,6 @@ export const Route = createFileRoute("/")({
   }),
   component: HomePage,
 });
-
-const STATS = [
-  { value: "340+", label: "Shifts posted" },
-  { value: "1,200+", label: "Registered workers" },
-  { value: "95%", label: "Fill rate" },
-];
 
 const WORKER_STEPS = [
   { n: "01", title: "Create your profile", body: "Register with your skills, experience, languages, and upload your ID for verification." },
