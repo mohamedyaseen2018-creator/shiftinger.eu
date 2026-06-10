@@ -29,6 +29,7 @@ interface AppLite {
   status: string;
   match_score: number;
   matched_criteria: unknown;
+  message?: string | null;
   worker_confirmed: boolean;
   business_confirmed: boolean;
 }
@@ -139,6 +140,9 @@ function MyJobsPage() {
                                       </span>
                                     ))}
                                   </div>
+                                )}
+                                {a.message && (
+                                  <p className="mt-2 rounded-md bg-white px-3 py-2 text-xs italic text-ink/60 ring-1 ring-ink/5">"{a.message}"</p>
                                 )}
                                 <div className="mt-3 flex items-center gap-2">
                                   {!a.business_confirmed && (
