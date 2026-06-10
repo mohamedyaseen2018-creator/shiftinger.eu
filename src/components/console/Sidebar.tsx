@@ -9,6 +9,7 @@ import {
   Settings,
   FileCheck2,
   PencilRuler,
+  Mail,
   Home,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -24,6 +25,7 @@ const NAV = [
   { to: "/console/matches", label: "Matches", icon: GitMerge },
   { to: "/console/disputes", label: "Disputes", icon: ShieldAlert },
   { to: "/console/content", label: "Site content", icon: PencilRuler },
+  { to: "/console/emails", label: "Emails", icon: Mail },
   { to: "/console/settings", label: "Settings", icon: Settings },
 ] as const;
 
