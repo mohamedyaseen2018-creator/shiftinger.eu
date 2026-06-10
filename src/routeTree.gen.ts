@@ -24,6 +24,7 @@ import { Route as ConsoleWorkersRouteImport } from './routes/console.workers'
 import { Route as ConsoleShiftsRouteImport } from './routes/console.shifts'
 import { Route as ConsoleSettingsRouteImport } from './routes/console.settings'
 import { Route as ConsoleMatchesRouteImport } from './routes/console.matches'
+import { Route as ConsoleEmailsRouteImport } from './routes/console.emails'
 import { Route as ConsoleDocumentsRouteImport } from './routes/console.documents'
 import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
 import { Route as ConsoleContentRouteImport } from './routes/console.content'
@@ -109,6 +110,11 @@ const ConsoleMatchesRoute = ConsoleMatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleEmailsRoute = ConsoleEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const ConsoleDocumentsRoute = ConsoleDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/documents': typeof ConsoleDocumentsRoute
+  '/console/emails': typeof ConsoleEmailsRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/documents': typeof ConsoleDocumentsRoute
+  '/console/emails': typeof ConsoleEmailsRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
   '/console/documents': typeof ConsoleDocumentsRoute
+  '/console/emails': typeof ConsoleEmailsRoute
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/console/content'
     | '/console/disputes'
     | '/console/documents'
+    | '/console/emails'
     | '/console/matches'
     | '/console/settings'
     | '/console/shifts'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/console/content'
     | '/console/disputes'
     | '/console/documents'
+    | '/console/emails'
     | '/console/matches'
     | '/console/settings'
     | '/console/shifts'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/console/content'
     | '/console/disputes'
     | '/console/documents'
+    | '/console/emails'
     | '/console/matches'
     | '/console/settings'
     | '/console/shifts'
@@ -441,6 +453,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleMatchesRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/emails': {
+      id: '/console/emails'
+      path: '/emails'
+      fullPath: '/console/emails'
+      preLoaderRoute: typeof ConsoleEmailsRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/console/documents': {
       id: '/console/documents'
       path: '/documents'
@@ -540,6 +559,7 @@ interface ConsoleRouteChildren {
   ConsoleContentRoute: typeof ConsoleContentRoute
   ConsoleDisputesRoute: typeof ConsoleDisputesRoute
   ConsoleDocumentsRoute: typeof ConsoleDocumentsRoute
+  ConsoleEmailsRoute: typeof ConsoleEmailsRoute
   ConsoleMatchesRoute: typeof ConsoleMatchesRoute
   ConsoleSettingsRoute: typeof ConsoleSettingsRoute
   ConsoleShiftsRoute: typeof ConsoleShiftsRoute
@@ -552,6 +572,7 @@ const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleContentRoute: ConsoleContentRoute,
   ConsoleDisputesRoute: ConsoleDisputesRoute,
   ConsoleDocumentsRoute: ConsoleDocumentsRoute,
+  ConsoleEmailsRoute: ConsoleEmailsRoute,
   ConsoleMatchesRoute: ConsoleMatchesRoute,
   ConsoleSettingsRoute: ConsoleSettingsRoute,
   ConsoleShiftsRoute: ConsoleShiftsRoute,
