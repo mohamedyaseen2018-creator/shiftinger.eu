@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, MapPin, Clock, Languages, Rocket, Star, Loader2, User } from "lucide-react";
+import { CheckCircle, MapPin, Clock, Languages, Rocket, Star, Loader2, User, Globe } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -205,11 +205,11 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           </div>
         </div>
 
-        {/* ── Row 7: nationality + languages (always rendered) ── */}
+        {/* ── Row 7a: nationality (always rendered) ── */}
         <p className="flex items-center gap-2">
-          <Languages size={14} className="flex-shrink-0 text-ink/40" />
+          <Globe size={14} className="flex-shrink-0 text-ink/40" />
           <span className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-ink/50">Nationality:</span>
+            <span className="text-xs text-ink/50">Nationality</span>
             {nationality ? (
               <span className="text-xs font-medium text-ink/70">
                 {nationality.flag} {nationality.name}
@@ -217,14 +217,25 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             ) : (
               <span className="text-xs text-ink/30">—</span>
             )}
-            {worker.languages.map((l) => (
-              <span
-                key={l.language}
-                className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
-              >
-                {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
-              </span>
-            ))}
+          </span>
+        </p>
+
+        {/* ── Row 7b: languages (always rendered) ── */}
+        <p className="flex items-center gap-2">
+          <Languages size={14} className="flex-shrink-0 text-ink/40" />
+          <span className="flex flex-wrap items-center gap-1.5">
+            {worker.languages.length > 0 ? (
+              worker.languages.map((l) => (
+                <span
+                  key={l.language}
+                  className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
+                >
+                  {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-ink/30">—</span>
+            )}
           </span>
         </p>
 
