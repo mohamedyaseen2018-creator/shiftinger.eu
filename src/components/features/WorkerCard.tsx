@@ -106,42 +106,43 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               )}
             </div>
 
-            {/* ── Row 2: role + availability-type badges ── */}
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {/* ── Row 2: role + rating (always rendered) ── */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-medium text-teal">
                 <Icon size={12} /> {worker.mainRole}
               </span>
-              {lookingFor.includes("single") && (
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">Single shifts</span>
-              )}
-              {lookingFor.includes("parttime") && (
-                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">Part-time</span>
+              {showRating ? (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink">
+                  <Star size={13} className="fill-gold text-gold" /> {worker.rating.toFixed(1)} / 5
+                  <span className="font-normal text-ink/40">· {worker.shiftsCompleted} shifts</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs text-ink/30">
+                  <Star size={13} /> — / 5 · New
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        {/* ── Row 3: rating · city · nationality ── */}
-        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-ink/60">
-          {showRating && (
-            <>
-              <span className="inline-flex items-center gap-1 font-semibold text-ink">
-                <Star size={13} className="fill-gold text-gold" /> {worker.rating.toFixed(1)} / 5
-                <span className="font-normal text-ink/40">· {worker.shiftsCompleted} shifts</span>
-              </span>
-              <span className="text-ink/25">·</span>
-            </>
-          )}
-          <span className="inline-flex items-center gap-1">
-            <MapPin size={12} /> {worker.city || "Portugal"}
-          </span>
-          {nationality && (
-            <>
-              <span className="text-ink/25">·</span>
-              <span>{nationality.flag} {nationality.name}</span>
-            </>
-          )}
+        {/* ── Row 3: location (always rendered) ── */}
+        <p className="flex items-center gap-1 text-xs text-ink/60">
+          <MapPin size={12} className="flex-shrink-0" />
+          {worker.city ? `${worker.city}, Portugal` : "Portugal"}
         </p>
+
+        {/* ── Row 4: shift preferences (always rendered) ── */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {lookingFor.includes("single") && (
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">Single shifts</span>
+          )}
+          {lookingFor.includes("parttime") && (
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">Part-time</span>
+          )}
+          {!lookingFor.includes("single") && !lookingFor.includes("parttime") && (
+            <span className="rounded-full bg-ink/5 px-2.5 py-0.5 text-[11px] text-ink/30">—</span>
+          )}
+        </div>
 
         {/* ── Row 4: main role experience + secondary roles ── */}
         <div className="text-[13px]">
@@ -198,22 +199,27 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           </div>
         )}
 
-        {/* ── Row 6: languages ── */}
-        {worker.languages.length > 0 && (
-          <p className="flex items-center gap-2">
-            <Languages size={14} className="flex-shrink-0 text-ink/40" />
-            <span className="flex flex-wrap gap-1.5">
-              {worker.languages.map((l) => (
-                <span
-                  key={l.language}
-                  className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
-                >
-                  {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
-                </span>
-              ))}
-            </span>
-          </p>
-        )}
+        {/* ── Row 7: nationality + languages (always rendered) ── */}
+        <p className="flex items-center gap-2">
+          <Languages size={14} className="flex-shrink-0 text-ink/40" />
+          <span className="flex flex-wrap items-center gap-1.5">
+            {nationality ? (
+              <span className="text-xs font-medium text-ink/70">
+                {nationality.flag} {nationality.name}
+              </span>
+            ) : (
+              <span className="text-xs text-ink/30">—</span>
+            )}
+            {worker.languages.map((l) => (
+              <span
+                key={l.language}
+                className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
+              >
+                {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
+              </span>
+            ))}
+          </span>
+        </p>
 
         {/* ── Row 7: atividade + immediate start ── */}
         <div className="flex flex-wrap items-center gap-2">
