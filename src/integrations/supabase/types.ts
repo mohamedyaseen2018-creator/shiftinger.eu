@@ -391,6 +391,78 @@ export type Database = {
         }
         Relationships: []
       }
+      email_outbox: {
+        Row: {
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          recipient_email: string
+          recipient_id: string | null
+          status: string
+          subject: string
+          template_key: string | null
+          triggered_by: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          recipient_email: string
+          recipient_id?: string | null
+          status?: string
+          subject: string
+          template_key?: string | null
+          triggered_by?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          recipient_email?: string
+          recipient_id?: string | null
+          status?: string
+          subject?: string
+          template_key?: string | null
+          triggered_by?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name: string
+          subject: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          subject?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       job_catalog: {
         Row: {
           active: boolean
