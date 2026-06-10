@@ -53,6 +53,13 @@ const PRIVACY_ITEMS = [
 function HomePage() {
   const [applied, setApplied] = useState<Set<string>>(new Set());
   const { c } = useSiteContent();
+  const stats = Route.useLoaderData();
+
+  const STATS = [
+    { value: stats.shiftsPosted.toLocaleString("en"), label: "Shifts posted" },
+    { value: stats.registeredWorkers.toLocaleString("en"), label: "Registered workers" },
+    { value: stats.fillRate === null ? "—" : `${stats.fillRate}%`, label: "Fill rate" },
+  ];
 
   return (
     <SiteLayout>
