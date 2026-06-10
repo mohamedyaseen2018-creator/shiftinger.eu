@@ -1,27 +1,25 @@
 import { useState } from "react";
-import { CheckCircle, MapPin, Briefcase, Clock, Languages, Rocket, MessageCircle, Star, FileText, Loader2 } from "lucide-react";
+import { CheckCircle, MapPin, Clock, Languages, Rocket, Star, Loader2, User } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import type { WorkerProfile } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { getWorkerContact } from "@/lib/talent.functions";
+import WorkerProfileModal from "@/components/features/WorkerProfileModal";
 import {
   getInitials,
   roleIcon,
   NATIONALITY_OPTIONS,
   LANGUAGE_FLAGS,
   DAY_OPTIONS,
-  LOOKING_FOR_OPTIONS,
 } from "@/data/utils";
 
 interface WorkerCardProps {
   worker: WorkerProfile;
-  /** Optional in-app chat handler. Falls back to WhatsApp when omitted. */
-  onContact?: (worker: WorkerProfile) => void;
 }
 
-/** Compact WhatsApp-style time-slot labels for the post body. */
+/** Compact WhatsApp-style time-slot labels. */
 const SLOT_SHORT: Record<string, string> = {
   "Morning (6–13)": "Morning",
   "Afternoon (12–18)": "Afternoon",
@@ -29,22 +27,22 @@ const SLOT_SHORT: Record<string, string> = {
   "Night (22–06)": "Night",
 };
 
-export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
+export default function WorkerCard({ worker }: WorkerCardProps) {
   const initials = getInitials(worker.name);
   const Icon = roleIcon(worker.mainRole);
   const days = worker.availability?.days ?? [];
   const slots = worker.availability?.timeSlots ?? [];
   const lookingFor = worker.availability?.lookingFor ?? [];
-  const nationalityFlag =
-    NATIONALITY_OPTIONS.find((n) => n.name === worker.nationality)?.flag ?? "🌍";
+  const nationality = NATIONALITY_OPTIONS.find((n) => n.name === worker.nationality);
 
   const { user, profile, isAdmin } = useAuth();
   const canContact = !!user && (profile?.account_type === "business" || isAdmin);
   const [revealing, setRevealing] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const revealContact = useServerFn(getWorkerContact);
   const navigate = useNavigate();
 
-  const handleContact = async () => {
+  const handleWhatsApp = async () => {
     if (!user) {
       navigate({ to: "/auth", search: { mode: "signin", role: "business" } });
       return;
@@ -57,7 +55,10 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
       setRevealing(true);
       const res = await revealContact({ data: { workerId: worker.userId } });
       if (res.whatsappUrl) {
-        window.open(res.whatsappUrl, "_blank", "noopener,noreferrer");
+        const text = encodeURIComponent(
+          `Hi ${worker.name}, I found your profile on Shiftinger and I'd like to discuss a shift opportunity.`,
+        );
+        window.open(`${res.whatsappUrl}?text=${text}`, "_blank", "noopener,noreferrer");
       } else {
         toast.error("This worker has not shared a contact number");
       }
@@ -68,179 +69,144 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
     }
   };
 
-  const lookingLabels = lookingFor
-    .map((v) => LOOKING_FOR_OPTIONS.find((o) => o.value === v)?.label ?? v)
-    .filter(Boolean);
   const showRating = worker.rating > 0 && worker.shiftsCompleted >= 3;
-  const portfolioUrl = worker.portfolioUrl?.trim() || null;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-ink/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
-      {/* ── Header ── */}
-      <div className="flex flex-wrap items-start gap-3 p-4">
-        <div className="relative flex-shrink-0">
-          {worker.avatarUrl ? (
-            <img
-              src={worker.avatarUrl}
-              alt={worker.name}
-              className="size-14 rounded-full object-cover ring-2 ring-teal/15"
-            />
-          ) : (
-            <div className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-teal to-teal/70 text-lg font-semibold text-canvas">
-              {initials}
-            </div>
-          )}
-          <span
-            className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-white bg-ink text-canvas"
-            title={worker.mainRole}
-          >
-            <Icon size={12} />
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="text-base font-semibold text-ink">{worker.name}</h3>
-            {worker.verified && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                <CheckCircle size={11} /> Verified
-              </span>
+    <article className="group flex h-full min-h-96 flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-ink/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        {/* ── Row 1: avatar + name + verified ── */}
+        <div className="flex items-start gap-3">
+          <div className="relative flex-shrink-0">
+            {worker.avatarUrl ? (
+              <img
+                src={worker.avatarUrl}
+                alt={worker.name}
+                className="size-14 rounded-full object-cover ring-2 ring-teal/15"
+              />
+            ) : (
+              <div className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-teal to-teal/70 text-lg font-semibold text-canvas">
+                {initials}
+              </div>
             )}
-            <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-medium text-teal">
-              <Icon size={12} /> {worker.mainRole}
+            <span
+              className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-white bg-ink text-canvas"
+              title={worker.mainRole}
+            >
+              <Icon size={12} />
             </span>
-            {lookingLabels.map((l) => (
-              <span
-                key={l}
-                className="rounded-full bg-ink/5 px-2.5 py-0.5 text-xs font-medium text-ink/70 ring-1 ring-ink/10"
-              >
-                {l}
-              </span>
-            ))}
-            {showRating && (
-              <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink">
-                <Star size={14} className="fill-gold text-gold" /> {worker.rating.toFixed(1)}
-                <span className="font-normal text-ink/40">/ 5 · {worker.shiftsCompleted} shifts</span>
-              </span>
-            )}
           </div>
 
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-ink/50">
-            <MapPin size={13} /> {nationalityFlag} {worker.city || "Portugal"}
-            <span className="text-ink/30">· available now</span>
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="text-[15px] font-bold text-ink">{worker.name}</h3>
+              {worker.verified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                  <CheckCircle size={11} /> Verified
+                </span>
+              )}
+            </div>
+
+            {/* ── Row 2: role + availability-type badges ── */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-medium text-teal">
+                <Icon size={12} /> {worker.mainRole}
+              </span>
+              {lookingFor.includes("single") && (
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">Single shifts</span>
+              )}
+              {lookingFor.includes("parttime") && (
+                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">Part-time</span>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Primary CTA */}
-        <button
-          onClick={handleContact}
-          disabled={revealing || (!!user && !canContact)}
-          title={!canContact ? "Sign in as a business to contact this worker" : undefined}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-teal px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {revealing ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} />}
-          Hire me
-        </button>
-      </div>
-
-      <div className="border-t border-ink/5" />
-
-      {/* ── Body (post content) ── */}
-      <div className="space-y-2.5 p-4 text-[13px] leading-relaxed">
-        {/* Headline */}
-        <p className="font-medium text-ink">
-          <Icon size={15} className="mb-0.5 mr-1 inline text-teal" />
-          {worker.mainRole}
-          {worker.mainRoleYears > 0 && (
-            <span className="text-ink/50"> · {worker.mainRoleYears} yr{worker.mainRoleYears !== 1 ? "s" : ""}</span>
+        {/* ── Row 3: rating · city · nationality ── */}
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-ink/60">
+          {showRating && (
+            <>
+              <span className="inline-flex items-center gap-1 font-semibold text-ink">
+                <Star size={13} className="fill-gold text-gold" /> {worker.rating.toFixed(1)} / 5
+                <span className="font-normal text-ink/40">· {worker.shiftsCompleted} shifts</span>
+              </span>
+              <span className="text-ink/25">·</span>
+            </>
+          )}
+          <span className="inline-flex items-center gap-1">
+            <MapPin size={12} /> {worker.city || "Portugal"}
+          </span>
+          {nationality && (
+            <>
+              <span className="text-ink/25">·</span>
+              <span>{nationality.flag} {nationality.name}</span>
+            </>
           )}
         </p>
 
-        {/* Secondary roles + years */}
-        {worker.subRoles.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs font-medium text-ink/50">Also works as</span>
-            {worker.subRoles.map((s) => (
-              <span
-                key={s.role}
-                className="inline-flex items-center gap-1 rounded-full bg-teal/8 px-2.5 py-0.5 text-xs font-medium text-teal ring-1 ring-teal/15"
-              >
-                {s.role}
-                {s.years > 0 && (
-                  <span className="text-teal/60">· {s.years}y</span>
-                )}
+        {/* ── Row 4: main role experience + secondary roles ── */}
+        <div className="text-[13px]">
+          <p className="font-medium text-ink">
+            {worker.mainRole}
+            {worker.mainRoleYears > 0 && (
+              <span className="font-normal text-ink/50">
+                {" "}· {worker.mainRoleYears} yr{worker.mainRoleYears !== 1 ? "s" : ""} experience
               </span>
-            ))}
-          </div>
-        )}
-
-        {/* Looking for */}
-        {lookingLabels.length > 0 && (
-          <p className="text-ink/70">
-            🔍 Looking for{" "}
-            <span className="font-semibold text-teal">{lookingLabels.join(" or ")}</span>{" "}
-            opportunities in <span className="font-semibold text-ink">{worker.city || "Portugal"}</span>.
+            )}
           </p>
-        )}
-
-        {/* Experience */}
-        {worker.mainRoleYears > 0 && (
-          <p className="flex items-start gap-2 text-ink/70">
-            <Briefcase size={15} className="mt-0.5 flex-shrink-0 text-ink/40" />
-            <span>
-              {worker.mainRoleYears}+ year{worker.mainRoleYears !== 1 ? "s" : ""} of experience as a{" "}
-              {worker.mainRole.toLowerCase()}.
-            </span>
-          </p>
-        )}
-
-        {/* Bio */}
-        {worker.bio && <p className="line-clamp-3 text-ink/60">{worker.bio}</p>}
-
-        {/* Availability days */}
-        {days.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Clock size={15} className="flex-shrink-0 text-ink/40" />
-            <div className="flex flex-wrap gap-1">
-              {DAY_OPTIONS.map((d) => (
+          {worker.subRoles.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-ink/50">Also works as</span>
+              {worker.subRoles.map((s) => (
                 <span
-                  key={d}
-                  className={`flex size-7 items-center justify-center rounded-md text-[11px] font-semibold ${
-                    days.includes(d)
-                      ? "bg-teal text-canvas"
-                      : "bg-ink/5 text-ink/25"
-                  }`}
+                  key={s.role}
+                  className="rounded-full bg-teal/8 px-2 py-0.5 text-[11px] font-medium text-teal ring-1 ring-teal/15"
                 >
-                  {d[0]}
+                  {s.role}{s.years > 0 ? ` · ${s.years}y` : ""}
                 </span>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Row 5: availability days + time slots ── */}
+        {days.length > 0 && (
+          <div className="flex items-start gap-2">
+            <Clock size={14} className="mt-0.5 flex-shrink-0 text-ink/40" />
+            <div>
+              <div className="flex flex-wrap gap-1">
+                {DAY_OPTIONS.map((d) => (
+                  <span
+                    key={d}
+                    className={`flex size-6 items-center justify-center rounded text-[10px] font-semibold ${
+                      days.includes(d) ? "bg-teal text-canvas" : "bg-ink/5 text-ink/25"
+                    }`}
+                  >
+                    {d[0]}
+                  </span>
+                ))}
+              </div>
+              {slots.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {slots.map((s) => (
+                    <span key={s} className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-medium text-gold">
+                      {SLOT_SHORT[s] ?? s}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Time slots */}
-        {slots.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pl-7">
-            {slots.map((s) => (
-              <span
-                key={s}
-                className="rounded-full bg-gold/10 px-2.5 py-0.5 text-xs font-medium text-gold"
-              >
-                {SLOT_SHORT[s] ?? s}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Languages */}
+        {/* ── Row 6: languages ── */}
         {worker.languages.length > 0 && (
-          <p className="flex items-center gap-2 text-ink/70">
-            <Languages size={15} className="flex-shrink-0 text-ink/40" />
+          <p className="flex items-center gap-2">
+            <Languages size={14} className="flex-shrink-0 text-ink/40" />
             <span className="flex flex-wrap gap-1.5">
               {worker.languages.map((l) => (
                 <span
                   key={l.language}
-                  className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/60 ring-1 ring-ink/10"
+                  className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
                 >
                   {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
                 </span>
@@ -249,46 +215,28 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
           </p>
         )}
 
-        {/* Atividade / immediate start */}
-        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+        {/* ── Row 7: atividade + immediate start ── */}
+        <div className="flex flex-wrap items-center gap-2">
           {worker.atividade && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200">
               ✓ Open Atividade
             </span>
           )}
-          <span className="inline-flex items-center gap-1 text-xs text-ink/50">
-            <Rocket size={13} /> Available for immediate start
+          <span className="inline-flex items-center gap-1 text-[11px] text-ink/50">
+            <Rocket size={12} /> Immediate start
           </span>
         </div>
-
-        {/* CV / portfolio link */}
-        {portfolioUrl && (
-          <a
-            href={portfolioUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/10"
-          >
-            <FileText size={13} /> View CV / portfolio
-          </a>
-        )}
       </div>
 
-      {/* ── Footer / contact ── */}
+      {/* ── Footer: rate + CTAs ── */}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-ink/5 bg-canvas/40 px-4 py-3">
         <p className="text-sm">
           <span className="font-semibold text-ink">€{worker.minRate}</span>
           <span className="text-ink/40">/hr min</span>
         </p>
-        <div className="flex flex-1 items-center justify-end gap-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => onContact?.(worker)}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-ink/15 transition-colors hover:bg-ink/5"
-          >
-            <MessageCircle size={14} /> Chat
-          </button>
-          <button
-            onClick={handleContact}
+            onClick={handleWhatsApp}
             disabled={revealing || (!!user && !canContact)}
             title={!canContact ? "Sign in as a business to contact this worker" : undefined}
             className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1eb858] disabled:cursor-not-allowed disabled:opacity-50"
@@ -302,8 +250,22 @@ export default function WorkerCard({ worker, onContact }: WorkerCardProps) {
             )}
             WhatsApp
           </button>
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-teal ring-1 ring-teal/30 transition-colors hover:bg-teal/5"
+          >
+            <User size={14} /> View Profile
+          </button>
         </div>
       </div>
+
+      <WorkerProfileModal
+        worker={worker}
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        onWhatsApp={handleWhatsApp}
+        revealing={revealing}
+      />
     </article>
   );
 }

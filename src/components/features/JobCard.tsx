@@ -1,23 +1,21 @@
-import { Lock, Clock, Users } from "lucide-react";
-import type { Job } from "@/data/types";
-import { maskBusinessName, timeAgo, formatDate, roleIcon, LANGUAGE_FLAGS } from "@/data/utils";
+import { Lock, Clock, Users, Check, X } from "lucide-react";
+import type { Job, MatchCriterion } from "@/data/types";
+import { useAuth } from "@/lib/auth";
+import { matchColor } from "@/lib/matching";
+import { timeAgo, formatDate, roleIcon, LANGUAGE_FLAGS } from "@/data/utils";
 
 interface JobCardProps {
   job: Job;
   matchScore?: number;
+  matchCriteria?: MatchCriterion[];
   applied?: boolean;
   onApply?: (jobId: string) => void;
   compact?: boolean;
 }
 
-function matchColor(score: number) {
-  if (score >= 80) return { text: "text-green-600", bar: "bg-green-500" };
-  if (score >= 50) return { text: "text-amber-600", bar: "bg-amber-500" };
-  return { text: "text-red-500", bar: "bg-red-400" };
-}
-
-export default function JobCard({ job, matchScore, applied, onApply, compact }: JobCardProps) {
+export default function JobCard({ job, matchScore, matchCriteria, applied, onApply, compact }: JobCardProps) {
   const Icon = roleIcon(job.role);
+  const { user, profile, isAdmin } = useAuth();
   const totalHours =
     job.startTime && job.endTime
       ? (() => {
@@ -26,6 +24,27 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
           return (eh * 60 + em - (sh * 60 + sm)) / 60;
         })()
       : null;
+
+  // Role-based action area (reads from session, not props)
+  let action: React.ReactNode = null;
+  if (isAdmin) {
+    action = <span className="rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/40">Admin view</span>;
+  } else if (profile?.account_type === "business") {
+    action =
+      user?.id === job.businessId ? (
+        <span className="rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/40">Posted by you</span>
+      ) : null;
+  } else if (onApply) {
+    action = (
+      <button
+        onClick={() => onApply(job.id)}
+        disabled={applied}
+        className="rounded-full bg-teal px-4 py-1.5 text-xs font-medium text-canvas transition-colors hover:bg-teal-light disabled:opacity-50"
+      >
+        {applied ? "Applied ✓" : "Apply"}
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-white p-5 ring-1 ring-ink/5 transition-shadow hover:shadow-sm">
@@ -42,8 +61,6 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
               <span className="inline-flex items-center gap-1 rounded bg-ink/5 px-1.5 py-0.5">
                 <Lock size={9} /> {job.area || "—"}
               </span>
-              <span className="text-ink/20">·</span>
-              <span className="italic text-ink/40">{maskBusinessName(job.businessName || "Business")}</span>
             </p>
           </div>
         </div>
@@ -104,6 +121,20 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
           <div className="h-1.5 overflow-hidden rounded-full bg-ink/5">
             <div className={`h-full rounded-full ${matchColor(matchScore).bar}`} style={{ width: `${matchScore}%` }} />
           </div>
+          {matchCriteria && matchCriteria.length > 0 && (
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+              {matchCriteria.slice(0, 5).map((c, i) => (
+                <span key={i} className="flex min-w-0 items-center gap-1.5 text-xs text-ink/70">
+                  {c.matched ? (
+                    <Check size={12} className="flex-shrink-0 text-[#22c55e]" strokeWidth={3} />
+                  ) : (
+                    <X size={12} className="flex-shrink-0 text-[#ef4444]" strokeWidth={3} />
+                  )}
+                  <span className="truncate">{c.label}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -113,17 +144,9 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
 
       <div className="flex items-center justify-between border-t border-ink/5 pt-2">
         <span className="text-xs text-ink/40">
-          {timeAgo(job.postedAt)} · {job.applicants} applicants
+          {timeAgo(job.postedAt)} · {job.applicants} applicant{job.applicants !== 1 ? "s" : ""}
         </span>
-        {onApply && (
-          <button
-            onClick={() => onApply(job.id)}
-            disabled={applied}
-            className="rounded-full bg-teal px-4 py-1.5 text-xs font-medium text-canvas transition-colors hover:bg-teal-light disabled:opacity-50"
-          >
-            {applied ? "Applied" : "Apply"}
-          </button>
-        )}
+        {action}
       </div>
     </div>
   );

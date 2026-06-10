@@ -58,6 +58,7 @@ export type Database = {
           job_id: string
           match_score: number
           matched_criteria: Json
+          message: string | null
           owner_id: string
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
@@ -71,6 +72,7 @@ export type Database = {
           job_id: string
           match_score?: number
           matched_criteria?: Json
+          message?: string | null
           owner_id: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -84,6 +86,7 @@ export type Database = {
           job_id?: string
           match_score?: number
           matched_criteria?: Json
+          message?: string | null
           owner_id?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
