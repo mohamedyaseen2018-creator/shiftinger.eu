@@ -20,6 +20,7 @@ export default function Navbar() {
   const navLinks = [
     { label: c("header.nav_jobs"), to: "/jobs" as const },
     { label: c("header.nav_talent"), to: "/talent" as const },
+    { label: "For workers", to: "/for-workers" as const },
     { label: c("header.nav_business"), to: "/for-businesses" as const },
   ];
 
