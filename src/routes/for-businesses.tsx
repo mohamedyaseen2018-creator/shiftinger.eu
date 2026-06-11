@@ -22,11 +22,70 @@ export const Route = createFileRoute("/for-businesses")({
   component: ForBusinessesPage,
 });
 
-const STEPS = [
-  { n: "01", title: "Post your shift", body: "Select the role, date, hours, and pay. Tick the skills you need. Done in under 3 minutes." },
-  { n: "02", title: "See matched candidates", body: "Applicants ranked by skill match %. Skills, experience, rating, and distance — all at a glance." },
-  { n: "03", title: "Accept with one click", body: "Accept, waitlist, or decline. The worker gets a notification instantly. Chat opens automatically." },
-  { n: "04", title: "Worker confirms", body: "They have 2 hours to confirm. Once confirmed, you both exchange contacts and your address is shared." },
+const STEPS: JourneyStep[] = [
+  {
+    n: "01",
+    title: "Sign up & fill the form",
+    image: stepSignup,
+    points: [
+      "Create a business account in under a minute.",
+      "Add your company name and contact details.",
+      "Verify your email to activate your account.",
+      "No subscription required to get started.",
+    ],
+  },
+  {
+    n: "02",
+    title: "Build your company profile",
+    image: stepProfile,
+    points: [
+      "Add your venue details and location.",
+      "Upload your logo so workers recognise you.",
+      "Describe what makes your team a great place to work.",
+    ],
+  },
+  {
+    n: "03",
+    title: "Post jobs & reach out to talent",
+    image: stepPostjob,
+    points: [
+      "Create a shift with role, date, hours, and pay in minutes.",
+      "Tick the exact skills you need for the role.",
+      "Or browse verified workers and invite them directly.",
+      "Your post goes live to matched workers instantly.",
+    ],
+  },
+  {
+    n: "04",
+    title: "Check applications",
+    image: stepApplications,
+    points: [
+      "See applicants ranked by skill-match percentage.",
+      "Review experience, ratings, and distance at a glance.",
+      "Filter for verified workers or Atividade status.",
+    ],
+  },
+  {
+    n: "05",
+    title: "Contact & accept the perfect one",
+    image: stepAccept,
+    points: [
+      "Open a private chat with your shortlisted workers.",
+      "Accept the best fit with one click.",
+      "The worker confirms within the 2-hour window.",
+      "Exchange contacts and share your address securely.",
+    ],
+  },
+  {
+    n: "06",
+    title: "Rate the worker",
+    image: stepRating,
+    points: [
+      "Leave a rating after the shift is complete.",
+      "Help the community recognise reliable workers.",
+      "Build a roster of favourites for next time.",
+    ],
+  },
 ];
 
 const FEATURE_CARDS = [
