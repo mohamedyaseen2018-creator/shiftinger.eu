@@ -54,7 +54,7 @@ export function toJob(row: JobRow, biz?: BusinessLite): Job {
     rate: Number(row.rate),
     spots: row.spots,
     spotsRemaining: row.spots_remaining,
-    languages: Array.isArray(row.languages) ? (row.languages as string[]) : [],
+    languages: normalizeLanguages(row.languages),
     atividade: row.atividade as Job["atividade"],
     note: row.note ?? undefined,
     skills: Array.isArray(row.skills) ? (row.skills as string[]) : [],
