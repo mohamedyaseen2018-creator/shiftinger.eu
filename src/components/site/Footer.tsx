@@ -5,6 +5,7 @@ import { useSiteContent } from "@/components/site/SiteContentProvider";
 const WORKER_LINKS = [
   { label: "Browse shifts", to: "/jobs" },
   { label: "Register as worker", to: "/register" },
+  { label: "For workers", to: "/for-workers" },
   { label: "Find talent", to: "/talent" },
 ];
 

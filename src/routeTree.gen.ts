@@ -14,6 +14,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as ForWorkersRouteImport } from './routes/for-workers'
 import { Route as ForBusinessesRouteImport } from './routes/for-businesses'
 import { Route as ConsoleRouteImport } from './routes/console'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -59,6 +60,11 @@ const LoginRoute = LoginRouteImport.update({
 const JobsRoute = JobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForWorkersRoute = ForWorkersRouteImport.update({
+  id: '/for-workers',
+  path: '/for-workers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForBusinessesRoute = ForBusinessesRouteImport.update({
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/console': typeof ConsoleRouteWithChildren
   '/for-businesses': typeof ForBusinessesRoute
+  '/for-workers': typeof ForWorkersRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/for-businesses': typeof ForBusinessesRoute
+  '/for-workers': typeof ForWorkersRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/console': typeof ConsoleRouteWithChildren
   '/for-businesses': typeof ForBusinessesRoute
+  '/for-workers': typeof ForWorkersRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/console'
     | '/for-businesses'
+    | '/for-workers'
     | '/jobs'
     | '/login'
     | '/onboarding'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/for-businesses'
+    | '/for-workers'
     | '/jobs'
     | '/login'
     | '/onboarding'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/console'
     | '/for-businesses'
+    | '/for-workers'
     | '/jobs'
     | '/login'
     | '/onboarding'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ConsoleRoute: typeof ConsoleRouteWithChildren
   ForBusinessesRoute: typeof ForBusinessesRoute
+  ForWorkersRoute: typeof ForWorkersRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-workers': {
+      id: '/for-workers'
+      path: '/for-workers'
+      fullPath: '/for-workers'
+      preLoaderRoute: typeof ForWorkersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/for-businesses': {
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ConsoleRoute: ConsoleRouteWithChildren,
   ForBusinessesRoute: ForBusinessesRoute,
+  ForWorkersRoute: ForWorkersRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
@@ -598,13 +619,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

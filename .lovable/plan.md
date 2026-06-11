@@ -1,28 +1,52 @@
-# Worker Card — Stable Row Layout
+# For Workers page + "How it works" steps + pricing teaser
 
 ## Goal
-Reorder the worker card rows and make every row always render (with placeholders when data is missing) so all cards in the grid have identical structure — the viewer's eyes always find the same info in the same place.
+Create a new **For Workers** page that mirrors the existing **For Business** page, add a visual step-by-step "How it works" section (with screenshots) to **both** pages, and add a pricing section that is visibly blurred with a "Coming soon" overlay on both.
 
-## New Row Order
+## 1. New route: `/for-workers`
+- New file `src/routes/for-workers.tsx`, structured like `for-businesses.tsx` (hero + steps + features + pricing), using `SiteLayout`.
+- Own `head()` metadata: title "For workers — Shiftinger", worker-focused description, og:title/og:description.
+- Hero: worker-oriented headline + subtitle, primary CTA → `/register`, secondary CTA → `/jobs`. A small stats grid (e.g. shifts available, businesses hiring, avg pay, fast confirmation).
 
-1. **Avatar + Name + Verified** (unchanged)
-2. **Main role line + Rating** — the role badge row now also shows the rating inline:
-   - With rating: `★ 4.8 / 5 · 12 shifts`
-   - Without rating (or under 3 shifts): a muted placeholder like `★ — / 5 · New` so the line never disappears and the row height stays the same
-3. **Location line** — `📍 Lisbon, Portugal` (city only; falls back to `Portugal`)
-4. **Shift preference line** — "Single shifts" / "Part-time" badges move here from the name row. If the worker selected neither, show a muted `—` placeholder chip so the row keeps its height
-5. **Experience + secondary roles** (unchanged)
-6. **Availability days + time slots** (unchanged)
-7. **Nationality + Languages line** — nationality flag + name followed by language chips (nationality moves here from the old rating/city line). Placeholder `—` when missing
-8. **Atividade + Immediate start** (unchanged)
-9. **Footer: rate + WhatsApp / View Profile** (unchanged)
+## 2. "How it works" step section (both pages)
+A new section on each page showing the journey as numbered steps. Each step has: a number, a title, a **screenshot image**, and **up to 4 short bullet points**. Steps are tailored per audience.
 
-## Consistency rules
-- Rows 2–4 and 7 always render — missing data shows a subtle muted placeholder instead of collapsing, so card heights and row positions match across the grid.
-- Placeholders use low-contrast styling (`text-ink/30`) so they don't draw attention but preserve spacing.
+**For Workers steps**
+1. Sign up & fill the form — pick worker role, basic details, verify email
+2. Build your profile — add skills/experience, languages, ID verification, set rates
+3. Apply for jobs / post availability — browse shifts, one-tap apply, publish your availability so businesses reach out
+4. Get noticed & check applications — track application status, see who viewed you
+5. Get contacted & accepted — chat opens on mutual match, confirm within the window, exchange contacts
+6. Complete & get rated — work the shift, receive a rating, build reputation
+
+**For Business steps**
+1. Sign up & fill the form — pick business account, company basics, verify email
+2. Build your company profile — add venue details, logo, location
+3. Post jobs / reach out to talent — create a shift in minutes or browse and invite workers directly
+4. Check applications — see skill-matched candidates ranked, filter by verification/Atividade
+5. Contact & accept the perfect one — open chat, accept the best fit, worker confirms
+6. Rate the worker — leave a rating after the shift to strengthen the community
+
+Each step renders in an alternating image/text layout. Bullet lists capped at 4 items.
+
+## 3. Screenshots (AI-generated placeholders)
+Generate clean placeholder mockup images (saved to `src/assets/`) representing each screen — e.g. signup form, profile builder, jobs list/apply, applications dashboard, chat/accept, rating. Reuse the same images across both pages where the screen is shared (signup, chat/accept, rating) to limit asset count (~6–7 images total). These are placeholders the user can later swap for real captures.
+
+## 4. Pricing section (blurred "Coming soon")
+- Add a Pricing section near the bottom of **both** pages.
+- Render representative plan cards (e.g. Free / Pro / Featured listings) but apply a heavy blur (`blur-sm`/`blur`) to the cards and overlay a centered "Pricing — coming soon" badge so prices are obscured but the section communicates that paid tiers are planned.
+- No real prices or checkout — purely a teaser.
+
+## 5. Navigation & footer
+- Navbar (`src/components/site/Navbar.tsx`): add a **For Workers** link (`/for-workers`) next to **For Business**, in both desktop and mobile menus.
+- Footer (`src/components/site/Footer.tsx`): add "For Workers" to the Workers column.
 
 ## Technical details
-- Single file change: `src/components/features/WorkerCard.tsx`
-- Remove the `showRating` conditional hiding; replace with always-rendered rating that switches between real value and placeholder
-- Move `lookingFor` badges out of row 2 into their own row; move `nationality` into the languages row (now after availability)
-- No backend, data, or other component changes
+- Use existing design tokens (`ink`, `canvas`, `gold`, `teal`) and the same card/section styling already used in `for-businesses.tsx`; no new dependencies.
+- Step and feature content can be defined as local arrays in each route file (matching the existing `STEPS`/`FEATURE_CARDS`/`STATS` pattern). Hardcoded copy is fine; no new `siteContent` keys required.
+- Images imported as ES6 asset imports from `src/assets/`.
+- No backend, schema, or business-logic changes — frontend/presentation only.
+
+## Out of scope
+- Real pricing/checkout (kept hidden behind the blur for now).
+- Editable-via-console content keys for the new copy (can be added later if needed).
