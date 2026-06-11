@@ -145,26 +145,14 @@ function ForBusinessesPage() {
         </div>
       </section>
 
-      {/* Process */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-14 text-center">
-            <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
-            <h2 className="mt-2 font-serif text-4xl text-ink">
-              {c("why.process_title")}
-            </h2>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step) => (
-              <div key={step.n} className="rounded-xl bg-white p-6 ring-1 ring-ink/5">
-                <span className="font-serif text-4xl text-ink/15">{step.n}</span>
-                <h3 className="mb-2 mt-3 font-medium text-ink">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-ink/60">{step.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* How it works */}
+      <HowItWorks
+        eyebrow="How it works"
+        title={c("why.process_title")}
+        subtitle="Six simple steps take you from posting a shift to rating the worker who nailed it."
+        steps={STEPS}
+      />
+
 
       {/* Features */}
       <section className="pb-24">
