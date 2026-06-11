@@ -182,6 +182,10 @@ function ForBusinessesPage() {
           </div>
         </div>
       </section>
+
+      {/* Pricing (obscured) */}
+      <PricingTeaser />
     </SiteLayout>
+
   );
 }
