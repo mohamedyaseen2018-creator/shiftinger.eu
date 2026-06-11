@@ -1,4 +1,5 @@
-import { Lock } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export interface JourneyStep {
   n: string;
@@ -7,16 +8,25 @@ export interface JourneyStep {
   points: string[];
 }
 
+export interface JourneyCta {
+  label: string;
+  to: string;
+  search?: Record<string, string>;
+  variant?: "primary" | "secondary";
+}
+
 export function HowItWorks({
   eyebrow,
   title,
   subtitle,
   steps,
+  ctas,
 }: {
   eyebrow: string;
   title: string;
   subtitle?: string;
   steps: JourneyStep[];
+  ctas?: JourneyCta[];
 }) {
   return (
     <section className="bg-canvas py-24">
@@ -66,6 +76,27 @@ export function HowItWorks({
             );
           })}
         </div>
+
+        {ctas && ctas.length > 0 && (
+          <div className="mt-20 flex flex-col items-center justify-center gap-3 rounded-2xl bg-ink px-6 py-10 text-center sm:flex-row">
+            {ctas.map((cta) => {
+              const isPrimary = cta.variant !== "secondary";
+              const className = isPrimary
+                ? "inline-flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-gold-dark"
+                : "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium text-canvas ring-1 ring-canvas/20 transition-colors hover:bg-canvas/5";
+              return (
+                <Link
+                  key={cta.label}
+                  to={cta.to}
+                  search={cta.search as never}
+                  className={className}
+                >
+                  {cta.label} <ArrowRight size={16} />
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
