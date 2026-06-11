@@ -34,6 +34,20 @@ export interface JobRow {
   created_at: string;
 }
 
+/** Coerce a languages value (which may be strings or {language, level} objects) to a string[]. */
+function normalizeLanguages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object" && "language" in item) {
+        return String((item as { language: unknown }).language ?? "");
+      }
+      return "";
+    })
+    .filter((lang): lang is string => lang.length > 0);
+}
+
 /** Map a DB job row + its business to the legacy Job shape used by JobCard. */
 export function toJob(row: JobRow, biz?: BusinessLite): Job {
   return {
@@ -54,7 +68,7 @@ export function toJob(row: JobRow, biz?: BusinessLite): Job {
     rate: Number(row.rate),
     spots: row.spots,
     spotsRemaining: row.spots_remaining,
-    languages: Array.isArray(row.languages) ? (row.languages as string[]) : [],
+    languages: normalizeLanguages(row.languages),
     atividade: row.atividade as Job["atividade"],
     note: row.note ?? undefined,
     skills: Array.isArray(row.skills) ? (row.skills as string[]) : [],
