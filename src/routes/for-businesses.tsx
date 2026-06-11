@@ -151,6 +151,10 @@ function ForBusinessesPage() {
         title={c("why.process_title")}
         subtitle="Six simple steps take you from posting a shift to rating the worker who nailed it."
         steps={STEPS}
+        ctas={[
+          { label: "Get started", to: "/register", variant: "primary" },
+          { label: "Sign up as a business", to: "/auth", search: { mode: "signup", role: "business" }, variant: "secondary" },
+        ]}
       />
 
 

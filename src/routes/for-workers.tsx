@@ -149,6 +149,10 @@ function ForWorkersPage() {
         title="From sign-up to your first rating"
         subtitle="Six simple steps take you from creating an account to building a reputation that lands you better shifts."
         steps={STEPS}
+        ctas={[
+          { label: "Get started", to: "/register", variant: "primary" },
+          { label: "Sign up as a worker", to: "/auth", search: { mode: "signup", role: "worker" }, variant: "secondary" },
+        ]}
       />
 
       {/* Features */}
