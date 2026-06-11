@@ -87,7 +87,7 @@ export function HowItWorks({
               return (
                 <Link
                   key={cta.label}
-                  to={cta.to}
+                  to={cta.to as never}
                   search={cta.search as never}
                   className={className}
                 >
