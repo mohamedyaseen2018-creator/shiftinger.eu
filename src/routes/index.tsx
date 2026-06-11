@@ -84,7 +84,8 @@ function HomePage() {
                 {c("home.hero_title")}
               </h1>
               <p className="mt-8 max-w-[52ch] text-pretty text-lg text-ink/70">
-                {c("home.hero_subtitle")}
+                <span className="font-semibold text-ink">Need extra shifts?</span>{" "}
+                Shiftinger connects chefs, baristas, and hospitality professionals with restaurants, cafés, and event venues across Portugal — work when you want, as much as you want.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link

@@ -106,7 +106,7 @@ export const CONTENT_DEFAULTS: Record<string, string> = {
     "© 2025 Shiftinger. All rights reserved. Built for Portugal's flexible workforce.",
   // Home
   "home.banner": "First 500 workers & 100 businesses — free of charge",
-  "home.hero_eyebrow": "Portugal's flexible work platform",
+  "home.hero_eyebrow": "Portugal's #1 extra shift platform",
   "home.hero_title": "Find shifts. Find talent. Build your income.",
   "home.hero_subtitle":
     "Shiftinger connects immigrants, students, and career-changers with restaurants, cafés, and event businesses across Portugal. Work by shift, grow at your pace.",
