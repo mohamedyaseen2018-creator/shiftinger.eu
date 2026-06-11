@@ -287,7 +287,7 @@ function HomePage() {
               Browse all talent
             </Link>
           </div>
-          <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {MOCK_WORKERS.slice(0, 3).map((w) => (
               <WorkerCard key={w.id} worker={w} />
             ))}
