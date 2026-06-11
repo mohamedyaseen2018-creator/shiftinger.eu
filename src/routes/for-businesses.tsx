@@ -2,6 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle, ArrowRight, Shield, Clock, MessageCircle, Star, Zap } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { HowItWorks, PricingTeaser, type JourneyStep } from "@/components/site/JourneySections";
+import stepSignup from "@/assets/step-signup.jpg";
+import stepProfile from "@/assets/step-profile.jpg";
+import stepPostjob from "@/assets/step-postjob.jpg";
+import stepApplications from "@/assets/step-applications.jpg";
+import stepAccept from "@/assets/step-accept.jpg";
+import stepRating from "@/assets/step-rating.jpg";
 
 export const Route = createFileRoute("/for-businesses")({
   head: () => ({
