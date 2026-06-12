@@ -151,66 +151,66 @@ function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS (dark) ── */}
-      <section className="bg-ink py-24 text-canvas">
+      <section className="bg-ink py-12 text-canvas sm:py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-16 max-w-xl">
+          <div className="mb-8 max-w-xl">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
-            <h2 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">
+            <h2 className="mt-2 font-serif text-2xl leading-tight sm:text-3xl">
               {c("home.how_title")}
             </h2>
-            <p className="mt-4 text-canvas/60">
+            <p className="mt-3 text-sm text-canvas/60">
               {c("home.how_subtitle")}
             </p>
           </div>
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
             <div>
-              <span className="mb-6 inline-block rounded-full bg-teal px-3 py-1 text-xs font-medium text-canvas">
+              <span className="mb-4 inline-block rounded-full bg-teal px-3 py-1 text-[10px] font-medium text-canvas">
                 For workers
               </span>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {WORKER_STEPS.map((step) => (
                   <div
                     key={step.n}
-                    className="rounded-xl bg-canvas/[0.03] p-4 ring-1 ring-canvas/10"
+                    className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
                   >
-                    <div className="mb-1.5 flex items-center gap-2">
-                      <span className="font-serif text-lg italic text-gold/60">{step.n}</span>
-                      <h3 className="text-sm font-medium leading-tight">{step.title}</h3>
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="font-serif text-base italic text-gold/60">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight">{step.title}</h3>
                     </div>
-                    <p className="text-xs leading-relaxed text-canvas/60">{step.body}</p>
+                    <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
                 ))}
               </div>
               <Link
                 to="/register"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal px-4 py-2 text-xs font-medium text-canvas transition-colors hover:bg-teal-light"
               >
-                Register as a worker <ArrowRight size={15} />
+                Register as a worker <ArrowRight size={14} />
               </Link>
             </div>
-            <div className="lg:border-l lg:border-canvas/10 lg:pl-12">
-              <span className="mb-6 inline-block rounded-full bg-gold px-3 py-1 text-xs font-medium text-canvas">
+            <div className="lg:border-l lg:border-canvas/10 lg:pl-10">
+              <span className="mb-4 inline-block rounded-full bg-gold px-3 py-1 text-[10px] font-medium text-canvas">
                 For businesses
               </span>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {BUSINESS_STEPS.map((step) => (
                   <div
                     key={step.n}
-                    className="rounded-xl bg-canvas/[0.03] p-4 ring-1 ring-canvas/10"
+                    className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
                   >
-                    <div className="mb-1.5 flex items-center gap-2">
-                      <span className="font-serif text-lg italic text-gold/60">{step.n}</span>
-                      <h3 className="text-sm font-medium leading-tight">{step.title}</h3>
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="font-serif text-base italic text-gold/60">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight">{step.title}</h3>
                     </div>
-                    <p className="text-xs leading-relaxed text-canvas/60">{step.body}</p>
+                    <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
                 ))}
               </div>
               <Link
                 to="/register"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-gold-dark"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-xs font-medium text-canvas transition-colors hover:bg-gold-dark"
               >
-                Register as a business <ArrowRight size={15} />
+                Register as a business <ArrowRight size={14} />
               </Link>
             </div>
           </div>
