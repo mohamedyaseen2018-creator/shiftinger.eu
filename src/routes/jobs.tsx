@@ -71,7 +71,7 @@ function JobsPage() {
 
     let workerProfile: Record<string, unknown> | null = null;
     if (user && profile?.account_type === "worker") {
-      const { data } = await supabase.from("worker_profiles").select("*").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase.from("worker_profiles").select("id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, experience, atividade, bio, min_rate, looking_for, available_days, time_slots, availability_visible, messages_open, verified, rating, rating_count, shifts_completed, avatar_url, created_at, updated_at, residence, portfolio_url, atividade_number").eq("user_id", user.id).maybeSingle();
       workerProfile = data;
       setWorker(data);
       const { data: apps } = await supabase.from("applications").select("job_id").eq("worker_id", user.id);
