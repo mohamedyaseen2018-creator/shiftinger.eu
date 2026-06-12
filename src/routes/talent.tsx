@@ -124,7 +124,7 @@ function TalentPage() {
             <p className="mt-2 text-sm">Verified workers who make their profile visible will appear here.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((w) => (
               <WorkerCard key={w.id} worker={w} />
             ))}
