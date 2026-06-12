@@ -245,9 +245,9 @@ function HomePage() {
       </section>
 
       {/* ── SHIFTS PREVIEW ── */}
-      <section className="pb-12">
+      <section className="pb-10">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Latest shifts</span>
               <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
