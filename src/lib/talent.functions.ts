@@ -34,7 +34,7 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
 export const getWorkerContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { workerId: string }) => {
-    if (!data || typeof data.workerId !== "string" || data.workerId.length < 10) {
+    if (!data || typeof data.workerId !== "string" || !UUID_RE.test(data.workerId)) {
       throw new Error("Invalid worker id");
     }
     return { workerId: data.workerId };
