@@ -19,7 +19,7 @@ export default function Footer() {
   const { c } = useSiteContent();
   return (
     <footer className="border-t border-ink/5 bg-ink text-canvas/80">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-12">
+      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <span className="text-2xl font-medium tracking-tight">
