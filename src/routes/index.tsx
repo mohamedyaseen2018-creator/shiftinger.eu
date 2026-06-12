@@ -80,7 +80,7 @@ function HomePage() {
                   {c("home.hero_eyebrow")}
                 </span>
               </div>
-              <h1 className="max-w-[18ch] text-balance font-serif text-5xl leading-[1.1] text-ink lg:text-7xl">
+              <h1 className="max-w-[18ch] text-balance font-serif text-3xl leading-[1.1] text-ink sm:text-4xl md:text-5xl lg:text-7xl">
                 {c("home.hero_title")}
               </h1>
               <p className="mt-8 max-w-[52ch] text-pretty text-lg text-ink/70">
@@ -101,10 +101,10 @@ function HomePage() {
                   {c("home.hero_cta_secondary")}
                 </Link>
               </div>
-              <div className="mt-12 flex gap-10">
+              <div className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
                 {STATS.map((s) => (
                   <div key={s.label}>
-                    <p className="font-serif text-3xl text-teal">{s.value}</p>
+                    <p className="font-serif text-2xl text-teal sm:text-3xl">{s.value}</p>
                     <p className="mt-0.5 text-sm text-ink/50">{s.label}</p>
                   </div>
                 ))}
