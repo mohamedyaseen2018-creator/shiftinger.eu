@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "@/components/console/Sidebar";
+import { ConsoleMfaGate } from "@/components/console/ConsoleMfaGate";
 import { AdminStoreProvider } from "@/data/adminStore";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
