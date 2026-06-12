@@ -278,6 +278,15 @@
   animation: shiftinger-pulse 1.6s ease-in-out infinite;
 }
 
+@keyframes shiftinger-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@utility animate-sheet-up {
+  animation: shiftinger-sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-surface-page); }
 ::-webkit-scrollbar-thumb { background: var(--color-teal-deep); border-radius: 3px; }
