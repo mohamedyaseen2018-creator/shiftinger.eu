@@ -43,9 +43,19 @@ function initials(value: string): string {
 }
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { profile, user } = useAuth();
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const clearMfa = useServerFn(clearAdminMfa);
   const displayName = profile?.full_name || profile?.email || user?.email || "Admin";
   const email = profile?.email || user?.email || "";
+
+  const handleSignOut = async () => {
+    onNavigate?.();
+    await clearMfa().catch(() => {});
+    await signOut();
+    navigate({ to: "/" });
+  };
+
 
   return (
     <div className="flex h-full flex-col bg-pine-dark text-white">
