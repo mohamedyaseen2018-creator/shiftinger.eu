@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
@@ -11,8 +11,11 @@ import {
   PencilRuler,
   Mail,
   Home,
+  LogOut,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
+import { clearAdminMfa } from "@/lib/adminMfa.functions";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/brand/Logo";
 
