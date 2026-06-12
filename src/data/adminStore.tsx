@@ -25,6 +25,7 @@ import {
   consoleSetMatchStatus,
   consoleSetAdminRole,
   consoleDeleteUser,
+  consoleBanUser,
   consoleSignWorkerDoc,
   consoleSetWorkerVerified,
   type ConsoleStatus,
