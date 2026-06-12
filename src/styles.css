@@ -210,6 +210,12 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     font-family: var(--font-sans);
     font-size: var(--font-size-body);
@@ -218,6 +224,14 @@
     background: var(--color-surface-page);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Media never forces horizontal overflow */
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -262,6 +276,15 @@
 
 @utility pulse-window {
   animation: shiftinger-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes shiftinger-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@utility animate-sheet-up {
+  animation: shiftinger-sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 ::-webkit-scrollbar { width: 6px; }
