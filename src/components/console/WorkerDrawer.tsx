@@ -57,6 +57,9 @@ export function WorkerDrawer({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmBan, setConfirmBan] = useState(false);
+  const [banReason, setBanReason] = useState("");
+
 
   useEffect(() => {
     setForm(worker);
