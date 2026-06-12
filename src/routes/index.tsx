@@ -69,7 +69,7 @@ function HomePage() {
       </div>
 
       {/* ── HERO (asymmetric + sticky rail) ── */}
-      <section className="py-16 lg:py-28">
+      <section className="py-10 lg:py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="flex flex-col gap-12 lg:flex-row">
             {/* Main */}
@@ -174,8 +174,8 @@ function HomePage() {
                     className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
                   >
                     <div className="mb-1 flex items-center gap-2">
-                      <span className="font-serif text-base italic text-gold/60">{step.n}</span>
-                      <h3 className="text-xs font-medium leading-tight">{step.title}</h3>
+                      <span className="font-serif text-base italic text-teal-pale">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight text-teal-soft">{step.title}</h3>
                     </div>
                     <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
@@ -199,8 +199,8 @@ function HomePage() {
                     className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
                   >
                     <div className="mb-1 flex items-center gap-2">
-                      <span className="font-serif text-base italic text-gold/60">{step.n}</span>
-                      <h3 className="text-xs font-medium leading-tight">{step.title}</h3>
+                      <span className="font-serif text-base italic text-gold/70">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight text-gold">{step.title}</h3>
                     </div>
                     <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
@@ -218,7 +218,7 @@ function HomePage() {
       </section>
 
       {/* ── PRIVACY ── */}
-      <section className="py-24">
+      <section className="py-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="rounded-2xl bg-gold/5 p-8 ring-1 ring-gold/10 lg:p-12">
             <div className="grid items-center gap-10 lg:grid-cols-2">
@@ -245,9 +245,9 @@ function HomePage() {
       </section>
 
       {/* ── SHIFTS PREVIEW ── */}
-      <section className="pb-12">
+      <section className="pb-10">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Latest shifts</span>
               <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
@@ -277,9 +277,9 @@ function HomePage() {
       </section>
 
       {/* ── TALENT PREVIEW ── */}
-      <section className="pb-28">
+      <section className="pb-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Available workers</span>
               <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
