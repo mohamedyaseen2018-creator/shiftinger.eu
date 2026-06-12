@@ -54,7 +54,7 @@ export default function MobileNav() {
         {tabs.map((tab) => (
           <li key={tab.to} className="flex-1">
             <Link
-              to={tab.to}
+              to={tab.to as never}
               search={tab.search as never}
               activeOptions={{ exact: tab.to === "/" || tab.to === "/dashboard" }}
               className={cn(
