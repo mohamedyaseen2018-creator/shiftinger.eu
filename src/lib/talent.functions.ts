@@ -24,7 +24,10 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
     .eq("verified", true)
     .eq("availability_visible", true);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[listVisibleWorkers] DB error:", error.message);
+    throw new Error("Failed to load workers.");
+  }
 
   return profiles ?? [];
 });
