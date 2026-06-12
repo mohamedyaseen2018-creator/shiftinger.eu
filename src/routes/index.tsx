@@ -69,7 +69,7 @@ function HomePage() {
       </div>
 
       {/* ── HERO (asymmetric + sticky rail) ── */}
-      <section className="py-16 lg:py-28">
+      <section className="py-10 lg:py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="flex flex-col gap-12 lg:flex-row">
             {/* Main */}
