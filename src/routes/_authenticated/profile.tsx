@@ -269,7 +269,7 @@ function BusinessEdit({ userId }: { userId: string }) {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("business_profiles").select("id, user_id, business_name, category, city, area, description, is_early_bird, verified, rating, rating_count, avatar_url, created_at, updated_at, categories, nif, sub_sector, display_initials, languages_required, preferred_roles").eq("user_id", userId).maybeSingle(),
       supabase.from("business_contacts").select("phone").eq("user_id", userId).maybeSingle(),
     ]).then(([bp, bc]) => {
       if (bp.data) setData({ ...bp.data, phone: (bc.data?.phone as string) ?? "" });
