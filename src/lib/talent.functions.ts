@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+
+
 /**
  * Public listing of workers who opted in to be visible in Find Talent.
  * Returns ONLY a safe projection of verified + visible worker profiles.
@@ -20,7 +24,10 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
     .eq("verified", true)
     .eq("availability_visible", true);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[listVisibleWorkers] DB error:", error.message);
+    throw new Error("Failed to load workers.");
+  }
 
   return profiles ?? [];
 });
@@ -34,7 +41,7 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
 export const getWorkerContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { workerId: string }) => {
-    if (!data || typeof data.workerId !== "string" || data.workerId.length < 10) {
+    if (!data || typeof data.workerId !== "string" || !UUID_RE.test(data.workerId)) {
       throw new Error("Invalid worker id");
     }
     return { workerId: data.workerId };
@@ -93,8 +100,6 @@ export const getWorkerContact = createServerFn({ method: "POST" })
       whatsappUrl: digits ? `https://wa.me/${digits}` : null,
     };
   });
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function maskName(name: string): string {
   return name

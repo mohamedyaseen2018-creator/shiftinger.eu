@@ -24,7 +24,10 @@ export const getApplicantCounts = createServerFn({ method: "POST" })
       .select("job_id")
       .in("job_id", data.jobIds);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[getApplicantCounts] DB error:", error.message);
+      throw new Error("Failed to load applicant counts.");
+    }
 
     const counts: Record<string, number> = {};
     for (const r of rows ?? []) {

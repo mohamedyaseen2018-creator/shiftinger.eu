@@ -109,13 +109,12 @@ function AuthPage() {
     });
     setBusy(false);
     if (error) {
-      toast.error(
-        error.message.includes("already registered")
-          ? "This email is already registered. Try signing in."
-          : error.message,
-      );
+      // Avoid user enumeration: never reveal whether an email is already registered.
+      toast.error("Sign-up failed. Please try again or contact support.");
       return;
     }
+    // Always show the same confirmation state regardless of whether the email
+    // was already registered, so membership cannot be probed from the UI.
     setEmailSent(true);
   };
 
