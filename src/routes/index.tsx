@@ -199,8 +199,8 @@ function HomePage() {
                     className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
                   >
                     <div className="mb-1 flex items-center gap-2">
-                      <span className="font-serif text-base italic text-gold/60">{step.n}</span>
-                      <h3 className="text-xs font-medium leading-tight">{step.title}</h3>
+                      <span className="font-serif text-base italic text-gold/70">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight text-gold">{step.title}</h3>
                     </div>
                     <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
