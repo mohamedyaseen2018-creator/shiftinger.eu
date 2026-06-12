@@ -236,17 +236,26 @@ export function WorkerDrawer({
           </div>
 
           <SheetFooter className="mt-auto flex-row items-center justify-between gap-2 border-t border-line bg-white px-6 py-4">
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-            >
-              <Trash2 size={15} /> Delete
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                <Trash2 size={15} /> Delete
+              </button>
+              <button
+                onClick={() => setConfirmBan(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                <Ban size={15} /> Ban
+              </button>
+            </div>
             <div className="flex gap-2">
               <GhostButton onClick={onClose}>Cancel</GhostButton>
               <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</PrimaryButton>
             </div>
           </SheetFooter>
+
         </SheetContent>
       </Sheet>
 
