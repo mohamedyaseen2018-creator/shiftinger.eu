@@ -155,7 +155,7 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="mb-16 max-w-xl">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
-            <h2 className="mt-3 font-serif text-4xl leading-tight">
+            <h2 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">
               {c("home.how_title")}
             </h2>
             <p className="mt-4 text-canvas/60">
@@ -244,7 +244,7 @@ function HomePage() {
           <div className="mb-10 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Latest shifts</span>
-              <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
+              <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
                 {c("home.shifts_title")}
               </h2>
               <p className="mt-2 text-ink/60">{c("home.shifts_subtitle")}</p>
@@ -276,7 +276,7 @@ function HomePage() {
           <div className="mb-10 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Available workers</span>
-              <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
+              <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
                 {c("home.talent_title")}
               </h2>
               <p className="mt-2 text-ink/60">{c("home.talent_subtitle")}</p>
