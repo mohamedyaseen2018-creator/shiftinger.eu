@@ -218,7 +218,7 @@ function HomePage() {
       </section>
 
       {/* ── PRIVACY ── */}
-      <section className="py-24">
+      <section className="py-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="rounded-2xl bg-gold/5 p-8 ring-1 ring-gold/10 lg:p-12">
             <div className="grid items-center gap-10 lg:grid-cols-2">
