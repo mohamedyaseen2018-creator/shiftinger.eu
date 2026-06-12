@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
@@ -11,8 +11,11 @@ import {
   PencilRuler,
   Mail,
   Home,
+  LogOut,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
+import { clearAdminMfa } from "@/lib/adminMfa.functions";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/brand/Logo";
 
@@ -40,9 +43,19 @@ function initials(value: string): string {
 }
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { profile, user } = useAuth();
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const clearMfa = useServerFn(clearAdminMfa);
   const displayName = profile?.full_name || profile?.email || user?.email || "Admin";
   const email = profile?.email || user?.email || "";
+
+  const handleSignOut = async () => {
+    onNavigate?.();
+    await clearMfa().catch(() => {});
+    await signOut();
+    navigate({ to: "/" });
+  };
+
 
   return (
     <div className="flex h-full flex-col bg-pine-dark text-white">
@@ -94,6 +107,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <p className="truncate text-[11px] text-white/60">Super admin · {email}</p>
           </div>
         </div>
+        <button
+          onClick={handleSignOut}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
       </div>
     </div>
   );
