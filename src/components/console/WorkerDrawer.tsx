@@ -287,6 +287,46 @@ export function WorkerDrawer({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={confirmBan} onOpenChange={setConfirmBan}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-sans">Ban {form.name || "this worker"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the account and permanently blacklists their email and phone number. They
+              will never be able to register again with the same email or phone. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-1">
+            <Field label="Reason (optional, internal)">
+              <TextInput
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                placeholder="e.g. repeated no-shows, fraud"
+              />
+            </Field>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await store.banUser(form.id, "worker", form.name, banReason || undefined);
+                  toast.success("Worker banned");
+                  setConfirmBan(false);
+                  onClose();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not ban worker");
+                }
+              }}
+              className="rounded-xl bg-red-600 hover:bg-red-700"
+            >
+              Ban permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
+
   );
 }
