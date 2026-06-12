@@ -162,47 +162,53 @@ function HomePage() {
               {c("home.how_subtitle")}
             </p>
           </div>
-          <div className="grid gap-16 lg:grid-cols-2">
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
             <div>
-              <span className="mb-8 inline-block rounded-full bg-teal px-3 py-1 text-xs font-medium text-canvas">
+              <span className="mb-6 inline-block rounded-full bg-teal px-3 py-1 text-xs font-medium text-canvas">
                 For workers
               </span>
-              <div className="space-y-8">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {WORKER_STEPS.map((step) => (
-                  <div key={step.n} className="flex gap-6">
-                    <span className="font-serif text-2xl italic text-gold/60">{step.n}</span>
-                    <div>
-                      <h3 className="mb-1 text-base font-medium">{step.title}</h3>
-                      <p className="max-w-[48ch] text-sm text-canvas/60">{step.body}</p>
+                  <div
+                    key={step.n}
+                    className="rounded-xl bg-canvas/[0.03] p-4 ring-1 ring-canvas/10"
+                  >
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <span className="font-serif text-lg italic text-gold/60">{step.n}</span>
+                      <h3 className="text-sm font-medium leading-tight">{step.title}</h3>
                     </div>
+                    <p className="text-xs leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
                 ))}
               </div>
               <Link
                 to="/register"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
               >
                 Register as a worker <ArrowRight size={15} />
               </Link>
             </div>
-            <div className="lg:border-l lg:border-canvas/10 lg:pl-16">
-              <span className="mb-8 inline-block rounded-full bg-gold px-3 py-1 text-xs font-medium text-canvas">
+            <div className="lg:border-l lg:border-canvas/10 lg:pl-12">
+              <span className="mb-6 inline-block rounded-full bg-gold px-3 py-1 text-xs font-medium text-canvas">
                 For businesses
               </span>
-              <div className="space-y-8">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {BUSINESS_STEPS.map((step) => (
-                  <div key={step.n} className="flex gap-6">
-                    <span className="font-serif text-2xl italic text-gold/60">{step.n}</span>
-                    <div>
-                      <h3 className="mb-1 text-base font-medium">{step.title}</h3>
-                      <p className="max-w-[48ch] text-sm text-canvas/60">{step.body}</p>
+                  <div
+                    key={step.n}
+                    className="rounded-xl bg-canvas/[0.03] p-4 ring-1 ring-canvas/10"
+                  >
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <span className="font-serif text-lg italic text-gold/60">{step.n}</span>
+                      <h3 className="text-sm font-medium leading-tight">{step.title}</h3>
                     </div>
+                    <p className="text-xs leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
                 ))}
               </div>
               <Link
                 to="/register"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-gold-dark"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-gold-dark"
               >
                 Register as a business <ArrowRight size={15} />
               </Link>
