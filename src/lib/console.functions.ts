@@ -502,7 +502,26 @@ export const consoleSetAdminRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ── WRITE: delete a user (auth + owned rows) ─────────────────────────────────
+// Remove every row owned by a user plus their auth account. Shared by delete & ban.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function purgeUser(supabaseAdmin: any, userId: string): Promise<void> {
+  await supabaseAdmin.from("applications").delete().or(`worker_id.eq.${userId},owner_id.eq.${userId}`);
+  await supabaseAdmin.from("jobs").delete().eq("owner_id", userId);
+  await supabaseAdmin.from("conversations").delete().or(`worker_id.eq.${userId},business_id.eq.${userId}`);
+  await supabaseAdmin.from("worker_contacts").delete().eq("user_id", userId);
+  await supabaseAdmin.from("worker_documents").delete().eq("user_id", userId);
+  await supabaseAdmin.from("worker_profiles").delete().eq("user_id", userId);
+  await supabaseAdmin.from("business_contacts").delete().eq("user_id", userId);
+  await supabaseAdmin.from("business_profiles").delete().eq("user_id", userId);
+  await supabaseAdmin.from("business_locations").delete().eq("business_id", userId);
+  await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+  await supabaseAdmin.from("profiles").delete().eq("id", userId);
+
+  const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (delErr) throw new Error(delErr.message);
+}
+
+// ── WRITE: delete a user (auth + owned rows) — email becomes reusable ─────────
 export const consoleDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
@@ -530,22 +549,67 @@ export const consoleDeleteUser = createServerFn({ method: "POST" })
       details: {},
     });
 
-    await supabaseAdmin.from("applications").delete().or(`worker_id.eq.${data.userId},owner_id.eq.${data.userId}`);
-    await supabaseAdmin.from("jobs").delete().eq("owner_id", data.userId);
-    await supabaseAdmin.from("conversations").delete().or(`worker_id.eq.${data.userId},business_id.eq.${data.userId}`);
-    await supabaseAdmin.from("worker_contacts").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("worker_documents").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("worker_profiles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("business_contacts").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("business_profiles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("business_locations").delete().eq("business_id", data.userId);
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("profiles").delete().eq("id", data.userId);
-
-    const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
-    if (delErr) throw new Error(delErr.message);
+    await purgeUser(supabaseAdmin, data.userId);
     return { ok: true };
   });
+
+// ── WRITE: ban a user — blacklist email + phone, then remove the account ──────
+export const consoleBanUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        targetLabel: z.string().max(200).optional(),
+        accountType: z.enum(["worker", "business"]).optional(),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    if (data.userId === adminId) throw new Error("You cannot ban your own admin account.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Gather the identity (email + phone) before deleting the rows.
+    const [{ data: prof }, { data: wc }, { data: bc }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("email").eq("id", data.userId).maybeSingle(),
+      supabaseAdmin.from("worker_contacts").select("phone").eq("user_id", data.userId).maybeSingle(),
+      supabaseAdmin.from("business_contacts").select("phone").eq("user_id", data.userId).maybeSingle(),
+    ]);
+
+    const email = prof?.email ?? null;
+    const rawPhone = wc?.phone ?? bc?.phone ?? null;
+    const phone = rawPhone ? rawPhone.replace(/\D/g, "") || null : null;
+
+    if (!email && !phone) {
+      throw new Error("No email or phone on file — cannot ban this account.");
+    }
+
+    await supabaseAdmin.from("banned_identities").insert({
+      email,
+      phone,
+      reason: data.reason ?? null,
+      banned_user_id: data.userId,
+      banned_by: adminId,
+      banned_by_email: adminEmail,
+    });
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: "ban",
+      target_type: data.accountType ?? "user",
+      target_id: data.userId,
+      target_label: data.targetLabel ?? null,
+      details: { email, phone, reason: data.reason ?? null },
+    });
+
+    await purgeUser(supabaseAdmin, data.userId);
+    return { ok: true };
+  });
+
 
 // ── READ: signed URL for a worker's uploaded ID document ─────────────────────
 export const consoleSignWorkerDoc = createServerFn({ method: "POST" })
