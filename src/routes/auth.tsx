@@ -112,7 +112,7 @@ function AuthPage() {
       toast.error(
         error.message.includes("already registered")
           ? "This email is already registered. Try signing in."
-          : error.message,
+          : "Sign-up failed. Please try again or contact support.",
       );
       return;
     }
