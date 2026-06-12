@@ -107,6 +107,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <p className="truncate text-[11px] text-white/60">Super admin · {email}</p>
           </div>
         </div>
+        <button
+          onClick={handleSignOut}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
       </div>
     </div>
   );
