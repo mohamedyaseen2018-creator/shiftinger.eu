@@ -61,7 +61,7 @@ export default function ApplyJobModal({ job, criteria, open, submitting, onClose
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-2xl p-0 sm:w-full">
+      <DialogContent className="gap-0 p-0 sm:max-w-lg">
         <div className="p-5 sm:p-6">
           <DialogHeader className="text-left">
             <DialogTitle className="font-serif text-xl text-ink">
