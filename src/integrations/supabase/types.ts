@@ -103,6 +103,39 @@ export type Database = {
           },
         ]
       }
+      banned_identities: {
+        Row: {
+          banned_by: string | null
+          banned_by_email: string | null
+          banned_user_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          phone: string | null
+          reason: string | null
+        }
+        Insert: {
+          banned_by?: string | null
+          banned_by_email?: string | null
+          banned_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+        }
+        Update: {
+          banned_by?: string | null
+          banned_by_email?: string | null
+          banned_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       business_contacts: {
         Row: {
           contact_name: string | null
@@ -1202,6 +1235,11 @@ export type Database = {
         Returns: boolean
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_identity_banned: {
+        Args: { _email: string; _phone: string }
+        Returns: boolean
+      }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
       set_agreement: {
         Args: { _conversation_id: string; _send_location?: boolean }
         Returns: undefined
