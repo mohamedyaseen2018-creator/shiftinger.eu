@@ -210,6 +210,12 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     font-family: var(--font-sans);
     font-size: var(--font-size-body);
@@ -218,6 +224,14 @@
     background: var(--color-surface-page);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Media never forces horizontal overflow */
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
