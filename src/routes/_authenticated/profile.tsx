@@ -61,7 +61,7 @@ function WorkerEdit({ userId }: { userId: string }) {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("worker_profiles").select("id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, experience, atividade, bio, min_rate, looking_for, available_days, time_slots, availability_visible, messages_open, verified, rating, rating_count, shifts_completed, avatar_url, created_at, updated_at, residence, portfolio_url, atividade_number").eq("user_id", userId).maybeSingle(),
       supabase.from("worker_contacts").select("phone").eq("user_id", userId).maybeSingle(),
     ]).then(([{ data: wp }, { data: wc }]) => {
       if (wp) setData({ ...wp, phone: (wc?.phone as string) ?? "" });
@@ -269,7 +269,7 @@ function BusinessEdit({ userId }: { userId: string }) {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("business_profiles").select("id, user_id, business_name, category, city, area, description, is_early_bird, verified, rating, rating_count, avatar_url, created_at, updated_at, categories, nif, sub_sector, display_initials, languages_required, preferred_roles").eq("user_id", userId).maybeSingle(),
       supabase.from("business_contacts").select("phone").eq("user_id", userId).maybeSingle(),
     ]).then(([bp, bc]) => {
       if (bp.data) setData({ ...bp.data, phone: (bc.data?.phone as string) ?? "" });
