@@ -337,6 +337,7 @@ interface StoreValue {
     label?: string,
   ) => Promise<void>;
   deleteUser: (userId: string, accountType: AccountType, label?: string) => Promise<void>;
+  banUser: (userId: string, accountType: AccountType, label?: string, reason?: string) => Promise<void>;
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
 
