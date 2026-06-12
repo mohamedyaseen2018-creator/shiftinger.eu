@@ -1201,6 +1201,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved: { Args: { _user_id: string }; Returns: boolean }
       set_agreement: {
         Args: { _conversation_id: string; _send_location?: boolean }
         Returns: undefined
