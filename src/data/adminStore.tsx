@@ -491,6 +491,10 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         await consoleDeleteUser({ data: { userId, accountType, targetLabel: label } });
         await refresh();
       },
+      banUser: async (userId, accountType, label, reason) => {
+        await consoleBanUser({ data: { userId, accountType, targetLabel: label, reason } });
+        await refresh();
+      },
       grantAdmin: async (email) => {
         await consoleSetAdminRole({ data: { email, makeAdmin: true } });
         await refresh();
