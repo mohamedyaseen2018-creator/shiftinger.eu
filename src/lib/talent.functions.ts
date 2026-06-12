@@ -53,7 +53,7 @@ export const getWorkerContact = createServerFn({ method: "POST" })
     // 1. Caller must be a verified business (workers cannot harvest contacts).
     const { data: profile } = await supabase
       .from("profiles")
-      .select("account_type")
+      .select("account_type, status")
       .eq("id", userId)
       .maybeSingle();
 
@@ -64,6 +64,11 @@ export const getWorkerContact = createServerFn({ method: "POST" })
 
     if (profile?.account_type !== "business" && !isAdmin) {
       throw new Error("Only businesses can reveal worker contact details");
+    }
+
+    // Blocked/rejected businesses keep a valid JWT — gate on approval status.
+    if (!isAdmin && profile?.status !== "approved") {
+      throw new Error("Your account must be approved to access contact details");
     }
 
     // 2. Worker must be verified + visible before we expose a number.
