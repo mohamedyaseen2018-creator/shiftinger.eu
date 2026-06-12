@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2, Star, Mail, BadgeCheck } from "lucide-react";
+import { Trash2, Star, Mail, BadgeCheck, Ban } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
