@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2, Star, Mail, Phone, ExternalLink } from "lucide-react";
+import { Trash2, Star, Mail, Phone, ExternalLink, Ban } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
