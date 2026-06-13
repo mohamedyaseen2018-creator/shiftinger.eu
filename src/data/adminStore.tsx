@@ -643,7 +643,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           .map((l) => l.value),
       businessLabel: (name, revealed = false) => maskBusiness(name, revealed),
     }),
-    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
+    [loading, error, workers, businesses, shifts, matches, admins, adminEmails, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
