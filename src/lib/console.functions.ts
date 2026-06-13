@@ -236,7 +236,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
       createdAt: a.created_at,
     }));
 
-    return { workers, businesses, shifts, matches, admins, metrics, audit };
+    return { workers, businesses, shifts, matches, admins, adminEmails, metrics, audit };
   });
 
 // ── WRITE: status (approve / reject / block) ─────────────────────────────────
