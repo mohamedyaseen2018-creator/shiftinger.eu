@@ -328,6 +328,7 @@ interface StoreValue {
   shifts: Shift[];
   matches: Match[];
   admins: AdminUser[];
+  adminEmails: AdminEmail[];
   audit: AuditEntry[];
   metrics: Metrics;
   config: PlatformConfig;
