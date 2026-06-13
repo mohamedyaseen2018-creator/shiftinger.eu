@@ -203,6 +203,12 @@ export const getConsoleData = createServerFn({ method: "GET" })
         role: (roleByUser.get(p.id) ?? []).includes("admin") ? "admin" : "moderator",
       }));
 
+    // Admin/moderator accounts belong in the Access section, never in the
+    // Workers or Businesses lists — even if they hold a worker/business profile.
+    const adminUserIds = new Set(admins.map((a) => a.id));
+    const visibleWorkers = workers.filter((w) => !adminUserIds.has(w.id));
+    const visibleBusinesses = businesses.filter((b) => !adminUserIds.has(b.id));
+
     const profileEmails = new Set(profiles.map((p) => (p.email ?? "").toLowerCase()));
     const adminEmails = (adminEmailsR.data ?? []).map((a) => ({
       id: a.id,
