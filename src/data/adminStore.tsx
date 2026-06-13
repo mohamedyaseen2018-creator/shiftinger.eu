@@ -24,6 +24,8 @@ import {
   consoleUpdateShift,
   consoleSetMatchStatus,
   consoleSetAdminRole,
+  consoleAddAdminEmail,
+  consoleRemoveAdminEmail,
   consoleDeleteUser,
   consoleBanUser,
   consoleSignWorkerDoc,
