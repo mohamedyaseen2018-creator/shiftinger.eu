@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2, Star, Mail, BadgeCheck } from "lucide-react";
+import { Trash2, Star, Mail, BadgeCheck, Ban } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -57,6 +57,9 @@ export function BusinessModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmBan, setConfirmBan] = useState(false);
+  const [banReason, setBanReason] = useState("");
+
 
   useEffect(() => {
     setForm(business);
@@ -215,12 +218,21 @@ export function BusinessModal({
           </div>
 
           <DialogFooter className="flex-row items-center justify-between gap-2">
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-            >
-              <Trash2 size={15} /> Delete
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                <Trash2 size={15} /> Delete
+              </button>
+              <button
+                onClick={() => setConfirmBan(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                <Ban size={15} /> Ban
+              </button>
+            </div>
+
             <div className="flex gap-2">
               <GhostButton onClick={onClose}>Cancel</GhostButton>
               <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</PrimaryButton>
@@ -257,6 +269,46 @@ export function BusinessModal({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={confirmBan} onOpenChange={setConfirmBan}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-sans">Ban {form.name || "this business"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the account and permanently blacklists their email and phone number. They
+              will never be able to register again with the same email or phone. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-1">
+            <Field label="Reason (optional, internal)">
+              <TextInput
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                placeholder="e.g. fraud, abuse"
+              />
+            </Field>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await store.banUser(form.id, "business", form.name, banReason || undefined);
+                  toast.success("Business banned");
+                  setConfirmBan(false);
+                  onClose();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not ban business");
+                }
+              }}
+              className="rounded-xl bg-red-600 hover:bg-red-700"
+            >
+              Ban permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
+
 }

@@ -25,6 +25,7 @@ import {
   consoleSetMatchStatus,
   consoleSetAdminRole,
   consoleDeleteUser,
+  consoleBanUser,
   consoleSignWorkerDoc,
   consoleSetWorkerVerified,
   type ConsoleStatus,
@@ -336,6 +337,7 @@ interface StoreValue {
     label?: string,
   ) => Promise<void>;
   deleteUser: (userId: string, accountType: AccountType, label?: string) => Promise<void>;
+  banUser: (userId: string, accountType: AccountType, label?: string, reason?: string) => Promise<void>;
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
 
@@ -487,6 +489,10 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       },
       deleteUser: async (userId, accountType, label) => {
         await consoleDeleteUser({ data: { userId, accountType, targetLabel: label } });
+        await refresh();
+      },
+      banUser: async (userId, accountType, label, reason) => {
+        await consoleBanUser({ data: { userId, accountType, targetLabel: label, reason } });
         await refresh();
       },
       grantAdmin: async (email) => {
