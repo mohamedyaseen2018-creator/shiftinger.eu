@@ -242,7 +242,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
       createdAt: a.created_at,
     }));
 
-    return { workers, businesses, shifts, matches, admins, adminEmails, metrics, audit };
+    return { workers: visibleWorkers, businesses: visibleBusinesses, shifts, matches, admins, adminEmails, metrics, audit };
   });
 
 // ── WRITE: status (approve / reject / block) ─────────────────────────────────
