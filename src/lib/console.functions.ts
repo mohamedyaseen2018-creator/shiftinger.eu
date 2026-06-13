@@ -199,9 +199,21 @@ export const getConsoleData = createServerFn({ method: "GET" })
         id: p.id,
         email: p.email,
         name: p.full_name ?? p.email,
-        accountType: p.account_type as "worker" | "business",
+        accountType: p.account_type as "worker" | "business" | "admin",
         role: (roleByUser.get(p.id) ?? []).includes("admin") ? "admin" : "moderator",
       }));
+
+    const profileEmails = new Set(profiles.map((p) => (p.email ?? "").toLowerCase()));
+    const adminEmails = (adminEmailsR.data ?? []).map((a) => ({
+      id: a.id,
+      email: a.email,
+      role: a.role as string,
+      note: a.note ?? "",
+      addedByEmail: a.added_by_email ?? null,
+      createdAt: a.created_at,
+      // true once a real account exists for this allowlisted email
+      registered: profileEmails.has((a.email ?? "").toLowerCase()),
+    }));
 
     const metrics = {
       workers: workers.length,
