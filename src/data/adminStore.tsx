@@ -353,6 +353,8 @@ interface StoreValue {
   banUser: (userId: string, accountType: AccountType, label?: string, reason?: string) => Promise<void>;
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
+  addAdminEmail: (email: string, note?: string) => Promise<void>;
+  removeAdminEmail: (email: string) => Promise<void>;
 
   createWorker: (input: NewWorkerInput) => Promise<void>;
   createBusiness: (input: NewBusinessInput) => Promise<void>;
