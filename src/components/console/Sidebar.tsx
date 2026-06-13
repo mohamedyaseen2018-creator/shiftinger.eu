@@ -12,6 +12,7 @@ import {
   Mail,
   Home,
   LogOut,
+  KeyRound,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";

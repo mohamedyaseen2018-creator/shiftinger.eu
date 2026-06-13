@@ -30,6 +30,7 @@ import { Route as ConsoleDocumentsRouteImport } from './routes/console.documents
 import { Route as ConsoleDisputesRouteImport } from './routes/console.disputes'
 import { Route as ConsoleContentRouteImport } from './routes/console.content'
 import { Route as ConsoleBusinessesRouteImport } from './routes/console.businesses'
+import { Route as ConsoleAccessRouteImport } from './routes/console.access'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostJobRouteImport } from './routes/_authenticated/post-job'
 import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated/my-jobs'
@@ -141,6 +142,11 @@ const ConsoleBusinessesRoute = ConsoleBusinessesRouteImport.update({
   path: '/businesses',
   getParentRoute: () => ConsoleRoute,
 } as any)
+const ConsoleAccessRoute = ConsoleAccessRouteImport.update({
+  id: '/access',
+  path: '/access',
+  getParentRoute: () => ConsoleRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/access': typeof ConsoleAccessRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/my-jobs': typeof AuthenticatedMyJobsRoute
   '/post-job': typeof AuthenticatedPostJobRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/console/access': typeof ConsoleAccessRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/_authenticated/my-jobs': typeof AuthenticatedMyJobsRoute
   '/_authenticated/post-job': typeof AuthenticatedPostJobRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/console/access': typeof ConsoleAccessRoute
   '/console/businesses': typeof ConsoleBusinessesRoute
   '/console/content': typeof ConsoleContentRoute
   '/console/disputes': typeof ConsoleDisputesRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/access'
     | '/console/businesses'
     | '/console/content'
     | '/console/disputes'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/my-jobs'
     | '/post-job'
     | '/profile'
+    | '/console/access'
     | '/console/businesses'
     | '/console/content'
     | '/console/disputes'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-jobs'
     | '/_authenticated/post-job'
     | '/_authenticated/profile'
+    | '/console/access'
     | '/console/businesses'
     | '/console/content'
     | '/console/disputes'
@@ -508,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsoleBusinessesRouteImport
       parentRoute: typeof ConsoleRoute
     }
+    '/console/access': {
+      id: '/console/access'
+      path: '/access'
+      fullPath: '/console/access'
+      preLoaderRoute: typeof ConsoleAccessRouteImport
+      parentRoute: typeof ConsoleRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -575,6 +594,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ConsoleRouteChildren {
+  ConsoleAccessRoute: typeof ConsoleAccessRoute
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
   ConsoleContentRoute: typeof ConsoleContentRoute
   ConsoleDisputesRoute: typeof ConsoleDisputesRoute
@@ -588,6 +608,7 @@ interface ConsoleRouteChildren {
 }
 
 const ConsoleRouteChildren: ConsoleRouteChildren = {
+  ConsoleAccessRoute: ConsoleAccessRoute,
   ConsoleBusinessesRoute: ConsoleBusinessesRoute,
   ConsoleContentRoute: ConsoleContentRoute,
   ConsoleDisputesRoute: ConsoleDisputesRoute,
