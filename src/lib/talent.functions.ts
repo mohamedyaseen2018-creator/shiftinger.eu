@@ -16,20 +16,26 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: profiles, error } = await supabaseAdmin
-    .from("worker_profiles")
-    .select(
-      "id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, atividade, bio, min_rate, looking_for, available_days, time_slots, verified, rating, rating_count, shifts_completed, avatar_url, portfolio_url, availability_visible",
-    )
-    .eq("verified", true)
-    .eq("availability_visible", true);
+  const [{ data: profiles, error }, { data: roleRows }] = await Promise.all([
+    supabaseAdmin
+      .from("worker_profiles")
+      .select(
+        "id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, atividade, bio, min_rate, looking_for, available_days, time_slots, verified, rating, rating_count, shifts_completed, avatar_url, portfolio_url, availability_visible",
+      )
+      .eq("verified", true)
+      .eq("availability_visible", true),
+    supabaseAdmin.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
+  ]);
 
   if (error) {
     console.error("[listVisibleWorkers] DB error:", error.message);
     throw new Error("Failed to load workers.");
   }
 
-  return profiles ?? [];
+  // Admin/moderator accounts must never surface in the public talent listing,
+  // even if they happen to carry a verified, visible worker profile.
+  const adminUserIds = new Set((roleRows ?? []).map((r) => r.user_id));
+  return (profiles ?? []).filter((p) => !adminUserIds.has(p.user_id));
 });
 
 /**
