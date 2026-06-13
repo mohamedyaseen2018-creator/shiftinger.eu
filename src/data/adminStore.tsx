@@ -434,6 +434,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       shifts,
       matches,
       admins,
+      adminEmails,
       audit,
       metrics,
       config,
