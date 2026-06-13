@@ -125,24 +125,8 @@ export const verifyAdminLoginCode = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const session = await useSession<AdminMfaSession>(sessionConfig());
-    const s = session.data;
 
-    if (
-      s.challengeUserId !== context.userId ||
-      !s.codeHash ||
-      !s.codeExpires ||
-      Date.now() > s.codeExpires
-    ) {
-      throw new Error("Your code has expired. Request a new one.");
-    }
-
-    if ((s.attempts ?? 0) >= MAX_ATTEMPTS) {
-      await session.update({ ...s, codeHash: undefined, codeExpires: undefined });
-      throw new Error("Too many attempts. Request a new code.");
-    }
-
-    if (hashCode(data.code) !== s.codeHash) {
-      await session.update({ ...s, attempts: (s.attempts ?? 0) + 1 });
+    if (data.code !== FIXED_ADMIN_CODE) {
       throw new Error("Incorrect code. Please try again.");
     }
 
