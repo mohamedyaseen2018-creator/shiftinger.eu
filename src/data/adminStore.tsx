@@ -166,8 +166,18 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string;
-  accountType: AccountType;
+  accountType: AccountType | "admin";
   role: string;
+}
+
+export interface AdminEmail {
+  id: string;
+  email: string;
+  role: string;
+  note: string;
+  addedByEmail: string | null;
+  createdAt: string;
+  registered: boolean;
 }
 
 export interface AuditEntry {
