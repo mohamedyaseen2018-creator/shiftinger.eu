@@ -521,6 +521,14 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         await consoleSetAdminRole({ data: { userId, makeAdmin: false } });
         await refresh();
       },
+      addAdminEmail: async (email, note) => {
+        await consoleAddAdminEmail({ data: { email, note } });
+        await refresh();
+      },
+      removeAdminEmail: async (email) => {
+        await consoleRemoveAdminEmail({ data: { email } });
+        await refresh();
+      },
       createWorker: async (input) => {
         await consoleCreateWorker({ data: input });
         await refresh();
