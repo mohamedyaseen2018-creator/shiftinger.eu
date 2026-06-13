@@ -404,6 +404,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       setShifts(data.shifts as Shift[]);
       setMatches(data.matches as Match[]);
       setAdmins(data.admins as AdminUser[]);
+      setAdminEmails(data.adminEmails as AdminEmail[]);
       setAudit(data.audit as AuditEntry[]);
       setMetrics(data.metrics as Metrics);
       setConfig(cfg.config as PlatformConfig);
