@@ -58,7 +58,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
+    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR, adminEmailsR] =
       await Promise.all([
         supabaseAdmin.from("profiles").select("*"),
         supabaseAdmin.from("worker_profiles").select("*"),
@@ -70,6 +70,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         supabaseAdmin.from("applications").select("*"),
         supabaseAdmin.from("user_roles").select("user_id, role"),
         supabaseAdmin.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(40),
+        supabaseAdmin.from("admin_emails").select("*").order("created_at", { ascending: false }),
       ]);
 
     const profiles = profilesR.data ?? [];
@@ -198,9 +199,21 @@ export const getConsoleData = createServerFn({ method: "GET" })
         id: p.id,
         email: p.email,
         name: p.full_name ?? p.email,
-        accountType: p.account_type as "worker" | "business",
+        accountType: p.account_type as "worker" | "business" | "admin",
         role: (roleByUser.get(p.id) ?? []).includes("admin") ? "admin" : "moderator",
       }));
+
+    const profileEmails = new Set(profiles.map((p) => (p.email ?? "").toLowerCase()));
+    const adminEmails = (adminEmailsR.data ?? []).map((a) => ({
+      id: a.id,
+      email: a.email,
+      role: a.role as string,
+      note: a.note ?? "",
+      addedByEmail: a.added_by_email ?? null,
+      createdAt: a.created_at,
+      // true once a real account exists for this allowlisted email
+      registered: profileEmails.has((a.email ?? "").toLowerCase()),
+    }));
 
     const metrics = {
       workers: workers.length,
@@ -223,7 +236,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
       createdAt: a.created_at,
     }));
 
-    return { workers, businesses, shifts, matches, admins, metrics, audit };
+    return { workers, businesses, shifts, matches, admins, adminEmails, metrics, audit };
   });
 
 // ── WRITE: status (approve / reject / block) ─────────────────────────────────
@@ -502,7 +515,107 @@ export const consoleSetAdminRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Remove every row owned by a user plus their auth account. Shared by delete & ban.
+// ── WRITE: pre-authorize an admin email (allowlist) ──────────────────────────
+// Adds the email to the allowlist so that, when they sign up, they are created
+// as an admin (no worker/business profile). If an account already exists with
+// this email, the admin role is granted immediately.
+export const consoleAddAdminEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        email: z.string().email().max(200),
+        note: z.string().max(300).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const email = data.email.trim().toLowerCase();
+
+    const { error } = await supabaseAdmin.from("admin_emails").upsert(
+      {
+        email,
+        role: "admin",
+        note: data.note?.trim() || null,
+        added_by: adminId,
+        added_by_email: adminEmail,
+      },
+      { onConflict: "email" },
+    );
+    if (error) throw new Error(error.message);
+
+    // If they already have an account, grant the admin role right away.
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+    if (prof) {
+      await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: prof.id, role: "admin" }, { onConflict: "user_id,role" });
+    }
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: "admin_email:add",
+      target_type: "admin",
+      target_id: prof?.id ?? null,
+      target_label: email,
+      details: { note: data.note ?? null },
+    });
+    return { ok: true };
+  });
+
+// ── WRITE: remove an admin email from the allowlist + revoke any admin role ───
+export const consoleRemoveAdminEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z.object({ email: z.string().email().max(200) }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const email = data.email.trim().toLowerCase();
+
+    if (adminEmail && adminEmail.toLowerCase() === email) {
+      throw new Error("You cannot remove your own admin access.");
+    }
+
+    const { error } = await supabaseAdmin.from("admin_emails").delete().ilike("email", email);
+    if (error) throw new Error(error.message);
+
+    // Revoke the admin role from an existing account, if any.
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+    if (prof && prof.id !== adminId) {
+      await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", prof.id)
+        .eq("role", "admin");
+    }
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: "admin_email:remove",
+      target_type: "admin",
+      target_id: prof?.id ?? null,
+      target_label: email,
+      details: {},
+    });
+    return { ok: true };
+  });
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function purgeUser(supabaseAdmin: any, userId: string): Promise<void> {
   await supabaseAdmin.from("applications").delete().or(`worker_id.eq.${userId},owner_id.eq.${userId}`);

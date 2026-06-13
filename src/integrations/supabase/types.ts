@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_emails: {
+        Row: {
+          added_by: string | null
+          added_by_email: string | null
+          created_at: string
+          email: string
+          id: string
+          note: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          added_by?: string | null
+          added_by_email?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          added_by?: string | null
+          added_by_email?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           business_confirmed: boolean
@@ -1224,6 +1254,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_email_role: {
+        Args: { _email: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       confirm_application: { Args: { _app_id: string }; Returns: string }
       end_job: { Args: { _conversation_id: string }; Returns: undefined }
       has_pending_review: { Args: { _user: string }; Returns: boolean }
@@ -1250,7 +1284,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_type: "worker" | "business"
+      account_type: "worker" | "business" | "admin"
       app_role: "admin" | "moderator" | "user"
       application_status:
         | "applied"
@@ -1396,7 +1430,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: ["worker", "business"],
+      account_type: ["worker", "business", "admin"],
       app_role: ["admin", "moderator", "user"],
       application_status: [
         "applied",

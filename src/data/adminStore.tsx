@@ -24,6 +24,8 @@ import {
   consoleUpdateShift,
   consoleSetMatchStatus,
   consoleSetAdminRole,
+  consoleAddAdminEmail,
+  consoleRemoveAdminEmail,
   consoleDeleteUser,
   consoleBanUser,
   consoleSignWorkerDoc,
@@ -164,8 +166,18 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string;
-  accountType: AccountType;
+  accountType: AccountType | "admin";
   role: string;
+}
+
+export interface AdminEmail {
+  id: string;
+  email: string;
+  role: string;
+  note: string;
+  addedByEmail: string | null;
+  createdAt: string;
+  registered: boolean;
 }
 
 export interface AuditEntry {
@@ -316,6 +328,7 @@ interface StoreValue {
   shifts: Shift[];
   matches: Match[];
   admins: AdminUser[];
+  adminEmails: AdminEmail[];
   audit: AuditEntry[];
   metrics: Metrics;
   config: PlatformConfig;
@@ -340,6 +353,8 @@ interface StoreValue {
   banUser: (userId: string, accountType: AccountType, label?: string, reason?: string) => Promise<void>;
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
+  addAdminEmail: (email: string, note?: string) => Promise<void>;
+  removeAdminEmail: (email: string) => Promise<void>;
 
   createWorker: (input: NewWorkerInput) => Promise<void>;
   createBusiness: (input: NewBusinessInput) => Promise<void>;
@@ -370,6 +385,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [adminEmails, setAdminEmails] = useState<AdminEmail[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [metrics, setMetrics] = useState<Metrics>(EMPTY_METRICS);
   const [config, setConfig] = useState<PlatformConfig>(EMPTY_CONFIG);
@@ -388,6 +404,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       setShifts(data.shifts as Shift[]);
       setMatches(data.matches as Match[]);
       setAdmins(data.admins as AdminUser[]);
+      setAdminEmails(data.adminEmails as AdminEmail[]);
       setAudit(data.audit as AuditEntry[]);
       setMetrics(data.metrics as Metrics);
       setConfig(cfg.config as PlatformConfig);
@@ -417,6 +434,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       shifts,
       matches,
       admins,
+      adminEmails,
       audit,
       metrics,
       config,
@@ -501,6 +519,14 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       },
       revokeAdmin: async (userId) => {
         await consoleSetAdminRole({ data: { userId, makeAdmin: false } });
+        await refresh();
+      },
+      addAdminEmail: async (email, note) => {
+        await consoleAddAdminEmail({ data: { email, note } });
+        await refresh();
+      },
+      removeAdminEmail: async (email) => {
+        await consoleRemoveAdminEmail({ data: { email } });
         await refresh();
       },
       createWorker: async (input) => {
@@ -617,7 +643,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           .map((l) => l.value),
       businessLabel: (name, revealed = false) => maskBusiness(name, revealed),
     }),
-    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
+    [loading, error, workers, businesses, shifts, matches, admins, adminEmails, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
