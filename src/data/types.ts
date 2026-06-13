@@ -1,4 +1,4 @@
-export type AccountType = "worker" | "business";
+export type AccountType = "worker" | "business" | "admin";
 export type ProfileStatus =
   | "incomplete"
   | "pending_review"
