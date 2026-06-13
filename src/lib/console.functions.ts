@@ -203,6 +203,12 @@ export const getConsoleData = createServerFn({ method: "GET" })
         role: (roleByUser.get(p.id) ?? []).includes("admin") ? "admin" : "moderator",
       }));
 
+    // Admin/moderator accounts belong in the Access section, never in the
+    // Workers or Businesses lists — even if they hold a worker/business profile.
+    const adminUserIds = new Set(admins.map((a) => a.id));
+    const visibleWorkers = workers.filter((w) => !adminUserIds.has(w.id));
+    const visibleBusinesses = businesses.filter((b) => !adminUserIds.has(b.id));
+
     const profileEmails = new Set(profiles.map((p) => (p.email ?? "").toLowerCase()));
     const adminEmails = (adminEmailsR.data ?? []).map((a) => ({
       id: a.id,
@@ -216,15 +222,15 @@ export const getConsoleData = createServerFn({ method: "GET" })
     }));
 
     const metrics = {
-      workers: workers.length,
-      businesses: businesses.length,
+      workers: visibleWorkers.length,
+      businesses: visibleBusinesses.length,
       jobs: shifts.length,
       openJobs: shifts.filter((s) => s.status === "open").length,
       applications: matches.length,
       confirmed: matches.filter(
         (m) => m.status === "confirmed" || m.status === "working" || m.status === "completed",
       ).length,
-      pendingApprovals: [...workers, ...businesses].filter((x) => x.status === "pending_review").length,
+      pendingApprovals: [...visibleWorkers, ...visibleBusinesses].filter((x) => x.status === "pending_review").length,
     };
 
     const audit = (auditR.data ?? []).map((a) => ({
@@ -236,7 +242,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
       createdAt: a.created_at,
     }));
 
-    return { workers, businesses, shifts, matches, admins, adminEmails, metrics, audit };
+    return { workers: visibleWorkers, businesses: visibleBusinesses, shifts, matches, admins, adminEmails, metrics, audit };
   });
 
 // ── WRITE: status (approve / reject / block) ─────────────────────────────────
