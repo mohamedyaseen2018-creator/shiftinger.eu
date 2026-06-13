@@ -385,6 +385,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [adminEmails, setAdminEmails] = useState<AdminEmail[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [metrics, setMetrics] = useState<Metrics>(EMPTY_METRICS);
   const [config, setConfig] = useState<PlatformConfig>(EMPTY_CONFIG);
