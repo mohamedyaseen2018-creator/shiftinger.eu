@@ -32,15 +32,17 @@ function DashboardPage() {
 
   useEffect(() => {
     if (loading) return;
-    // Admins have an admin-only profile — send them straight to the admin dashboard.
-    if (isAdmin) {
+    // Only admin-only accounts (no worker/business profile) go straight to the
+    // admin console. A worker/business who also holds the admin role keeps their
+    // normal dashboard and reaches the console via the "Admin" button.
+    if (profile?.account_type === "admin") {
       navigate({ to: "/console" });
       return;
     }
     if (profile && profile.status === "incomplete") {
       navigate({ to: "/onboarding" });
     }
-  }, [loading, profile, isAdmin, navigate]);
+  }, [loading, profile, navigate]);
 
   if (loading || !profile) {
     return (
