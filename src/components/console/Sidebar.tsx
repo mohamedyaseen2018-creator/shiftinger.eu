@@ -30,6 +30,7 @@ const NAV = [
   { to: "/console/disputes", label: "Disputes", icon: ShieldAlert },
   { to: "/console/content", label: "Site content", icon: PencilRuler },
   { to: "/console/emails", label: "Emails", icon: Mail },
+  { to: "/console/access", label: "Access", icon: KeyRound },
   { to: "/console/settings", label: "Settings", icon: Settings },
 ] as const;
 
