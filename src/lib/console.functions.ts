@@ -222,15 +222,15 @@ export const getConsoleData = createServerFn({ method: "GET" })
     }));
 
     const metrics = {
-      workers: workers.length,
-      businesses: businesses.length,
+      workers: visibleWorkers.length,
+      businesses: visibleBusinesses.length,
       jobs: shifts.length,
       openJobs: shifts.filter((s) => s.status === "open").length,
       applications: matches.length,
       confirmed: matches.filter(
         (m) => m.status === "confirmed" || m.status === "working" || m.status === "completed",
       ).length,
-      pendingApprovals: [...workers, ...businesses].filter((x) => x.status === "pending_review").length,
+      pendingApprovals: [...visibleWorkers, ...visibleBusinesses].filter((x) => x.status === "pending_review").length,
     };
 
     const audit = (auditR.data ?? []).map((a) => ({
