@@ -58,7 +58,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
+    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR, adminEmailsR] =
       await Promise.all([
         supabaseAdmin.from("profiles").select("*"),
         supabaseAdmin.from("worker_profiles").select("*"),
@@ -70,6 +70,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         supabaseAdmin.from("applications").select("*"),
         supabaseAdmin.from("user_roles").select("user_id, role"),
         supabaseAdmin.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(40),
+        supabaseAdmin.from("admin_emails").select("*").order("created_at", { ascending: false }),
       ]);
 
     const profiles = profilesR.data ?? [];
