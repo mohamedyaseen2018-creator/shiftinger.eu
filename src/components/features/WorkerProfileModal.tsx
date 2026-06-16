@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import type { WorkerProfile } from "@/data/types";
 import { getWorkerPublicDetails } from "@/lib/talent.functions";
+import HaccpBadge from "@/components/features/HaccpBadge";
 import {
   getInitials,
   roleIcon,
