@@ -90,6 +90,7 @@ export interface Worker {
   ratingCount: number;
   shiftsCompleted: number;
   verified: boolean;
+  haccpVerified: boolean;
   status: ConsoleStatus;
   portfolioUrl: string;
   bio: string;
