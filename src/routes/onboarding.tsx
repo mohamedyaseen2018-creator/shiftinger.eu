@@ -300,10 +300,12 @@ function WorkerForm({
 }) {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const haccpRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [haccpUploading, setHaccpUploading] = useState(false);
 
   // Account
   const [name, setName] = useState("");
@@ -324,13 +326,17 @@ function WorkerForm({
   ]);
   // Documents + extras
   const [atividade, setAtividade] = useState<"yes" | "no">("no");
+  const [idDocType, setIdDocType] = useState<string | null>(null);
   const [docPath, setDocPath] = useState<string | null>(null);
   const [docName, setDocName] = useState("");
+  const [haccpPath, setHaccpPath] = useState<string | null>(null);
+  const [haccpName, setHaccpName] = useState("");
   const [minRate, setMinRate] = useState("");
   const [bio, setBio] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [days, setDays] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+
 
   const toggleLookingFor = (v: string) =>
     setLookingFor((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
