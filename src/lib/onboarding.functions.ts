@@ -51,6 +51,15 @@ export const setAccountType = createServerFn({ method: "POST" })
       .eq("id", userId);
     if (upErr) throw new Error("Could not update account type.");
 
+    // Read current counters once so we can adjust both sides together.
+    const { data: counters } = await supabaseAdmin
+      .from("registration_counters")
+      .select("worker_count, business_count")
+      .eq("id", 1)
+      .single();
+    const workerCount = counters?.worker_count ?? 0;
+    const businessCount = counters?.business_count ?? 0;
+
     if (desired === "business") {
       // Create the business side, remove the (empty) worker side.
       await supabaseAdmin
@@ -60,12 +69,11 @@ export const setAccountType = createServerFn({ method: "POST" })
           { onConflict: "user_id" },
         );
       await supabaseAdmin.from("worker_profiles").delete().eq("user_id", userId);
-      await supabaseAdmin.rpc("noop").catch(() => {});
       await supabaseAdmin
         .from("registration_counters")
         .update({
-          worker_count: await decr(supabaseAdmin, "worker_count"),
-          business_count: await incr(supabaseAdmin, "business_count"),
+          worker_count: Math.max(0, workerCount - 1),
+          business_count: businessCount + 1,
         })
         .eq("id", 1);
     } else {
@@ -77,26 +85,11 @@ export const setAccountType = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("registration_counters")
         .update({
-          business_count: await decr(supabaseAdmin, "business_count"),
-          worker_count: await incr(supabaseAdmin, "worker_count"),
+          business_count: Math.max(0, businessCount - 1),
+          worker_count: workerCount + 1,
         })
         .eq("id", 1);
     }
 
     return { ok: true, accountType: desired };
   });
-
-// Helpers read the current counter then return the adjusted value. They are
-// only ever called for a single in-flight switch, so a small race is harmless
-// and the values are display-only.
-async function decr(client: typeof import("@/integrations/supabase/client.server").supabaseAdmin, col: "worker_count" | "business_count") {
-  const { data } = await client.from("registration_counters").select(col).eq("id", 1).single();
-  const current = (data?.[col] as number | undefined) ?? 0;
-  return Math.max(0, current - 1);
-}
-
-async function incr(client: typeof import("@/integrations/supabase/client.server").supabaseAdmin, col: "worker_count" | "business_count") {
-  const { data } = await client.from("registration_counters").select(col).eq("id", 1).single();
-  const current = (data?.[col] as number | undefined) ?? 0;
-  return current + 1;
-}
