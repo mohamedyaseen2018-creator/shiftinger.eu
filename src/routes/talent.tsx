@@ -57,6 +57,7 @@ function mapWorker(r: Record<string, unknown>): WorkerProfile {
     nationality: (r.nationality as string) ?? "",
     avatarUrl: (r.avatar_url as string) ?? null,
     portfolioUrl: (r.portfolio_url as string) ?? null,
+    haccp: Boolean(r.haccp_verified),
   };
 }
 
