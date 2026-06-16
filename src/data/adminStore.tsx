@@ -90,6 +90,7 @@ export interface Worker {
   ratingCount: number;
   shiftsCompleted: number;
   verified: boolean;
+  haccpVerified: boolean;
   status: ConsoleStatus;
   portfolioUrl: string;
   bio: string;
@@ -463,6 +464,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             bio: w.bio,
             adminNotes: w.adminNotes,
             atividadeNumber: w.atividadeNumber,
+            haccpVerified: w.haccpVerified,
           },
         });
         await refresh();

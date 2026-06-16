@@ -110,6 +110,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         ratingCount: w.rating_count ?? 0,
         shiftsCompleted: w.shifts_completed ?? 0,
         verified: !!w.verified,
+        haccpVerified: !!w.haccp_verified,
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         portfolioUrl: w.portfolio_url ?? "",
         bio: w.bio ?? "",
@@ -317,6 +318,7 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         bio: z.string().max(2000).optional().default(""),
         adminNotes: z.string().max(2000).optional().default(""),
         atividadeNumber: z.string().max(80).optional().default(""),
+        haccpVerified: z.boolean().optional().default(false),
       })
       .parse(i),
   )
@@ -341,6 +343,7 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         bio: data.bio,
         admin_notes: data.adminNotes,
         atividade_number: data.atividadeNumber,
+        haccp_verified: data.haccpVerified,
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);

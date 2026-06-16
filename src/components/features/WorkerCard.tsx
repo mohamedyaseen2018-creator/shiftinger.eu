@@ -7,6 +7,7 @@ import type { WorkerProfile } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { getWorkerContact } from "@/lib/talent.functions";
 import WorkerProfileModal from "@/components/features/WorkerProfileModal";
+import HaccpBadge from "@/components/features/HaccpBadge";
 import {
   getInitials,
   roleIcon,
@@ -105,6 +106,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                   <CheckCircle size={11} /> Verified
                 </span>
               )}
+              {worker.haccp && <HaccpBadge />}
             </div>
 
             {/* ── Row 2: role + rating (always rendered) ── */}

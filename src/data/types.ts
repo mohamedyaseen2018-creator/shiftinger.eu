@@ -58,6 +58,7 @@ export interface WorkerProfile {
   nationality: string;
   avatarUrl?: string | null;
   portfolioUrl?: string | null;
+  haccp?: boolean;
 }
 
 export interface Job {

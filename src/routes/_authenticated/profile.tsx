@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import AvatarUpload from "@/components/features/AvatarUpload";
 import { CITY_OPTIONS, NATIONALITY_OPTIONS, ROLE_OPTIONS, LANGUAGE_OPTIONS, DAY_OPTIONS, TIME_SLOT_OPTIONS, LOOKING_FOR_OPTIONS } from "@/data/utils";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -135,7 +136,18 @@ function WorkerEdit({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl bg-canvas p-4">
+        <AvatarUpload
+          userId={userId}
+          table="worker_profiles"
+          initialPath={(data.avatar_url as string) ?? null}
+          variant="worker"
+          label="Profile photo"
+          helper="Recommended: 400 × 400 px · Square · JPG or PNG · Max 2 MB"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
+
         <div><Label>Full name</Label><input className={inputClass} value={(data.name as string) ?? ""} onChange={(e) => setData({ ...data, name: e.target.value })} /></div>
         <div><Label>WhatsApp number</Label><input className={inputClass} value={(data.phone as string) ?? ""} onChange={(e) => setData({ ...data, phone: e.target.value })} /></div>
         <div><Label>City</Label>
@@ -303,7 +315,18 @@ function BusinessEdit({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl bg-canvas p-4">
+        <AvatarUpload
+          userId={userId}
+          table="business_profiles"
+          initialPath={(data.avatar_url as string) ?? null}
+          variant="business"
+          label="Business logo or photo"
+          helper="Recommended: 400 × 400 px · Square · JPG or PNG · Max 2 MB"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
+
         <div><Label>Business name</Label><input className={inputClass} value={(data.business_name as string) ?? ""} onChange={(e) => setData({ ...data, business_name: e.target.value })} /></div>
         <div><Label>Category</Label><input className={inputClass} value={(data.category as string) ?? ""} onChange={(e) => setData({ ...data, category: e.target.value })} /></div>
         <div><Label>City</Label>

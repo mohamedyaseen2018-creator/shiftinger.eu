@@ -300,10 +300,12 @@ function WorkerForm({
 }) {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const haccpRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [haccpUploading, setHaccpUploading] = useState(false);
 
   // Account
   const [name, setName] = useState("");
@@ -324,13 +326,17 @@ function WorkerForm({
   ]);
   // Documents + extras
   const [atividade, setAtividade] = useState<"yes" | "no">("no");
+  const [idDocType, setIdDocType] = useState<string | null>(null);
   const [docPath, setDocPath] = useState<string | null>(null);
   const [docName, setDocName] = useState("");
+  const [haccpPath, setHaccpPath] = useState<string | null>(null);
+  const [haccpName, setHaccpName] = useState("");
   const [minRate, setMinRate] = useState("");
   const [bio, setBio] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [days, setDays] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+
 
   const toggleLookingFor = (v: string) =>
     setLookingFor((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
@@ -348,6 +354,10 @@ function WorkerForm({
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/jpg", "image/png", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG or PDF.");
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File too large — max 5MB.");
       return;
@@ -367,6 +377,34 @@ function WorkerForm({
     setDocName(file.name);
     toast.success("Document uploaded.");
   };
+
+  const handleHaccpUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/jpg", "image/png", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG or PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large — max 5MB.");
+      return;
+    }
+    setHaccpUploading(true);
+    const ext = file.name.split(".").pop() ?? "dat";
+    const path = `${userId}/haccp-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("worker-docs").upload(path, file, {
+      upsert: true,
+    });
+    setHaccpUploading(false);
+    if (error) {
+      toast.error("Upload failed. Please try again.");
+      return;
+    }
+    setHaccpPath(path);
+    setHaccpName(file.name);
+    toast.success("Certificate uploaded.");
+  };
+
 
   const submit = async () => {
     if (!name || !city || !phone) {
@@ -403,10 +441,18 @@ function WorkerForm({
         time_slots: timeSlots,
       })
       .eq("user_id", userId);
-    if (!wErr && docPath) {
+    if (!wErr && (docPath || haccpPath || idDocType)) {
       await supabase
         .from("worker_documents")
-        .upsert({ user_id: userId, id_document_url: docPath }, { onConflict: "user_id" });
+        .upsert(
+          {
+            user_id: userId,
+            id_document_url: docPath ?? undefined,
+            id_document_type: idDocType ?? undefined,
+            haccp_document_url: haccpPath ?? undefined,
+          },
+          { onConflict: "user_id" },
+        );
     }
     if (wErr) {
       setBusy(false);
@@ -626,33 +672,103 @@ function WorkerForm({
       {step === 3 && (
         <div className="space-y-6">
           <h2 className="font-serif text-2xl text-ink">Documents &amp; rate</h2>
+          {/* Confirm your identity */}
           <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
-            <p className="mb-1 text-sm font-medium text-ink">ID document (passport or NIF card)</p>
-            <p className="mb-3 text-xs text-ink/50">Required for the Verified badge. Stored privately and never shown publicly.</p>
-            <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleUpload} />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-8 text-center transition-colors hover:border-teal disabled:opacity-50"
-            >
-              {uploading ? (
-                <Loader2 size={20} className="animate-spin text-teal" />
-              ) : docPath ? (
-                <>
-                  <CheckCircle size={20} className="text-teal" />
-                  <p className="text-sm text-ink">{docName}</p>
-                  <p className="text-xs text-ink/40">Click to replace</p>
-                </>
-              ) : (
-                <>
-                  <Upload size={20} className="text-ink/40" />
-                  <p className="text-sm text-ink/60">Click to upload</p>
-                  <p className="text-xs text-ink/40">JPG, PNG or PDF, max 5MB</p>
-                </>
-              )}
-            </button>
+            <h3 className="text-sm font-semibold text-ink">Confirm your identity</h3>
+            <p className="mt-1 text-xs text-ink/50">
+              We only need to verify that you are who you say you are. Your document is never shared with businesses.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                "Cartão de Cidadão (CC)",
+                "Passaporte",
+                "Título de Residência",
+                "Carta de Condução (Driving licence)",
+              ].map((t) => {
+                const active = idDocType === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setIdDocType(t)}
+                    className={`flex items-center gap-2 rounded-lg p-3 text-left text-sm ring-1 transition-colors ${active ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"}`}
+                  >
+                    <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${active ? "border-teal bg-teal" : "border-ink/30"}`}>
+                      {active && <Check size={11} className="text-white" />}
+                    </span>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            {idDocType && (
+              <div className="mt-3">
+                <p className="mb-1 text-sm font-medium text-ink">Photo of the front side only</p>
+                <p className="mb-2 text-xs text-ink/50">A clear phone photo is fine. We just need to read your name and photo.</p>
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleUpload} />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-teal disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 size={20} className="animate-spin text-teal" />
+                  ) : docPath ? (
+                    <>
+                      <CheckCircle size={20} className="text-teal" />
+                      <p className="text-sm text-ink">{docName}</p>
+                      <p className="text-xs text-ink/40">Click to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-ink/40" />
+                      <p className="text-sm text-ink/60">Click to upload</p>
+                      <p className="text-xs text-ink/40">Max 5 MB · JPG, PNG or PDF</p>
+                    </>
+                  )}
+                </button>
+                <div className="mt-3 rounded-lg bg-teal/5 px-3 py-2 text-xs text-teal ring-1 ring-teal/10">
+                  We only use this to confirm your identity. It is never visible to businesses or other workers.
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Food hygiene certificate (optional) */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Food hygiene certificate</h3>
+            <p className="mt-1 text-xs text-ink/50">
+              Very common in hospitality — if you have one, upload it to unlock your HACCP badge on your profile.
+            </p>
+            <div className="mt-3">
+              <p className="mb-2 text-sm font-medium text-ink">HACCP or food hygiene certificate (optional)</p>
+              <input ref={haccpRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleHaccpUpload} />
+              <button
+                type="button"
+                onClick={() => haccpRef.current?.click()}
+                disabled={haccpUploading}
+                className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-teal disabled:opacity-50"
+              >
+                {haccpUploading ? (
+                  <Loader2 size={20} className="animate-spin text-teal" />
+                ) : haccpPath ? (
+                  <>
+                    <CheckCircle size={20} className="text-teal" />
+                    <p className="text-sm text-ink">{haccpName}</p>
+                    <p className="text-xs text-ink/40">Click to replace</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} className="text-ink/40" />
+                    <p className="text-sm text-ink/60">Click to upload</p>
+                    <p className="text-xs text-ink/40">Max 5 MB · JPG, PNG or PDF</p>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
 
           <div>
             <Label>Do you have an active Atividade (recibos verdes)?</Label>
@@ -776,16 +892,29 @@ function BusinessForm({
   onDone: () => Promise<void>;
 }) {
   const navigate = useNavigate();
+  const docRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Business
   const [businessName, setBusinessName] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [businessPhone, setBusinessPhone] = useState("+351 ");
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
+  // Verification doc
+  const [verifyOption, setVerifyOption] = useState<"nif" | "alvara" | null>(null);
+  const [docPath, setDocPath] = useState<string | null>(null);
+  const [docName, setDocName] = useState("");
+  const [showVerifyWarning, setShowVerifyWarning] = useState(false);
+  // Social presence
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   // Contact
   const [contactName, setContactName] = useState("");
   const [contactPosition, setContactPosition] = useState("");
@@ -795,11 +924,56 @@ function BusinessForm({
   const toggleCategory = (cat: string) =>
     setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 
+  const hasSocialLink = Boolean(
+    facebookUrl.trim() || instagramUrl.trim() || tiktokUrl.trim() || googleMapsUrl.trim(),
+  );
+  const hasVerification = Boolean(docPath) || hasSocialLink;
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const okType = ["application/pdf", "image/jpeg", "image/jpg", "image/png"].includes(file.type);
+    if (!okType) {
+      toast.error("Please upload a PDF, JPG or PNG.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large — max 5MB.");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() ?? "dat";
+    const path = `${userId}/verification-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("business-docs").upload(path, file, { upsert: true });
+    setUploading(false);
+    if (error) {
+      toast.error("Upload failed. Please try again.");
+      return;
+    }
+    setDocPath(path);
+    setDocName(file.name);
+    setShowVerifyWarning(false);
+    toast.success("Document uploaded.");
+  };
+
   const canNext = () => {
     if (step === 0) return businessName.trim() && categories.length > 0 && city;
     if (step === 1) return contactName.trim() && phone.trim();
     return true;
   };
+
+  const handleNext = () => {
+    if (!canNext()) {
+      toast.error("Please fill the required fields.");
+      return;
+    }
+    if (step === 0 && !hasVerification && !showVerifyWarning) {
+      setShowVerifyWarning(true);
+      return;
+    }
+    setStep(step + 1);
+  };
+
 
   const submit = async () => {
     if (!businessName || categories.length === 0 || !city || !phone) {
@@ -817,6 +991,10 @@ function BusinessForm({
         city,
         area: area || null,
         description: description || null,
+        facebook_url: facebookUrl.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
+        tiktok_url: tiktokUrl.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null,
       })
       .eq("user_id", userId);
     if (bErr) {
@@ -829,7 +1007,7 @@ function BusinessForm({
       .upsert(
         {
           user_id: userId,
-          phone,
+          phone: businessPhone.trim() || phone,
           contact_name: contactName || null,
           contact_position: contactPosition || null,
         },
@@ -839,6 +1017,14 @@ function BusinessForm({
       setBusy(false);
       toast.error("Could not save your contact details. Please try again.");
       return;
+    }
+    if (docPath) {
+      await supabase
+        .from("business_documents")
+        .upsert(
+          { user_id: userId, doc_type: verifyOption, document_url: docPath },
+          { onConflict: "user_id" },
+        );
     }
     if (address) {
       await supabase.from("business_locations").upsert({ business_id: userId, address });
@@ -882,6 +1068,10 @@ function BusinessForm({
               ))}
             </div>
           </div>
+          <div>
+            <Label>Business phone number</Label>
+            <input type="tel" className={inputClass} placeholder="+351 9XX XXX XXX" value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>City</Label>
@@ -900,6 +1090,88 @@ function BusinessForm({
             <Label>Exact address (kept private)</Label>
             <input className={inputClass} placeholder="Shared with a worker only after you agree to work" value={address} onChange={(e) => setAddress(e.target.value)} />
             <p className="mt-1 text-xs text-ink/40">Only revealed to a worker once you confirm and agree to work.</p>
+          </div>
+
+          {/* Verify your business */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Verify your business</h3>
+            <p className="mt-1 text-xs text-ink/50">Upload one document to build trust with workers. Takes under 2 minutes.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {([
+                { key: "nif", title: "Business NIF document", sub: "A letter or certificate showing your NIF from AT or your accountant" },
+                { key: "alvara", title: "Alvará or licença de utilização", sub: "Your operating licence — often already on file or framed on-site" },
+              ] as const).map((opt) => {
+                const active = verifyOption === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setVerifyOption(opt.key)}
+                    className={`rounded-lg p-3 text-left ring-1 transition-colors ${active ? "bg-gold/10 ring-gold" : "bg-white ring-ink/10 hover:ring-gold"}`}
+                  >
+                    <span className="flex items-center gap-2 text-sm font-medium text-ink">
+                      <span className={`flex size-4 items-center justify-center rounded-full border ${active ? "border-gold bg-gold" : "border-ink/30"}`}>
+                        {active && <Check size={11} className="text-white" />}
+                      </span>
+                      {opt.title}
+                    </span>
+                    <span className="mt-1 block pl-6 text-xs text-ink/50">{opt.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {verifyOption && (
+              <div className="mt-3">
+                <input ref={docRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleDocUpload} />
+                <button
+                  type="button"
+                  onClick={() => docRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-gold disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 size={20} className="animate-spin text-gold" />
+                  ) : docPath ? (
+                    <>
+                      <CheckCircle size={20} className="text-teal" />
+                      <p className="text-sm text-ink">{docName}</p>
+                      <p className="text-xs text-ink/40">Click to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-ink/40" />
+                      <p className="text-sm text-ink/60">Click to upload</p>
+                      <p className="text-xs text-ink/40">Max 5 MB · PDF, JPG or PNG</p>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Your online presence */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Your online presence</h3>
+            <p className="mt-1 text-xs text-ink/50">Add at least one link so workers can find you. Your exact address stays private.</p>
+            <div className="mt-3 space-y-3">
+              <div>
+                <Label>Facebook page URL</Label>
+                <input type="url" className={inputClass} placeholder="https://facebook.com/yourbusiness" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>Instagram profile URL</Label>
+                <input type="url" className={inputClass} placeholder="https://instagram.com/yourbusiness" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>TikTok profile URL</Label>
+                <input type="url" className={inputClass} placeholder="https://tiktok.com/@yourbusiness" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>Google Maps link</Label>
+                <input type="url" className={inputClass} placeholder="Paste your Google Maps business link" value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} />
+                <p className="mt-1 text-xs text-ink/40">Open Google Maps → find your business → Share → Copy link</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -954,21 +1226,28 @@ function BusinessForm({
 
       {/* Nav */}
       {step < BUSINESS_STEPS.length - 1 ? (
-        <div className="mt-8 flex justify-between border-t border-ink/5 pt-6">
-          {step > 0 ? (
-            <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
-              <ChevronLeft size={16} /> Back
-            </button>
-          ) : (
-            <div />
+        <div className="mt-8 border-t border-ink/5 pt-6">
+          {step === 0 && showVerifyWarning && !hasVerification && (
+            <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+              Please upload a verification document or add at least one social media link so workers can trust your listing.
+            </div>
           )}
-          <button
-            type="button"
-            onClick={() => (canNext() ? setStep(step + 1) : toast.error("Please fill the required fields."))}
-            className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold/90"
-          >
-            Next <ChevronRight size={16} />
-          </button>
+          <div className="flex justify-between">
+            {step > 0 ? (
+              <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+                <ChevronLeft size={16} /> Back
+              </button>
+            ) : (
+              <div />
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold/90"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       ) : (
         <div className="mt-8 border-t border-ink/5 pt-6">
