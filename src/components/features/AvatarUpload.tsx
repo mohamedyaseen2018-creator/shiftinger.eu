@@ -72,10 +72,10 @@ export default function AvatarUpload({
       toast.error("Upload failed. Please try again.");
       return;
     }
-    const { error: dbErr } = await supabase
-      .from(table)
-      .update({ avatar_url: newPath })
-      .eq("user_id", userId);
+    const { error: dbErr } =
+      table === "worker_profiles"
+        ? await supabase.from("worker_profiles").update({ avatar_url: newPath }).eq("user_id", userId)
+        : await supabase.from("business_profiles").update({ avatar_url: newPath }).eq("user_id", userId);
     setUploading(false);
     if (dbErr) {
       toast.error("Could not save your photo. Please try again.");
