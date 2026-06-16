@@ -48,6 +48,16 @@ function AuthPage() {
   const handleGoogle = async () => {
     setBusy(true);
     try {
+      // The chosen role can't travel through the OAuth flow, so remember it
+      // locally. Onboarding reads this to set the correct account type for new
+      // Google sign-ups (the DB trigger otherwise defaults everyone to worker).
+      if (tab === "signup") {
+        try {
+          window.localStorage.setItem("shiftinger:signup_role", accountType);
+        } catch {
+          /* ignore storage failures */
+        }
+      }
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
