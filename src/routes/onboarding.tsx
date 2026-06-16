@@ -1110,21 +1110,28 @@ function BusinessForm({
 
       {/* Nav */}
       {step < BUSINESS_STEPS.length - 1 ? (
-        <div className="mt-8 flex justify-between border-t border-ink/5 pt-6">
-          {step > 0 ? (
-            <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
-              <ChevronLeft size={16} /> Back
-            </button>
-          ) : (
-            <div />
+        <div className="mt-8 border-t border-ink/5 pt-6">
+          {step === 0 && showVerifyWarning && !hasVerification && (
+            <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+              Please upload a verification document or add at least one social media link so workers can trust your listing.
+            </div>
           )}
-          <button
-            type="button"
-            onClick={() => (canNext() ? setStep(step + 1) : toast.error("Please fill the required fields."))}
-            className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold/90"
-          >
-            Next <ChevronRight size={16} />
-          </button>
+          <div className="flex justify-between">
+            {step > 0 ? (
+              <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+                <ChevronLeft size={16} /> Back
+              </button>
+            ) : (
+              <div />
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold/90"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       ) : (
         <div className="mt-8 border-t border-ink/5 pt-6">
