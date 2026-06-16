@@ -441,10 +441,18 @@ function WorkerForm({
         time_slots: timeSlots,
       })
       .eq("user_id", userId);
-    if (!wErr && docPath) {
+    if (!wErr && (docPath || haccpPath || idDocType)) {
       await supabase
         .from("worker_documents")
-        .upsert({ user_id: userId, id_document_url: docPath }, { onConflict: "user_id" });
+        .upsert(
+          {
+            user_id: userId,
+            id_document_url: docPath ?? undefined,
+            id_document_type: idDocType ?? undefined,
+            haccp_document_url: haccpPath ?? undefined,
+          },
+          { onConflict: "user_id" },
+        );
     }
     if (wErr) {
       setBusy(false);
