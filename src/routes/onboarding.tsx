@@ -952,6 +952,10 @@ function BusinessForm({
               ))}
             </div>
           </div>
+          <div>
+            <Label>Business phone number</Label>
+            <input type="tel" className={inputClass} placeholder="+351 9XX XXX XXX" value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>City</Label>
@@ -970,6 +974,88 @@ function BusinessForm({
             <Label>Exact address (kept private)</Label>
             <input className={inputClass} placeholder="Shared with a worker only after you agree to work" value={address} onChange={(e) => setAddress(e.target.value)} />
             <p className="mt-1 text-xs text-ink/40">Only revealed to a worker once you confirm and agree to work.</p>
+          </div>
+
+          {/* Verify your business */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Verify your business</h3>
+            <p className="mt-1 text-xs text-ink/50">Upload one document to build trust with workers. Takes under 2 minutes.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {([
+                { key: "nif", title: "Business NIF document", sub: "A letter or certificate showing your NIF from AT or your accountant" },
+                { key: "alvara", title: "Alvará or licença de utilização", sub: "Your operating licence — often already on file or framed on-site" },
+              ] as const).map((opt) => {
+                const active = verifyOption === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setVerifyOption(opt.key)}
+                    className={`rounded-lg p-3 text-left ring-1 transition-colors ${active ? "bg-gold/10 ring-gold" : "bg-white ring-ink/10 hover:ring-gold"}`}
+                  >
+                    <span className="flex items-center gap-2 text-sm font-medium text-ink">
+                      <span className={`flex size-4 items-center justify-center rounded-full border ${active ? "border-gold bg-gold" : "border-ink/30"}`}>
+                        {active && <Check size={11} className="text-white" />}
+                      </span>
+                      {opt.title}
+                    </span>
+                    <span className="mt-1 block pl-6 text-xs text-ink/50">{opt.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {verifyOption && (
+              <div className="mt-3">
+                <input ref={docRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleDocUpload} />
+                <button
+                  type="button"
+                  onClick={() => docRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-gold disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 size={20} className="animate-spin text-gold" />
+                  ) : docPath ? (
+                    <>
+                      <CheckCircle size={20} className="text-teal" />
+                      <p className="text-sm text-ink">{docName}</p>
+                      <p className="text-xs text-ink/40">Click to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-ink/40" />
+                      <p className="text-sm text-ink/60">Click to upload</p>
+                      <p className="text-xs text-ink/40">Max 5 MB · PDF, JPG or PNG</p>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Your online presence */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Your online presence</h3>
+            <p className="mt-1 text-xs text-ink/50">Add at least one link so workers can find you. Your exact address stays private.</p>
+            <div className="mt-3 space-y-3">
+              <div>
+                <Label>Facebook page URL</Label>
+                <input type="url" className={inputClass} placeholder="https://facebook.com/yourbusiness" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>Instagram profile URL</Label>
+                <input type="url" className={inputClass} placeholder="https://instagram.com/yourbusiness" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>TikTok profile URL</Label>
+                <input type="url" className={inputClass} placeholder="https://tiktok.com/@yourbusiness" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>Google Maps link</Label>
+                <input type="url" className={inputClass} placeholder="Paste your Google Maps business link" value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} />
+                <p className="mt-1 text-xs text-ink/40">Open Google Maps → find your business → Share → Copy link</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
