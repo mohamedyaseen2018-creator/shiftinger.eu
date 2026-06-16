@@ -354,6 +354,10 @@ function WorkerForm({
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/jpg", "image/png", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG or PDF.");
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File too large — max 5MB.");
       return;
@@ -373,6 +377,34 @@ function WorkerForm({
     setDocName(file.name);
     toast.success("Document uploaded.");
   };
+
+  const handleHaccpUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/jpg", "image/png", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG or PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large — max 5MB.");
+      return;
+    }
+    setHaccpUploading(true);
+    const ext = file.name.split(".").pop() ?? "dat";
+    const path = `${userId}/haccp-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("worker-docs").upload(path, file, {
+      upsert: true,
+    });
+    setHaccpUploading(false);
+    if (error) {
+      toast.error("Upload failed. Please try again.");
+      return;
+    }
+    setHaccpPath(path);
+    setHaccpName(file.name);
+    toast.success("Certificate uploaded.");
+  };
+
 
   const submit = async () => {
     if (!name || !city || !phone) {
