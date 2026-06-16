@@ -672,33 +672,103 @@ function WorkerForm({
       {step === 3 && (
         <div className="space-y-6">
           <h2 className="font-serif text-2xl text-ink">Documents &amp; rate</h2>
+          {/* Confirm your identity */}
           <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
-            <p className="mb-1 text-sm font-medium text-ink">ID document (passport or NIF card)</p>
-            <p className="mb-3 text-xs text-ink/50">Required for the Verified badge. Stored privately and never shown publicly.</p>
-            <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleUpload} />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-8 text-center transition-colors hover:border-teal disabled:opacity-50"
-            >
-              {uploading ? (
-                <Loader2 size={20} className="animate-spin text-teal" />
-              ) : docPath ? (
-                <>
-                  <CheckCircle size={20} className="text-teal" />
-                  <p className="text-sm text-ink">{docName}</p>
-                  <p className="text-xs text-ink/40">Click to replace</p>
-                </>
-              ) : (
-                <>
-                  <Upload size={20} className="text-ink/40" />
-                  <p className="text-sm text-ink/60">Click to upload</p>
-                  <p className="text-xs text-ink/40">JPG, PNG or PDF, max 5MB</p>
-                </>
-              )}
-            </button>
+            <h3 className="text-sm font-semibold text-ink">Confirm your identity</h3>
+            <p className="mt-1 text-xs text-ink/50">
+              We only need to verify that you are who you say you are. Your document is never shared with businesses.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                "Cartão de Cidadão (CC)",
+                "Passaporte",
+                "Título de Residência",
+                "Carta de Condução (Driving licence)",
+              ].map((t) => {
+                const active = idDocType === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setIdDocType(t)}
+                    className={`flex items-center gap-2 rounded-lg p-3 text-left text-sm ring-1 transition-colors ${active ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"}`}
+                  >
+                    <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${active ? "border-teal bg-teal" : "border-ink/30"}`}>
+                      {active && <Check size={11} className="text-white" />}
+                    </span>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            {idDocType && (
+              <div className="mt-3">
+                <p className="mb-1 text-sm font-medium text-ink">Photo of the front side only</p>
+                <p className="mb-2 text-xs text-ink/50">A clear phone photo is fine. We just need to read your name and photo.</p>
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleUpload} />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-teal disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 size={20} className="animate-spin text-teal" />
+                  ) : docPath ? (
+                    <>
+                      <CheckCircle size={20} className="text-teal" />
+                      <p className="text-sm text-ink">{docName}</p>
+                      <p className="text-xs text-ink/40">Click to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-ink/40" />
+                      <p className="text-sm text-ink/60">Click to upload</p>
+                      <p className="text-xs text-ink/40">Max 5 MB · JPG, PNG or PDF</p>
+                    </>
+                  )}
+                </button>
+                <div className="mt-3 rounded-lg bg-teal/5 px-3 py-2 text-xs text-teal ring-1 ring-teal/10">
+                  We only use this to confirm your identity. It is never visible to businesses or other workers.
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Food hygiene certificate (optional) */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Food hygiene certificate</h3>
+            <p className="mt-1 text-xs text-ink/50">
+              Very common in hospitality — if you have one, upload it to unlock your HACCP badge on your profile.
+            </p>
+            <div className="mt-3">
+              <p className="mb-2 text-sm font-medium text-ink">HACCP or food hygiene certificate (optional)</p>
+              <input ref={haccpRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleHaccpUpload} />
+              <button
+                type="button"
+                onClick={() => haccpRef.current?.click()}
+                disabled={haccpUploading}
+                className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-teal disabled:opacity-50"
+              >
+                {haccpUploading ? (
+                  <Loader2 size={20} className="animate-spin text-teal" />
+                ) : haccpPath ? (
+                  <>
+                    <CheckCircle size={20} className="text-teal" />
+                    <p className="text-sm text-ink">{haccpName}</p>
+                    <p className="text-xs text-ink/40">Click to replace</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} className="text-ink/40" />
+                    <p className="text-sm text-ink/60">Click to upload</p>
+                    <p className="text-xs text-ink/40">Max 5 MB · JPG, PNG or PDF</p>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
 
           <div>
             <Label>Do you have an active Atividade (recibos verdes)?</Label>
