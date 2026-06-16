@@ -1,52 +1,44 @@
-# For Workers page + "How it works" steps + pricing teaser
+# Registration & Dashboard Upload Features
 
-## Goal
-Create a new **For Workers** page that mirrors the existing **For Business** page, add a visual step-by-step "How it works" section (with screenshots) to **both** pages, and add a pricing section that is visibly blurred with a "Coming soon" overlay on both.
+Adds business/worker verification uploads, a business phone field, social links, avatar uploads on both dashboards, and an admin-verified HACCP badge.
 
-## 1. New route: `/for-workers`
-- New file `src/routes/for-workers.tsx`, structured like `for-businesses.tsx` (hero + steps + features + pricing), using `SiteLayout`.
-- Own `head()` metadata: title "For workers — Shiftinger", worker-focused description, og:title/og:description.
-- Hero: worker-oriented headline + subtitle, primary CTA → `/register`, secondary CTA → `/jobs`. A small stats grid (e.g. shifts available, businesses hiring, avg pay, fast confirmation).
+## Backend (one migration + 2 storage buckets)
 
-## 2. "How it works" step section (both pages)
-A new section on each page showing the journey as numbered steps. Each step has: a number, a title, a **screenshot image**, and **up to 4 short bullet points**. Steps are tailored per audience.
+### Storage buckets
+- `avatars` (public) — business logos & worker profile photos (publicly displayed). RLS: owner can write/update/delete their own `{userId}/...` files; public read.
+- `business-docs` (private) — business verification documents. RLS: owner + admin read/write only. (Worker ID & HACCP keep using the existing private `worker-docs` bucket.)
 
-**For Workers steps**
-1. Sign up & fill the form — pick worker role, basic details, verify email
-2. Build your profile — add skills/experience, languages, ID verification, set rates
-3. Apply for jobs / post availability — browse shifts, one-tap apply, publish your availability so businesses reach out
-4. Get noticed & check applications — track application status, see who viewed you
-5. Get contacted & accepted — chat opens on mutual match, confirm within the window, exchange contacts
-6. Complete & get rated — work the shift, receive a rating, build reputation
+### Schema changes (migration)
+- `business_profiles`: add `facebook_url`, `instagram_url`, `tiktok_url`, `google_maps_url` (text). Column grants exclude these from anon where appropriate.
+- `worker_profiles`: add `haccp_verified boolean default false` (drives the public badge; only admins set it true).
+- `worker_documents`: add `id_document_type text`, `haccp_document_url text`.
+- New table `business_documents` (`user_id`, `doc_type`, `document_url`) with owner+admin RLS and grants.
+- Update `worker_profiles_public` view / `listVisibleWorkers` projection to include `haccp_verified` + `avatar_url`.
 
-**For Business steps**
-1. Sign up & fill the form — pick business account, company basics, verify email
-2. Build your company profile — add venue details, logo, location
-3. Post jobs / reach out to talent — create a shift in minutes or browse and invite workers directly
-4. Check applications — see skill-matched candidates ranked, filter by verification/Atividade
-5. Contact & accept the perfect one — open chat, accept the best fit, worker confirms
-6. Rate the worker — leave a rating after the shift to strengthen the community
+## Business registration (`onboarding.tsx` → BusinessForm, Step 0)
+1. **Business phone** — `tel` input, value pre-filled `"+351 "`, placeholder `"+351 9XX XXX XXX"`, after Business type, before City/Neighbourhood. Saved to `business_contacts.phone`.
+2. **Verify your business** section — two radio-style cards (NIF document / Alvará). Selected card reveals a file upload (PDF/JPG/PNG, max 5 MB) → `business-docs` bucket, recorded in `business_documents`.
+3. **Your online presence** — 4 optional URL inputs (Facebook, Instagram, TikTok, Google Maps + helper text) → `business_profiles`.
+4. **Next validation** — on leaving Step 0, if no document AND no social/maps link, show an inline amber, non-blocking warning above the Next button. Does not hard-block.
 
-Each step renders in an alternating image/text layout. Bullet lists capped at 4 items.
+## Worker registration (`onboarding.tsx` → WorkerForm, Documents step)
+5. **Confirm your identity** — 4 radio-style document-type cards (CC / Passaporte / Título de Residência / Carta de Condução). Selecting one reveals a single front-side upload (JPG/PNG/PDF, 5 MB) → `worker-docs`, with the teal privacy notice. Saves `id_document_type` + `id_document_url`.
+6. **Food hygiene certificate** (optional) — single upload (JPG/PNG/PDF, 5 MB) → `worker-docs`, saved to `haccp_document_url`.
 
-## 3. Screenshots (AI-generated placeholders)
-Generate clean placeholder mockup images (saved to `src/assets/`) representing each screen — e.g. signup form, profile builder, jobs list/apply, applications dashboard, chat/accept, rating. Reuse the same images across both pages where the screen is shared (signup, chat/accept, rating) to limit asset count (~6–7 images total). These are placeholders the user can later swap for real captures.
+## HACCP badge
+- Small pill: shield-check icon, "HACCP certified", teal palette (`#E1F5EE` bg, `#085041` text, `#5DCAA5` border).
+- Shown on `WorkerCard` and in `WorkerProfileModal` only when `haccp_verified` is true.
+- `WorkerProfile` type gains a `haccp` boolean; talent data mapping reads `haccp_verified`.
 
-## 4. Pricing section (blurred "Coming soon")
-- Add a Pricing section near the bottom of **both** pages.
-- Render representative plan cards (e.g. Free / Pro / Featured listings) but apply a heavy blur (`blur-sm`/`blur`) to the cards and overlay a centered "Pricing — coming soon" badge so prices are obscured but the section communicates that paid tiers are planned.
-- No real prices or checkout — purely a teaser.
+## Dashboards (avatar uploads)
+7. **Business dashboard / profile area** — circular logo/photo upload (JPG/PNG, max 2 MB) to `avatars`, store URL in `business_profiles.avatar_url`. Store/building placeholder icon when empty.
+8. **Worker dashboard / profile area** — circular profile-photo upload (JPG/PNG, max 2 MB) to `avatars`, store URL in `worker_profiles.avatar_url`. User placeholder icon when empty.
 
-## 5. Navigation & footer
-- Navbar (`src/components/site/Navbar.tsx`): add a **For Workers** link (`/for-workers`) next to **For Business**, in both desktop and mobile menus.
-- Footer (`src/components/site/Footer.tsx`): add "For Workers" to the Workers column.
+Avatar upload UI is added at the top of the profile editors in `profile.tsx` (the dashboards link here as the profile area), giving both account types an immediate edit surface.
 
-## Technical details
-- Use existing design tokens (`ink`, `canvas`, `gold`, `teal`) and the same card/section styling already used in `for-businesses.tsx`; no new dependencies.
-- Step and feature content can be defined as local arrays in each route file (matching the existing `STEPS`/`FEATURE_CARDS`/`STATS` pattern). Hardcoded copy is fine; no new `siteContent` keys required.
-- Images imported as ES6 asset imports from `src/assets/`.
-- No backend, schema, or business-logic changes — frontend/presentation only.
+## Admin HACCP verification
+- The console Workers drawer gets a control to mark `haccp_verified` true/false, so the badge only appears after admin approval (matching the existing verified-badge pattern).
 
-## Out of scope
-- Real pricing/checkout (kept hidden behind the blur for now).
-- Editable-via-console content keys for the new copy (can be added later if needed).
+## Notes
+- All uploads validate size/type client-side before upload and show the specified hints.
+- Reuses existing teal/gold design tokens and form primitives; no new color literals except the HACCP badge palette specified by you.
