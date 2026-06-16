@@ -875,6 +875,10 @@ function BusinessForm({
         city,
         area: area || null,
         description: description || null,
+        facebook_url: facebookUrl.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
+        tiktok_url: tiktokUrl.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null,
       })
       .eq("user_id", userId);
     if (bErr) {
@@ -887,7 +891,7 @@ function BusinessForm({
       .upsert(
         {
           user_id: userId,
-          phone,
+          phone: businessPhone.trim() || phone,
           contact_name: contactName || null,
           contact_position: contactPosition || null,
         },
@@ -897,6 +901,14 @@ function BusinessForm({
       setBusy(false);
       toast.error("Could not save your contact details. Please try again.");
       return;
+    }
+    if (docPath) {
+      await supabase
+        .from("business_documents")
+        .upsert(
+          { user_id: userId, doc_type: verifyOption, document_url: docPath },
+          { onConflict: "user_id" },
+        );
     }
     if (address) {
       await supabase.from("business_locations").upsert({ business_id: userId, address });
