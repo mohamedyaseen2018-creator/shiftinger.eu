@@ -318,6 +318,7 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         bio: z.string().max(2000).optional().default(""),
         adminNotes: z.string().max(2000).optional().default(""),
         atividadeNumber: z.string().max(80).optional().default(""),
+        haccpVerified: z.boolean().optional().default(false),
       })
       .parse(i),
   )
