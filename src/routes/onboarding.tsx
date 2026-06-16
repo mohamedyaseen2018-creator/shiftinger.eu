@@ -776,16 +776,29 @@ function BusinessForm({
   onDone: () => Promise<void>;
 }) {
   const navigate = useNavigate();
+  const docRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Business
   const [businessName, setBusinessName] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [businessPhone, setBusinessPhone] = useState("+351 ");
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
+  // Verification doc
+  const [verifyOption, setVerifyOption] = useState<"nif" | "alvara" | null>(null);
+  const [docPath, setDocPath] = useState<string | null>(null);
+  const [docName, setDocName] = useState("");
+  const [showVerifyWarning, setShowVerifyWarning] = useState(false);
+  // Social presence
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   // Contact
   const [contactName, setContactName] = useState("");
   const [contactPosition, setContactPosition] = useState("");
@@ -795,11 +808,56 @@ function BusinessForm({
   const toggleCategory = (cat: string) =>
     setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 
+  const hasSocialLink = Boolean(
+    facebookUrl.trim() || instagramUrl.trim() || tiktokUrl.trim() || googleMapsUrl.trim(),
+  );
+  const hasVerification = Boolean(docPath) || hasSocialLink;
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const okType = ["application/pdf", "image/jpeg", "image/jpg", "image/png"].includes(file.type);
+    if (!okType) {
+      toast.error("Please upload a PDF, JPG or PNG.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large — max 5MB.");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() ?? "dat";
+    const path = `${userId}/verification-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("business-docs").upload(path, file, { upsert: true });
+    setUploading(false);
+    if (error) {
+      toast.error("Upload failed. Please try again.");
+      return;
+    }
+    setDocPath(path);
+    setDocName(file.name);
+    setShowVerifyWarning(false);
+    toast.success("Document uploaded.");
+  };
+
   const canNext = () => {
     if (step === 0) return businessName.trim() && categories.length > 0 && city;
     if (step === 1) return contactName.trim() && phone.trim();
     return true;
   };
+
+  const handleNext = () => {
+    if (!canNext()) {
+      toast.error("Please fill the required fields.");
+      return;
+    }
+    if (step === 0 && !hasVerification && !showVerifyWarning) {
+      setShowVerifyWarning(true);
+      return;
+    }
+    setStep(step + 1);
+  };
+
 
   const submit = async () => {
     if (!businessName || categories.length === 0 || !city || !phone) {
