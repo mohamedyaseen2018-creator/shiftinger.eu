@@ -136,7 +136,18 @@ function WorkerEdit({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl bg-canvas p-4">
+        <AvatarUpload
+          userId={userId}
+          table="worker_profiles"
+          initialPath={(data.avatar_url as string) ?? null}
+          variant="worker"
+          label="Profile photo"
+          helper="Recommended: 400 × 400 px · Square · JPG or PNG · Max 2 MB"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
+
         <div><Label>Full name</Label><input className={inputClass} value={(data.name as string) ?? ""} onChange={(e) => setData({ ...data, name: e.target.value })} /></div>
         <div><Label>WhatsApp number</Label><input className={inputClass} value={(data.phone as string) ?? ""} onChange={(e) => setData({ ...data, phone: e.target.value })} /></div>
         <div><Label>City</Label>
