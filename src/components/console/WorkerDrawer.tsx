@@ -204,6 +204,13 @@ export function WorkerDrawer({
               </Field>
             )}
 
+            <ToggleRow
+              label="HACCP certified"
+              description="Show the HACCP badge after verifying the worker's food-hygiene certificate"
+              checked={form.haccpVerified}
+              onChange={(v) => set({ haccpVerified: v })}
+            />
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Review status">
                 <SelectInput value={form.status} onChange={(v) => set({ status: v as ConsoleStatus })} options={STATUS_OPTIONS} />
