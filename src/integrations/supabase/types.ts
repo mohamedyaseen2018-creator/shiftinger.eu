@@ -193,6 +193,30 @@ export type Database = {
         }
         Relationships: []
       }
+      business_documents: {
+        Row: {
+          created_at: string
+          doc_type: string | null
+          document_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string | null
+          document_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string | null
+          document_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_locations: {
         Row: {
           address: string | null
@@ -226,7 +250,10 @@ export type Database = {
           created_at: string
           description: string | null
           display_initials: string
+          facebook_url: string | null
+          google_maps_url: string | null
           id: string
+          instagram_url: string | null
           is_early_bird: boolean
           languages_required: Json
           nif: string
@@ -234,6 +261,7 @@ export type Database = {
           rating: number
           rating_count: number
           sub_sector: string
+          tiktok_url: string | null
           updated_at: string
           user_id: string
           verified: boolean
@@ -249,7 +277,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_initials?: string
+          facebook_url?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram_url?: string | null
           is_early_bird?: boolean
           languages_required?: Json
           nif?: string
@@ -257,6 +288,7 @@ export type Database = {
           rating?: number
           rating_count?: number
           sub_sector?: string
+          tiktok_url?: string | null
           updated_at?: string
           user_id: string
           verified?: boolean
@@ -272,7 +304,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_initials?: string
+          facebook_url?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram_url?: string | null
           is_early_bird?: boolean
           languages_required?: Json
           nif?: string
@@ -280,6 +315,7 @@ export type Database = {
           rating?: number
           rating_count?: number
           sub_sector?: string
+          tiktok_url?: string | null
           updated_at?: string
           user_id?: string
           verified?: boolean
@@ -971,18 +1007,24 @@ export type Database = {
       worker_documents: {
         Row: {
           created_at: string
+          haccp_document_url: string | null
+          id_document_type: string | null
           id_document_url: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          haccp_document_url?: string | null
+          id_document_type?: string | null
           id_document_url?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          haccp_document_url?: string | null
+          id_document_type?: string | null
           id_document_url?: string | null
           updated_at?: string
           user_id?: string
@@ -1001,6 +1043,7 @@ export type Database = {
           city: string | null
           created_at: string
           experience: Json
+          haccp_verified: boolean
           id: string
           languages: Json
           looking_for: Json
@@ -1032,6 +1075,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           experience?: Json
+          haccp_verified?: boolean
           id?: string
           languages?: Json
           looking_for?: Json
@@ -1063,6 +1107,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           experience?: Json
+          haccp_verified?: boolean
           id?: string
           languages?: Json
           looking_for?: Json
@@ -1187,6 +1232,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           city: string | null
+          haccp_verified: boolean | null
           id: string | null
           languages: Json | null
           looking_for: Json | null
@@ -1210,6 +1256,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          haccp_verified?: boolean | null
           id?: string | null
           languages?: Json | null
           looking_for?: Json | null
@@ -1233,6 +1280,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          haccp_verified?: boolean | null
           id?: string | null
           languages?: Json | null
           looking_for?: Json | null
