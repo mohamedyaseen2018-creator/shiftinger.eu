@@ -464,6 +464,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             bio: w.bio,
             adminNotes: w.adminNotes,
             atividadeNumber: w.atividadeNumber,
+            haccpVerified: w.haccpVerified,
           },
         });
         await refresh();
