@@ -18,7 +18,10 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import type { AccountType } from "@/data/types";
 import { useAuth } from "@/lib/auth";
+import { setAccountType } from "@/lib/onboarding.functions";
+
 import {
   CITY_OPTIONS,
   NATIONALITY_OPTIONS,
