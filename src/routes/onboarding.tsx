@@ -1,4 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+
 import { useEffect, useRef, useState } from "react";
 import {
   Loader2,
@@ -16,7 +18,10 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import type { AccountType } from "@/data/types";
 import { useAuth } from "@/lib/auth";
+import { setAccountType } from "@/lib/onboarding.functions";
+
 import {
   CITY_OPTIONS,
   NATIONALITY_OPTIONS,
@@ -58,6 +63,8 @@ export const Route = createFileRoute("/onboarding")({
 function OnboardingPage() {
   const navigate = useNavigate();
   const { user, profile, loading, refreshProfile, signOut } = useAuth();
+  const switchAccountType = useServerFn(setAccountType);
+  const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -69,6 +76,44 @@ function OnboardingPage() {
       navigate({ to: "/dashboard" });
     }
   }, [loading, user, profile, navigate]);
+
+  // Auto-correct the account type for fresh sign-ups (notably Google, where the
+  // chosen role can't pass through OAuth and the DB trigger defaults to worker).
+  useEffect(() => {
+    if (loading || !profile || profile.status !== "incomplete") return;
+    let desired: string | null = null;
+    try {
+      desired = window.localStorage.getItem("shiftinger:signup_role");
+    } catch {
+      desired = null;
+    }
+    if (!desired) return;
+    try {
+      window.localStorage.removeItem("shiftinger:signup_role");
+    } catch {
+      /* ignore */
+    }
+    if (
+      (desired === "worker" || desired === "business") &&
+      desired !== profile.account_type
+    ) {
+      void switchAccountType({ data: { accountType: desired } }).then(() => refreshProfile());
+    }
+  }, [loading, profile, switchAccountType, refreshProfile]);
+
+  const handleSwitch = async (next: AccountType) => {
+    if (!profile || next === profile.account_type || switching) return;
+    setSwitching(true);
+    try {
+      await switchAccountType({ data: { accountType: next } });
+      await refreshProfile();
+      toast.success(next === "business" ? "Switched to a business account." : "Switched to a worker account.");
+    } catch {
+      toast.error("Could not switch account type. Please try again.");
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   if (loading || !profile) {
     return (
@@ -111,6 +156,35 @@ function OnboardingPage() {
             </p>
           </div>
 
+          {/* Account type switcher — only available while the profile is new. */}
+          <div className="mx-auto mt-6 max-w-sm">
+            <p className="mb-2 text-center text-xs font-medium text-ink/50">
+              Wrong account type? Switch below.
+            </p>
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-white p-1.5 ring-1 ring-ink/5">
+              <button
+                type="button"
+                onClick={() => handleSwitch("worker")}
+                disabled={switching}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  isWorker ? "bg-teal/10 text-teal ring-1 ring-teal" : "text-ink/60 hover:bg-ink/5"
+                }`}
+              >
+                I'm looking for work
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitch("business")}
+                disabled={switching}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  !isWorker ? "bg-gold/10 text-gold-dark ring-1 ring-gold" : "text-ink/60 hover:bg-ink/5"
+                }`}
+              >
+                I'm hiring staff
+              </button>
+            </div>
+          </div>
+
           <div className="mt-8">
             {isWorker ? (
               <WorkerForm userId={user!.id} email={profile.email} onDone={refreshProfile} />
@@ -128,6 +202,7 @@ function OnboardingPage() {
     </div>
   );
 }
+
 
 /* ──────────────────────────── shared bits ──────────────────────────── */
 
