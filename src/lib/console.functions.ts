@@ -110,6 +110,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         ratingCount: w.rating_count ?? 0,
         shiftsCompleted: w.shifts_completed ?? 0,
         verified: !!w.verified,
+        haccpVerified: !!w.haccp_verified,
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         portfolioUrl: w.portfolio_url ?? "",
         bio: w.bio ?? "",
