@@ -343,6 +343,7 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         bio: data.bio,
         admin_notes: data.adminNotes,
         atividade_number: data.atividadeNumber,
+        haccp_verified: data.haccpVerified,
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);
