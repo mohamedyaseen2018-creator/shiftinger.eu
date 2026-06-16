@@ -105,6 +105,7 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
                     <CheckCircle size={11} /> Verified
                   </span>
                 )}
+                {worker.haccp && <HaccpBadge />}
               </div>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink/60">
                 <span className="inline-flex items-center gap-1"><MapPin size={12} /> {worker.city || "Portugal"}</span>
