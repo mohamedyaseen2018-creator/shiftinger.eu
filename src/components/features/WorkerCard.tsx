@@ -106,6 +106,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                   <CheckCircle size={11} /> Verified
                 </span>
               )}
+              {worker.haccp && <HaccpBadge />}
             </div>
 
             {/* ── Row 2: role + rating (always rendered) ── */}
