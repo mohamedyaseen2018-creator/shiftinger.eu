@@ -315,7 +315,18 @@ function BusinessEdit({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl bg-canvas p-4">
+        <AvatarUpload
+          userId={userId}
+          table="business_profiles"
+          initialPath={(data.avatar_url as string) ?? null}
+          variant="business"
+          label="Business logo or photo"
+          helper="Recommended: 400 × 400 px · Square · JPG or PNG · Max 2 MB"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
+
         <div><Label>Business name</Label><input className={inputClass} value={(data.business_name as string) ?? ""} onChange={(e) => setData({ ...data, business_name: e.target.value })} /></div>
         <div><Label>Category</Label><input className={inputClass} value={(data.category as string) ?? ""} onChange={(e) => setData({ ...data, category: e.target.value })} /></div>
         <div><Label>City</Label>
