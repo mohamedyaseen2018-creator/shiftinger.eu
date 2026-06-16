@@ -20,7 +20,7 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
     supabaseAdmin
       .from("worker_profiles")
       .select(
-        "id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, atividade, bio, min_rate, looking_for, available_days, time_slots, verified, rating, rating_count, shifts_completed, avatar_url, portfolio_url, availability_visible",
+        "id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, atividade, bio, min_rate, looking_for, available_days, time_slots, verified, rating, rating_count, shifts_completed, avatar_url, portfolio_url, availability_visible, haccp_verified",
       )
       .eq("verified", true)
       .eq("availability_visible", true),
@@ -35,7 +35,21 @@ export const listVisibleWorkers = createServerFn({ method: "GET" }).handler(asyn
   // Admin/moderator accounts must never surface in the public talent listing,
   // even if they happen to carry a verified, visible worker profile.
   const adminUserIds = new Set((roleRows ?? []).map((r) => r.user_id));
-  return (profiles ?? []).filter((p) => !adminUserIds.has(p.user_id));
+  const visible = (profiles ?? []).filter((p) => !adminUserIds.has(p.user_id));
+
+  // Avatars live in a private bucket; convert stored paths to signed URLs so
+  // they render in the public talent grid without exposing the bucket.
+  const withAvatars = await Promise.all(
+    visible.map(async (p) => {
+      const raw = p.avatar_url as string | null;
+      if (!raw || /^https?:\/\//.test(raw)) return p;
+      const { data: signed } = await supabaseAdmin.storage
+        .from("avatars")
+        .createSignedUrl(raw, 60 * 60 * 24 * 7);
+      return { ...p, avatar_url: signed?.signedUrl ?? null };
+    }),
+  );
+  return withAvatars;
 });
 
 /**
