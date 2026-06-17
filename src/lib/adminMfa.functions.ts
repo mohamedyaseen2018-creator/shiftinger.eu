@@ -1,26 +1,28 @@
 // ============================================================================
-// Admin two-factor (email code) verification.
+// Admin two-factor (access code) verification.
 //
 // After an admin authenticates with their password / Google account, they must
-// confirm a 6-digit code sent to their email before the console unlocks. The
-// code and the "verified" flag live in an encrypted, http-only session cookie
-// (TanStack useSession) — no database table required.
+// confirm a 6-digit access code before the console unlocks. The "verified" flag
+// (and the per-session attempt counter used for lockout) live in an encrypted,
+// http-only session cookie (TanStack useSession) — no database table required.
+//
+// The expected code is NOT hardcoded in source. It is read from the private
+// server secret ADMIN_MFA_CODE, so it can be rotated without a code change and
+// is never exposed to the browser.
 // ============================================================================
 import { createServerFn } from "@tanstack/react-start";
 import { useSession } from "@tanstack/react-start/server";
-import { createHash, randomInt } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const CODE_TTL_MS = 10 * 60 * 1000; // code valid for 10 minutes
 const VERIFIED_TTL_MS = 8 * 60 * 60 * 1000; // re-verify every 8 hours
 const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 10 * 60 * 1000; // 10 minute lockout after too many tries
 
 interface AdminMfaSession {
-  challengeUserId?: string;
-  codeHash?: string;
-  codeExpires?: number;
   attempts?: number;
+  lockedUntil?: number;
   verifiedUserId?: string;
   verifiedAt?: number;
 }
@@ -43,9 +45,14 @@ function sessionConfig() {
   };
 }
 
-function hashCode(code: string): string {
+function hashCode(code: string): Buffer {
   const salt = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-  return createHash("sha256").update(`${salt}:${code}`).digest("hex");
+  return createHash("sha256").update(`${salt}:${code}`).digest();
+}
+
+/** Constant-time comparison of two codes (via their salted hashes). */
+function codesMatch(a: string, b: string): boolean {
+  return timingSafeEqual(hashCode(a), hashCode(b));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,14 +66,7 @@ async function assertAdmin(context: any): Promise<void> {
   if (!isAdmin) throw new Error("Not authorised. Admin access required.");
 }
 
-function maskEmail(email: string): string {
-  const [name, domain] = email.split("@");
-  if (!domain) return "your email";
-  const visible = name.slice(0, 2);
-  return `${visible}${"•".repeat(Math.max(name.length - 2, 1))}@${domain}`;
-}
-
-/** Whether the current admin has already passed email verification recently. */
+/** Whether the current admin has already passed verification recently. */
 export const getAdminMfaStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -80,40 +80,7 @@ export const getAdminMfaStatus = createServerFn({ method: "POST" })
     return { verified };
   });
 
-/** Generate a fresh code, stash its hash in the session, and email it. */
-export const requestAdminLoginCode = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context);
-
-    const email = (context.claims?.email as string | undefined) ?? "";
-    if (!email) throw new Error("No email on file for this admin account.");
-
-    const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
-
-    const session = await useSession<AdminMfaSession>(sessionConfig());
-    await session.update({
-      ...session.data,
-      challengeUserId: context.userId,
-      codeHash: hashCode(code),
-      codeExpires: Date.now() + CODE_TTL_MS,
-      attempts: 0,
-      // invalidate any previous verification while a new challenge is pending
-      verifiedUserId: undefined,
-      verifiedAt: undefined,
-    });
-
-    const { deliverEmail } = await import("@/lib/email.server");
-    const result = await deliverEmail(
-      email,
-      "Your Shiftinger admin verification code",
-      `Your admin verification code is ${code}\n\nIt expires in 10 minutes. If you did not try to sign in to the Shiftinger admin console, please secure your account immediately.`,
-    );
-
-    return { emailConfigured: result.configured, sent: result.sent, email: maskEmail(email) };
-  });
-
-/** Validate the code the admin typed. On success, mark the session verified. */
+/** Validate the access code the admin typed. On success, mark the session verified. */
 export const verifyAdminLoginCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -121,52 +88,43 @@ export const verifyAdminLoginCode = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+
+    const expected = process.env.ADMIN_MFA_CODE;
+    if (!expected || !/^\d{6}$/.test(expected)) {
+      throw new Error(
+        "Admin access code is not configured. Set the ADMIN_MFA_CODE secret to a 6-digit code.",
+      );
+    }
+
     const session = await useSession<AdminMfaSession>(sessionConfig());
     const d = session.data;
 
-    // A challenge must exist and be bound to the current admin.
-    if (!d.codeHash || d.challengeUserId !== context.userId) {
-      throw new Error("No verification code is pending. Please request a new code.");
+    // Enforce lockout window.
+    if (typeof d.lockedUntil === "number" && Date.now() < d.lockedUntil) {
+      const mins = Math.ceil((d.lockedUntil - Date.now()) / 60000);
+      throw new Error(`Too many incorrect attempts. Try again in ${mins} minute(s).`);
     }
 
-    // Enforce expiry.
-    if (typeof d.codeExpires !== "number" || Date.now() > d.codeExpires) {
-      await session.update({
-        ...d,
-        challengeUserId: undefined,
-        codeHash: undefined,
-        codeExpires: undefined,
-        attempts: 0,
-      });
-      throw new Error("This code has expired. Please request a new code.");
-    }
-
-    // Enforce lockout.
-    const attempts = d.attempts ?? 0;
-    if (attempts >= MAX_ATTEMPTS) {
-      await session.update({
-        ...d,
-        challengeUserId: undefined,
-        codeHash: undefined,
-        codeExpires: undefined,
-        attempts: 0,
-      });
-      throw new Error("Too many incorrect attempts. Please request a new code.");
-    }
-
-    // Verify the submitted code against the stored hash of the emailed code.
-    if (hashCode(data.code) !== d.codeHash) {
-      await session.update({ ...d, attempts: attempts + 1 });
+    // Validate the submitted code in constant time.
+    if (!codesMatch(data.code, expected)) {
+      const attempts = (d.attempts ?? 0) + 1;
+      if (attempts >= MAX_ATTEMPTS) {
+        await session.update({
+          ...d,
+          attempts: 0,
+          lockedUntil: Date.now() + LOCKOUT_MS,
+        });
+        throw new Error("Too many incorrect attempts. Please try again later.");
+      }
+      await session.update({ ...d, attempts });
       throw new Error("Incorrect code. Please try again.");
     }
 
     await session.update({
       verifiedUserId: context.userId,
       verifiedAt: Date.now(),
-      challengeUserId: undefined,
-      codeHash: undefined,
-      codeExpires: undefined,
       attempts: 0,
+      lockedUntil: undefined,
     });
 
     return { ok: true };
