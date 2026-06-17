@@ -122,8 +122,41 @@ export const verifyAdminLoginCode = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const session = await useSession<AdminMfaSession>(sessionConfig());
+    const d = session.data;
 
-    if (data.code !== FIXED_ADMIN_CODE) {
+    // A challenge must exist and be bound to the current admin.
+    if (!d.codeHash || d.challengeUserId !== context.userId) {
+      throw new Error("No verification code is pending. Please request a new code.");
+    }
+
+    // Enforce expiry.
+    if (typeof d.codeExpires !== "number" || Date.now() > d.codeExpires) {
+      await session.update({
+        ...d,
+        challengeUserId: undefined,
+        codeHash: undefined,
+        codeExpires: undefined,
+        attempts: 0,
+      });
+      throw new Error("This code has expired. Please request a new code.");
+    }
+
+    // Enforce lockout.
+    const attempts = d.attempts ?? 0;
+    if (attempts >= MAX_ATTEMPTS) {
+      await session.update({
+        ...d,
+        challengeUserId: undefined,
+        codeHash: undefined,
+        codeExpires: undefined,
+        attempts: 0,
+      });
+      throw new Error("Too many incorrect attempts. Please request a new code.");
+    }
+
+    // Verify the submitted code against the stored hash of the emailed code.
+    if (hashCode(data.code) !== d.codeHash) {
+      await session.update({ ...d, attempts: attempts + 1 });
       throw new Error("Incorrect code. Please try again.");
     }
 
