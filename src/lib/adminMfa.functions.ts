@@ -16,9 +16,6 @@ const CODE_TTL_MS = 10 * 60 * 1000; // code valid for 10 minutes
 const VERIFIED_TTL_MS = 8 * 60 * 60 * 1000; // re-verify every 8 hours
 const MAX_ATTEMPTS = 5;
 
-// Fixed admin verification code (per request, while email delivery is not set up).
-const FIXED_ADMIN_CODE = "191991";
-
 interface AdminMfaSession {
   challengeUserId?: string;
   codeHash?: string;
