@@ -10,10 +10,24 @@ import type { WorkerProfile } from "@/data/types";
 export const Route = createFileRoute("/talent")({
   head: () => ({
     meta: [
-      { title: "Find talent — Shiftinger" },
+      { title: "Find hospitality talent in Portugal — Shiftinger" },
       { name: "description", content: "Browse verified, skill-matched hospitality workers available for shifts across Portugal." },
-      { property: "og:title", content: "Find talent — Shiftinger" },
+      { property: "og:title", content: "Find hospitality talent in Portugal — Shiftinger" },
       { property: "og:description", content: "Verified, skill-matched workers ready for shifts across Portugal." },
+      { property: "og:url", content: "https://shiftinger.eu/talent" },
+    ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/talent" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Hospitality talent in Portugal",
+          url: "https://shiftinger.eu/talent",
+          description: "Verified, skill-matched hospitality workers available for shifts across Portugal.",
+        }),
+      },
     ],
   }),
   component: TalentPage,
