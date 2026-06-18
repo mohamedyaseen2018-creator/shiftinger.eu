@@ -107,7 +107,7 @@ function TalentPage() {
       <div className="border-b border-ink/5 bg-ink px-6 py-14 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <span className="text-xs font-semibold uppercase tracking-widest text-gold">Browse talent</span>
-          <h1 className="mt-2 font-serif text-4xl text-canvas">Available workers</h1>
+          <h1 className="mt-2 font-serif text-4xl text-canvas">Available hospitality workers in Portugal</h1>
           <p className="mt-2 text-canvas/60">Verified, skill-matched workers ready for shifts across Portugal.</p>
         </div>
       </div>
