@@ -16,7 +16,9 @@ export const Route = createFileRoute("/for-workers")({
       { name: "description", content: "Build a verified profile, apply to shifts in one tap, post your availability, and get matched with the right venues across Portugal." },
       { property: "og:title", content: "For workers — Shiftinger" },
       { property: "og:description", content: "Apply to shifts in one tap and get matched with the right venues." },
+      { property: "og:url", content: "https://shiftinger.eu/for-workers" },
     ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/for-workers" }],
   }),
   component: ForWorkersPage,
 });
