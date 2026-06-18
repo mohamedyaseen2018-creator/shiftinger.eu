@@ -1,0 +1,11 @@
+# Shiftinger
+
+> Shiftinger connects hospitality workers with restaurants, cafés and event venues across Portugal. Workers find flexible shifts and post availability; businesses hire verified, skill-matched talent — privately.
+
+## Pages
+
+- [Home](/): Overview of flexible hospitality work and hiring in Portugal.
+- [Jobs](/jobs): Browse the latest hospitality shifts and part-time roles across Portugal.
+- [Talent](/talent): Browse verified, skill-matched hospitality workers available for shifts.
+- [For businesses](/for-businesses): How venues post shifts and hire confirmed workers fast.
+- [For workers](/for-workers): How workers build a profile, apply in one tap, and get matched.

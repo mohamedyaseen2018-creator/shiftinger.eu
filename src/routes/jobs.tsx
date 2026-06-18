@@ -16,10 +16,24 @@ import type { Job } from "@/data/types";
 export const Route = createFileRoute("/jobs")({
   head: () => ({
     meta: [
-      { title: "Jobs available — Shiftinger" },
+      { title: "Hospitality jobs in Portugal — Shiftinger" },
       { name: "description", content: "Browse the latest hospitality shifts and part-time roles across Portugal on Shiftinger." },
-      { property: "og:title", content: "Jobs available — Shiftinger" },
-      { property: "og:description", content: "Find your next shift across Portugal." },
+      { property: "og:title", content: "Hospitality jobs in Portugal — Shiftinger" },
+      { property: "og:description", content: "Find your next hospitality shift across Portugal." },
+      { property: "og:url", content: "https://shiftinger.eu/jobs" },
+    ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/jobs" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Hospitality jobs in Portugal",
+          url: "https://shiftinger.eu/jobs",
+          description: "Latest hospitality shifts and part-time roles across Portugal.",
+        }),
+      },
     ],
   }),
   component: JobsPage,
@@ -186,7 +200,7 @@ function JobsPage() {
       <div className="border-b border-ink/5 bg-ink px-6 py-14 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <span className="text-xs font-semibold uppercase tracking-widest text-gold">Browse shifts</span>
-          <h1 className="mt-2 font-serif text-4xl text-canvas">Jobs available now</h1>
+          <h1 className="mt-2 font-serif text-4xl text-canvas">Hospitality jobs in Portugal</h1>
           <p className="mt-2 text-canvas/60">Find your next shift across Portugal.</p>
         </div>
       </div>

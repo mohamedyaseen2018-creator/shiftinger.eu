@@ -17,7 +17,9 @@ export const Route = createFileRoute("/for-businesses")({
       { name: "description", content: "Post a shift tonight and have a verified, skill-matched worker confirmed by morning. No agencies, no placement fees." },
       { property: "og:title", content: "For businesses — Shiftinger" },
       { property: "og:description", content: "Post a shift tonight. Have someone confirmed by morning." },
+      { property: "og:url", content: "https://shiftinger.eu/for-businesses" },
     ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/for-businesses" }],
   }),
   component: ForBusinessesPage,
 });
