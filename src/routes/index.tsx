@@ -17,12 +17,27 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Shiftinger connects workers with restaurants, cafés and event businesses across Portugal. Find shifts, post availability, and hire verified, skill-matched talent — privately.",
+          "Connect with restaurants, cafés and event venues across Portugal. Find hospitality shifts, post availability, and hire verified, skill-matched talent — privately.",
       },
       { property: "og:title", content: "Shiftinger — Flexible hospitality work in Portugal" },
       {
         property: "og:description",
         content: "Find shifts. Find talent. Build your income. Privacy-first flexible work across Portugal.",
+      },
+      { property: "og:url", content: "https://shiftinger.eu/" },
+    ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Shiftinger",
+          url: "https://shiftinger.eu",
+          description:
+            "Flexible hospitality work in Portugal — find shifts, post availability, and hire verified talent.",
+        }),
       },
     ],
   }),
