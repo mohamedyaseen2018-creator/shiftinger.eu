@@ -1132,33 +1132,6 @@ export type Database = {
       }
     }
     Views: {
-      applicant_worker_profiles: {
-        Row: {
-          avatar_url: string | null
-          main_role: string | null
-          name: string | null
-          rating: number | null
-          user_id: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          main_role?: string | null
-          name?: string | null
-          rating?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          avatar_url?: string | null
-          main_role?: string | null
-          name?: string | null
-          rating?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
       business_profiles_public: {
         Row: {
           area: string | null
@@ -1308,6 +1281,17 @@ export type Database = {
       }
       confirm_application: { Args: { _app_id: string }; Returns: string }
       end_job: { Args: { _conversation_id: string }; Returns: undefined }
+      get_applicant_worker_profiles: {
+        Args: { _worker_ids: string[] }
+        Returns: {
+          avatar_url: string
+          main_role: string
+          name: string
+          rating: number
+          user_id: string
+          verified: boolean
+        }[]
+      }
       has_pending_review: { Args: { _user: string }; Returns: boolean }
       has_role: {
         Args: {
