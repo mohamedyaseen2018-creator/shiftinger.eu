@@ -153,7 +153,7 @@ function HomePage() {
                 <div className="overflow-hidden rounded-2xl ring-1 ring-ink/5">
                   <img
                     src={cafeHero}
-                    alt="Sunlit minimalist Lisbon café interior"
+                    alt="Inside a sunlit minimalist Lisbon café showcasing a hospitality work environment"
                     width={600}
                     height={800}
                     className="aspect-[3/4] w-full object-cover"
