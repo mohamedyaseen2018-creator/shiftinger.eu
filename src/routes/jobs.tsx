@@ -200,7 +200,7 @@ function JobsPage() {
       <div className="border-b border-ink/5 bg-ink px-6 py-14 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <span className="text-xs font-semibold uppercase tracking-widest text-gold">Browse shifts</span>
-          <h1 className="mt-2 font-serif text-4xl text-canvas">Jobs available now</h1>
+          <h1 className="mt-2 font-serif text-4xl text-canvas">Hospitality jobs in Portugal</h1>
           <p className="mt-2 text-canvas/60">Find your next shift across Portugal.</p>
         </div>
       </div>
