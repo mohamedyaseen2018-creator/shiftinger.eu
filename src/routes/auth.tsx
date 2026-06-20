@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Briefcase, Store, Mail, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
+import { Briefcase, Store, Mail, ArrowRight, ShieldCheck, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
-import { signInSchema, signUpSchema } from "@/lib/validation";
+import { signInSchema, signUpSchema, checkPasswordRequirements } from "@/lib/validation";
 import type { AccountType } from "@/data/types";
 import Logo from "@/components/brand/Logo";
 
