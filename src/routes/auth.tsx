@@ -36,6 +36,9 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const passwordRequirements = checkPasswordRequirements(password);
 
   // Redirect already-authenticated users onward based on profile status.
   useEffect(() => {
