@@ -272,10 +272,36 @@ function AuthPage() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
                   placeholder="••••••••"
+                  aria-invalid={passwordError ? true : undefined}
                   className={inputClass}
                 />
+                {passwordError && (
+                  <p className="mt-1.5 text-xs text-red-600">{passwordError}</p>
+                )}
+                {tab === "signup" && password.length > 0 && (
+                  <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+                    {passwordRequirements.map((req) => (
+                      <li
+                        key={req.label}
+                        className={`flex items-center gap-1.5 text-xs ${
+                          req.met ? "text-teal" : "text-ink/45"
+                        }`}
+                      >
+                        {req.met ? (
+                          <Check size={12} strokeWidth={3} className="flex-shrink-0" />
+                        ) : (
+                          <X size={12} strokeWidth={3} className="flex-shrink-0" />
+                        )}
+                        <span>{req.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Field>
               <button
                 type="submit"
