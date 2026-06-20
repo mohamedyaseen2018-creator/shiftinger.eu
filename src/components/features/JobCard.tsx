@@ -59,7 +59,7 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
               <span>{job.businessCategory}</span>
               <span className="text-ink/20">·</span>
               <span className="inline-flex items-center gap-1 rounded bg-ink/5 px-1.5 py-0.5">
-                <Lock size={9} /> {job.area || "—"}
+                <Lock size={9} /> {[job.area, job.city].filter(Boolean).join(", ") || "—"}
               </span>
             </p>
           </div>
