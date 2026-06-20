@@ -103,8 +103,16 @@ function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
     const parsed = signUpSchema.safeParse({ email, password, fullName, accountType });
     if (!parsed.success) {
+      // Surface password-rule failures inline under the field; other field
+      // problems (name/email) stay as a toast.
+      const pwIssue = parsed.error.errors.find((err) => err.path[0] === "password");
+      if (pwIssue) {
+        setPasswordError(pwIssue.message);
+        return;
+      }
       toast.error(parsed.error.errors[0].message);
       return;
     }
@@ -122,7 +130,22 @@ function AuthPage() {
     });
     setBusy(false);
     if (error) {
-      // Avoid user enumeration: never reveal whether an email is already registered.
+      // Weak/leaked-password failures are predictable validation errors —
+      // show the real reason inline under the password field.
+      const code = (error as { code?: string }).code;
+      const msg = error.message ?? "";
+      const isWeakPassword =
+        code === "weak_password" ||
+        error.status === 422 ||
+        /password/i.test(msg);
+      if (isWeakPassword) {
+        setPasswordError(
+          msg ||
+            "Password is too weak. Use at least 8 characters with upper- and lowercase letters and a number.",
+        );
+        return;
+      }
+      // Unexpected errors only: avoid user enumeration and point to support.
       toast.error("Sign-up failed. Please try again or contact support.");
       return;
     }
@@ -130,6 +153,7 @@ function AuthPage() {
     // was already registered, so membership cannot be probed from the UI.
     setEmailSent(true);
   };
+
 
   if (emailSent) {
     return (
