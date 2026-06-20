@@ -108,6 +108,17 @@ const STATS = [
 
 function ForBusinessesPage() {
   const { c } = useSiteContent();
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  // This page is for anonymous visitors and business-role users. Workers who
+  // land here directly are sent to their dashboard.
+  useEffect(() => {
+    if (profile?.account_type === "worker") navigate({ to: "/dashboard" });
+  }, [profile, navigate]);
+
+  if (profile?.account_type === "worker") return null;
+
   return (
     <SiteLayout>
       {/* Hero */}
