@@ -75,7 +75,10 @@ export default function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-canvas/10 pt-8 sm:flex-row">
           <p className="text-xs text-canvas/40">{c("footer.copyright")}</p>
           <div className="flex items-center gap-6">
-            {["Privacy policy", "Terms of service", "Cookies"].map((item) => (
+            <Link to="/trust" className="text-xs text-canvas/40 transition-colors hover:text-canvas/70">
+              Trust &amp; privacy
+            </Link>
+            {["Terms of service", "Cookies"].map((item) => (
               <span key={item} className="cursor-pointer text-xs text-canvas/40 transition-colors hover:text-canvas/70">
                 {item}
               </span>
