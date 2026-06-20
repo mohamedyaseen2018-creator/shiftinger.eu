@@ -15,13 +15,16 @@ function Wordmark({ className = "" }: { className?: string }) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, profile } = useAuth();
   const { c } = useSiteContent();
+  // Workers shouldn't see the business marketing page; it's for anonymous
+  // visitors and business-role users only.
+  const isWorker = profile?.account_type === "worker";
   const navLinks = [
     { label: c("header.nav_jobs"), to: "/jobs" as const },
     { label: c("header.nav_talent"), to: "/talent" as const },
     { label: "For workers", to: "/for-workers" as const },
-    { label: c("header.nav_business"), to: "/for-businesses" as const },
+    ...(!isWorker ? [{ label: c("header.nav_business"), to: "/for-businesses" as const }] : []),
   ];
 
   return (

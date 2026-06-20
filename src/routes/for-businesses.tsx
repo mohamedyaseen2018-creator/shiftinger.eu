@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { CheckCircle, ArrowRight, Shield, Clock, MessageCircle, Star, Zap } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { useAuth } from "@/lib/auth";
 import { HowItWorks, PricingTeaser, type JourneyStep } from "@/components/site/JourneySections";
 import stepSignup from "@/assets/step-signup.jpg";
 import stepProfile from "@/assets/step-profile.jpg";
@@ -108,6 +110,17 @@ const STATS = [
 
 function ForBusinessesPage() {
   const { c } = useSiteContent();
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  // This page is for anonymous visitors and business-role users. Workers who
+  // land here directly are sent to their dashboard.
+  useEffect(() => {
+    if (profile?.account_type === "worker") navigate({ to: "/dashboard" });
+  }, [profile, navigate]);
+
+  if (profile?.account_type === "worker") return null;
+
   return (
     <SiteLayout>
       {/* Hero */}

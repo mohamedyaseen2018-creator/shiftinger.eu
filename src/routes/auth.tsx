@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Briefcase, Store, Mail, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
+import { Briefcase, Store, Mail, ArrowRight, ShieldCheck, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
-import { signInSchema, signUpSchema } from "@/lib/validation";
+import { signInSchema, signUpSchema, checkPasswordRequirements } from "@/lib/validation";
 import type { AccountType } from "@/data/types";
 import Logo from "@/components/brand/Logo";
 
@@ -36,6 +36,9 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const passwordRequirements = checkPasswordRequirements(password);
 
   // Redirect already-authenticated users onward based on profile status.
   useEffect(() => {
@@ -100,8 +103,16 @@ function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
     const parsed = signUpSchema.safeParse({ email, password, fullName, accountType });
     if (!parsed.success) {
+      // Surface password-rule failures inline under the field; other field
+      // problems (name/email) stay as a toast.
+      const pwIssue = parsed.error.errors.find((err) => err.path[0] === "password");
+      if (pwIssue) {
+        setPasswordError(pwIssue.message);
+        return;
+      }
       toast.error(parsed.error.errors[0].message);
       return;
     }
@@ -119,7 +130,22 @@ function AuthPage() {
     });
     setBusy(false);
     if (error) {
-      // Avoid user enumeration: never reveal whether an email is already registered.
+      // Weak/leaked-password failures are predictable validation errors —
+      // show the real reason inline under the password field.
+      const code = (error as { code?: string }).code;
+      const msg = error.message ?? "";
+      const isWeakPassword =
+        code === "weak_password" ||
+        error.status === 422 ||
+        /password/i.test(msg);
+      if (isWeakPassword) {
+        setPasswordError(
+          msg ||
+            "Password is too weak. Use at least 8 characters with upper- and lowercase letters and a number.",
+        );
+        return;
+      }
+      // Unexpected errors only: avoid user enumeration and point to support.
       toast.error("Sign-up failed. Please try again or contact support.");
       return;
     }
@@ -127,6 +153,7 @@ function AuthPage() {
     // was already registered, so membership cannot be probed from the UI.
     setEmailSent(true);
   };
+
 
   if (emailSent) {
     return (
@@ -245,10 +272,36 @@ function AuthPage() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
                   placeholder="••••••••"
+                  aria-invalid={passwordError ? true : undefined}
                   className={inputClass}
                 />
+                {passwordError && (
+                  <p className="mt-1.5 text-xs text-red-600">{passwordError}</p>
+                )}
+                {tab === "signup" && password.length > 0 && (
+                  <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+                    {passwordRequirements.map((req) => (
+                      <li
+                        key={req.label}
+                        className={`flex items-center gap-1.5 text-xs ${
+                          req.met ? "text-teal" : "text-ink/45"
+                        }`}
+                      >
+                        {req.met ? (
+                          <Check size={12} strokeWidth={3} className="flex-shrink-0" />
+                        ) : (
+                          <X size={12} strokeWidth={3} className="flex-shrink-0" />
+                        )}
+                        <span>{req.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Field>
               <button
                 type="submit"
