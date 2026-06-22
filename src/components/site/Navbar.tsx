@@ -132,6 +132,16 @@ export default function Navbar() {
                     Admin
                   </Link>
                 )}
+                {profile?.account_type === "business" && (
+                  <Link
+                    to="/post-job"
+                    className="rounded-full px-5 py-2 text-center text-sm font-medium text-canvas"
+                    style={{ backgroundColor: "#1D9E75" }}
+                    onClick={() => setOpen(false)}
+                  >
+                    Post Shift
+                  </Link>
+                )}
                 <Link
                   to="/dashboard"
                   className="rounded-full bg-teal px-5 py-2 text-center text-sm font-medium text-canvas"
