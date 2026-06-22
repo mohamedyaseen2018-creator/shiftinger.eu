@@ -53,10 +53,22 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
 
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-white p-5 ring-1 ring-ink/5 transition-shadow hover:shadow-sm">
+      {filled && (
+        <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700 ring-1 ring-green-200">
+          <BadgeCheck size={14} /> Successfully Matched
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg bg-teal/5 text-teal">
-            <Icon size={20} />
+          <div className="relative flex size-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-teal/5 text-teal">
+            {avatar ? (
+              <>
+                <img src={avatar} alt={job.businessName} className="absolute inset-0 size-full object-cover" style={{ filter: "blur(3px)" }} />
+                <Icon size={20} className="relative text-canvas drop-shadow" />
+              </>
+            ) : (
+              <Icon size={20} />
+            )}
           </div>
           <div>
             <h3 className="text-base font-medium leading-tight text-ink">{job.role}</h3>
