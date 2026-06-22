@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import NotificationBell from "@/components/site/NotificationBell";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
