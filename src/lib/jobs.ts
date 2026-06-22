@@ -78,6 +78,7 @@ export function toJob(row: JobRow, biz?: BusinessLite): Job {
     applicants: 0,
     placeRating: biz?.rating ?? null,
     placeRatingCount: biz?.rating_count ?? 0,
+    businessAvatarUrl: biz?.avatar_url ?? null,
   };
 }
 
