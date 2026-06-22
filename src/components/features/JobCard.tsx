@@ -121,11 +121,22 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
 
       {!compact && job.languages.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {job.languages.map((lang) => (
-            <span key={lang} className="flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/60">
-              <span>{LANGUAGE_FLAGS[lang] ?? "🌐"}</span> {lang}
-            </span>
-          ))}
+          {job.languages.map((lang) => {
+            // Per-language match: only colour when we know the worker's languages.
+            const known = workerLanguages !== undefined;
+            const has = known && workerLanguages!.some((l) => l.toLowerCase() === lang.toLowerCase());
+            const cls = !known
+              ? "bg-ink/5 text-ink/60"
+              : has
+                ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                : "bg-red-50 text-red-600 ring-1 ring-red-200";
+            return (
+              <span key={lang} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${cls}`}>
+                <span>{LANGUAGE_FLAGS[lang] ?? "🌐"}</span> {lang}
+                {known && (has ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={3} />)}
+              </span>
+            );
+          })}
         </div>
       )}
 
