@@ -92,11 +92,22 @@ export async function fetchOpenJobs(): Promise<{ jobs: JobRow[]; businesses: Rec
   const ownerIds = [...new Set(rows.map((j) => j.owner_id))];
   const businesses: Record<string, BusinessLite> = {};
   if (ownerIds.length) {
-    const { data: bps } = await supabase
-      .from("business_profiles_public")
-      .select("user_id, business_name, category, city, area, rating, rating_count, is_early_bird")
-      .in("user_id", ownerIds);
-    (bps ?? []).forEach((b) => (businesses[(b as BusinessLite).user_id] = b as BusinessLite));
+    const { data: bps } = await supabase.rpc("get_public_business_profiles", {
+      _user_ids: ownerIds,
+    });
+    (bps ?? []).forEach((b) => {
+      const row = b as BusinessLite;
+      businesses[row.user_id] = {
+        user_id: row.user_id,
+        business_name: row.business_name,
+        category: row.category,
+        city: row.city,
+        area: row.area,
+        rating: row.rating,
+        rating_count: row.rating_count,
+        is_early_bird: row.is_early_bird,
+      };
+    });
   }
   return { jobs: rows, businesses };
 }
