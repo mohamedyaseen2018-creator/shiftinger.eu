@@ -1132,72 +1132,6 @@ export type Database = {
       }
     }
     Views: {
-      business_profiles_public: {
-        Row: {
-          area: string | null
-          avatar_url: string | null
-          business_name: string | null
-          categories: Json | null
-          category: string | null
-          city: string | null
-          created_at: string | null
-          description: string | null
-          display_initials: string | null
-          id: string | null
-          is_early_bird: boolean | null
-          languages_required: Json | null
-          preferred_roles: Json | null
-          rating: number | null
-          rating_count: number | null
-          sub_sector: string | null
-          updated_at: string | null
-          user_id: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          area?: string | null
-          avatar_url?: string | null
-          business_name?: string | null
-          categories?: Json | null
-          category?: string | null
-          city?: string | null
-          created_at?: string | null
-          description?: string | null
-          display_initials?: string | null
-          id?: string | null
-          is_early_bird?: boolean | null
-          languages_required?: Json | null
-          preferred_roles?: Json | null
-          rating?: number | null
-          rating_count?: number | null
-          sub_sector?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          area?: string | null
-          avatar_url?: string | null
-          business_name?: string | null
-          categories?: Json | null
-          category?: string | null
-          city?: string | null
-          created_at?: string | null
-          description?: string | null
-          display_initials?: string | null
-          id?: string | null
-          is_early_bird?: boolean | null
-          languages_required?: Json | null
-          preferred_roles?: Json | null
-          rating?: number | null
-          rating_count?: number | null
-          sub_sector?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
       worker_profiles_public: {
         Row: {
           atividade: boolean | null
@@ -1288,6 +1222,30 @@ export type Database = {
           main_role: string
           name: string
           rating: number
+          user_id: string
+          verified: boolean
+        }[]
+      }
+      get_public_business_profiles: {
+        Args: { _user_ids?: string[] }
+        Returns: {
+          area: string
+          avatar_url: string
+          business_name: string
+          categories: Json
+          category: string
+          city: string
+          created_at: string
+          description: string
+          display_initials: string
+          id: string
+          is_early_bird: boolean
+          languages_required: Json
+          preferred_roles: Json
+          rating: number
+          rating_count: number
+          sub_sector: string
+          updated_at: string
           user_id: string
           verified: boolean
         }[]
