@@ -1,4 +1,4 @@
-import { Lock, Clock, Users, Check, X } from "lucide-react";
+import { Lock, Clock, Users, Check, X, BadgeCheck } from "lucide-react";
 import type { Job, MatchCriterion } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { matchColor } from "@/lib/matching";
@@ -11,11 +11,16 @@ interface JobCardProps {
   applied?: boolean;
   onApply?: (jobId: string) => void;
   compact?: boolean;
+  /** Worker's own languages — enables per-language match colouring. */
+  workerLanguages?: string[];
 }
 
-export default function JobCard({ job, matchScore, matchCriteria, applied, onApply, compact }: JobCardProps) {
+export default function JobCard({ job, matchScore, matchCriteria, applied, onApply, compact, workerLanguages }: JobCardProps) {
   const Icon = roleIcon(job.role);
   const { user, profile, isAdmin } = useAuth();
+  const avatar = job.businessAvatarUrl && /^https?:\/\//.test(job.businessAvatarUrl) ? job.businessAvatarUrl : null;
+  // A single-spot shift with no spots left is filled / successfully matched.
+  const filled = job.status !== "open" || job.spotsRemaining <= 0;
   const totalHours =
     job.startTime && job.endTime
       ? (() => {
@@ -34,7 +39,7 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
       user?.id === job.businessId ? (
         <span className="rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/40">Posted by you</span>
       ) : null;
-  } else if (onApply) {
+  } else if (onApply && !filled) {
     action = (
       <button
         onClick={() => onApply(job.id)}
