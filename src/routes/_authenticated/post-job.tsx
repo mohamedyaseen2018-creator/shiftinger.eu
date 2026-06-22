@@ -141,8 +141,8 @@ function PostJobPage() {
             {form.type === "single" ? (
               <div className="grid gap-5 sm:grid-cols-3">
                 <div><Label>Date</Label><input type="date" className={inputClass} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                <div><Label>Start</Label><input type="time" className={inputClass} value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} /></div>
-                <div><Label>End</Label><input type="time" className={inputClass} value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} /></div>
+                <div><Label>Start</Label><TimeSelect value={form.startTime} onChange={(v) => setForm({ ...form, startTime: v })} /></div>
+                <div><Label>End</Label><TimeSelect value={form.endTime} onChange={(v) => setForm({ ...form, endTime: v })} /></div>
               </div>
             ) : (
               <>
