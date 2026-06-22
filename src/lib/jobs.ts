@@ -10,6 +10,7 @@ interface BusinessLite {
   rating: number;
   rating_count: number;
   is_early_bird: boolean;
+  avatar_url: string | null;
 }
 
 export interface JobRow {
