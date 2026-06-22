@@ -160,8 +160,8 @@ function PostJobPage() {
                   </div>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <div><Label>Start time</Label><input type="time" className={inputClass} value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} /></div>
-                  <div><Label>End time</Label><input type="time" className={inputClass} value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} /></div>
+                  <div><Label>Start time</Label><TimeSelect value={form.startTime} onChange={(v) => setForm({ ...form, startTime: v })} /></div>
+                  <div><Label>End time</Label><TimeSelect value={form.endTime} onChange={(v) => setForm({ ...form, endTime: v })} /></div>
                 </div>
               </>
             )}
