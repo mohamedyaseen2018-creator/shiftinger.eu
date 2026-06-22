@@ -108,6 +108,7 @@ export async function fetchOpenJobs(): Promise<{ jobs: JobRow[]; businesses: Rec
         rating: row.rating,
         rating_count: row.rating_count,
         is_early_bird: row.is_early_bird,
+        avatar_url: row.avatar_url ?? null,
       };
     });
   }
