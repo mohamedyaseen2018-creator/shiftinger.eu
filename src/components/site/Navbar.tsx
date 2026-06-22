@@ -61,6 +61,16 @@ export default function Navbar() {
                   Admin
                 </Link>
               )}
+              {profile?.account_type === "business" && (
+                <Link
+                  to="/post-job"
+                  className="rounded-full px-5 py-2 text-sm font-medium text-canvas transition-colors hover:opacity-90"
+                  style={{ backgroundColor: "#1D9E75" }}
+                >
+                  Post Shift
+                </Link>
+              )}
+              <NotificationBell />
               <Link
                 to="/dashboard"
                 className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
