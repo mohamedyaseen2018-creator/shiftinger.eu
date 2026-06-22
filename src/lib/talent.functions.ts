@@ -193,6 +193,8 @@ export const getWorkerPublicDetails = createServerFn({ method: "POST" })
       ? await supabaseAdmin.from("business_profiles").select("user_id, business_name").in("user_id", bizIds)
       : { data: [] as { user_id: string; business_name: string | null }[] };
     const bizName = new Map((bps ?? []).map((b) => [b.user_id as string, maskName((b.business_name as string) || "Business")]));
+    // Reviews show the FULL business name (not masked) next to each rating.
+    const bizNameFull = new Map((bps ?? []).map((b) => [b.user_id as string, (b.business_name as string) || "Business"]));
 
     const history = (apps ?? []).map((a) => {
       const j = jobById.get(a.job_id as string);
@@ -212,7 +214,7 @@ export const getWorkerPublicDetails = createServerFn({ method: "POST" })
     });
 
     const reviewRows = (reviews ?? []).map((r) => ({
-      business: bizName.get(r.reviewer_id as string) ?? "B.",
+      business: bizNameFull.get(r.reviewer_id as string) ?? "Business",
       rating: Number(r.rating) || 0,
       comment: (r.comment as string) ?? "",
       date: r.created_at as string,
