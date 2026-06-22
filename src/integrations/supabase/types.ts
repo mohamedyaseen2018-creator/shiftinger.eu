@@ -83,12 +83,14 @@ export type Database = {
       applications: {
         Row: {
           business_confirmed: boolean
+          confirmation_message: string | null
           created_at: string
           id: string
           job_id: string
           match_score: number
           matched_criteria: Json
           message: string | null
+          offer_type: string
           owner_id: string
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
@@ -97,12 +99,14 @@ export type Database = {
         }
         Insert: {
           business_confirmed?: boolean
+          confirmation_message?: string | null
           created_at?: string
           id?: string
           job_id: string
           match_score?: number
           matched_criteria?: Json
           message?: string | null
+          offer_type?: string
           owner_id: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -111,12 +115,14 @@ export type Database = {
         }
         Update: {
           business_confirmed?: boolean
+          confirmation_message?: string | null
           created_at?: string
           id?: string
           job_id?: string
           match_score?: number
           matched_criteria?: Json
           message?: string | null
+          offer_type?: string
           owner_id?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -741,6 +747,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_config: {
         Row: {
           cities: string[]
@@ -1213,7 +1255,25 @@ export type Database = {
         Args: { _email: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
-      confirm_application: { Args: { _app_id: string }; Returns: string }
+      confirm_application: {
+        Args: { _app_id: string; _message?: string }
+        Returns: string
+      }
+      create_private_offer: {
+        Args: {
+          _date: string
+          _end: string
+          _rate: number
+          _role: string
+          _start: string
+          _worker_id: string
+        }
+        Returns: string
+      }
+      create_shift_offer: {
+        Args: { _job_id: string; _worker_id: string }
+        Returns: string
+      }
       end_job: { Args: { _conversation_id: string }; Returns: undefined }
       get_applicant_worker_profiles: {
         Args: { _worker_ids: string[] }
@@ -1248,6 +1308,17 @@ export type Database = {
           updated_at: string
           user_id: string
           verified: boolean
+        }[]
+      }
+      get_public_reviews: {
+        Args: { _reviewee_id: string }
+        Returns: {
+          comment: string
+          created_at: string
+          id: string
+          rating: number
+          reviewer_name: string
+          reviewer_type: string
         }[]
       }
       has_pending_review: { Args: { _user: string }; Returns: boolean }
@@ -1285,7 +1356,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       conversation_status: "open" | "agreed" | "completed" | "closed"
-      job_status: "open" | "closed" | "filled"
+      job_status: "open" | "closed" | "filled" | "private_offer"
       job_type: "single" | "parttime"
       profile_status:
         | "incomplete"
@@ -1432,7 +1503,7 @@ export const Constants = {
         "cancelled",
       ],
       conversation_status: ["open", "agreed", "completed", "closed"],
-      job_status: ["open", "closed", "filled"],
+      job_status: ["open", "closed", "filled", "private_offer"],
       job_type: ["single", "parttime"],
       profile_status: [
         "incomplete",

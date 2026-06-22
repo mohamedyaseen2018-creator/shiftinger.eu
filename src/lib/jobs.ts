@@ -10,6 +10,7 @@ interface BusinessLite {
   rating: number;
   rating_count: number;
   is_early_bird: boolean;
+  avatar_url: string | null;
 }
 
 export interface JobRow {
@@ -77,6 +78,7 @@ export function toJob(row: JobRow, biz?: BusinessLite): Job {
     applicants: 0,
     placeRating: biz?.rating ?? null,
     placeRatingCount: biz?.rating_count ?? 0,
+    businessAvatarUrl: biz?.avatar_url ?? null,
   };
 }
 
@@ -106,6 +108,7 @@ export async function fetchOpenJobs(): Promise<{ jobs: JobRow[]; businesses: Rec
         rating: row.rating,
         rating_count: row.rating_count,
         is_early_bird: row.is_early_bird,
+        avatar_url: row.avatar_url ?? null,
       };
     });
   }

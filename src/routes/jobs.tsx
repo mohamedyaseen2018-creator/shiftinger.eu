@@ -250,6 +250,15 @@ function JobsPage() {
                 job={job}
                 matchScore={worker ? match?.score : undefined}
                 matchCriteria={worker ? match?.criteria : undefined}
+                workerLanguages={
+                  worker
+                    ? (Array.isArray(worker.languages) ? worker.languages : [])
+                        .map((l) =>
+                          typeof l === "string" ? l : l && typeof l === "object" && "language" in l ? String((l as { language: unknown }).language) : "",
+                        )
+                        .filter(Boolean)
+                    : undefined
+                }
                 applied={appliedIds.has(job.id)}
                 onApply={openApply}
               />

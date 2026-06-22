@@ -68,6 +68,15 @@ export default function Footer() {
               <MessageCircle size={16} />
               {c("footer.contact_cta")}
             </a>
+            <a
+              href="https://chat.whatsapp.com/E8Ovtrle2bs7AqQ1F4LdNq?s=sh&p=i&mlu=4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium text-canvas ring-1 ring-canvas/20 transition-colors hover:bg-canvas/5"
+            >
+              <MessageCircle size={16} />
+              Join our Community
+            </a>
             <p className="mt-3 text-xs leading-relaxed text-canvas/50">{c("footer.contact_hours")}</p>
           </div>
         </div>

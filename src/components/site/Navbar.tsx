@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import NotificationBell from "@/components/site/NotificationBell";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
@@ -60,6 +61,16 @@ export default function Navbar() {
                   Admin
                 </Link>
               )}
+              {profile?.account_type === "business" && (
+                <Link
+                  to="/post-job"
+                  className="rounded-full px-5 py-2 text-sm font-medium text-canvas transition-colors hover:opacity-90"
+                  style={{ backgroundColor: "#1D9E75" }}
+                >
+                  Post Shift
+                </Link>
+              )}
+              <NotificationBell />
               <Link
                 to="/dashboard"
                 className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
@@ -119,6 +130,16 @@ export default function Navbar() {
                     onClick={() => setOpen(false)}
                   >
                     Admin
+                  </Link>
+                )}
+                {profile?.account_type === "business" && (
+                  <Link
+                    to="/post-job"
+                    className="rounded-full px-5 py-2 text-center text-sm font-medium text-canvas"
+                    style={{ backgroundColor: "#1D9E75" }}
+                    onClick={() => setOpen(false)}
+                  >
+                    Post Shift
                   </Link>
                 )}
                 <Link

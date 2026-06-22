@@ -1,4 +1,4 @@
-import { Lock, Clock, Users, Check, X } from "lucide-react";
+import { Lock, Clock, Users, Check, X, BadgeCheck } from "lucide-react";
 import type { Job, MatchCriterion } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { matchColor } from "@/lib/matching";
@@ -11,11 +11,16 @@ interface JobCardProps {
   applied?: boolean;
   onApply?: (jobId: string) => void;
   compact?: boolean;
+  /** Worker's own languages — enables per-language match colouring. */
+  workerLanguages?: string[];
 }
 
-export default function JobCard({ job, matchScore, matchCriteria, applied, onApply, compact }: JobCardProps) {
+export default function JobCard({ job, matchScore, matchCriteria, applied, onApply, compact, workerLanguages }: JobCardProps) {
   const Icon = roleIcon(job.role);
   const { user, profile, isAdmin } = useAuth();
+  const avatar = job.businessAvatarUrl && /^https?:\/\//.test(job.businessAvatarUrl) ? job.businessAvatarUrl : null;
+  // A single-spot shift with no spots left is filled / successfully matched.
+  const filled = job.status !== "open" || job.spotsRemaining <= 0;
   const totalHours =
     job.startTime && job.endTime
       ? (() => {
@@ -34,7 +39,7 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
       user?.id === job.businessId ? (
         <span className="rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/40">Posted by you</span>
       ) : null;
-  } else if (onApply) {
+  } else if (onApply && !filled) {
     action = (
       <button
         onClick={() => onApply(job.id)}
@@ -48,10 +53,22 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
 
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-white p-5 ring-1 ring-ink/5 transition-shadow hover:shadow-sm">
+      {filled && (
+        <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700 ring-1 ring-green-200">
+          <BadgeCheck size={14} /> Successfully Matched
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg bg-teal/5 text-teal">
-            <Icon size={20} />
+          <div className="relative flex size-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-teal/5 text-teal">
+            {avatar ? (
+              <>
+                <img src={avatar} alt={job.businessName} className="absolute inset-0 size-full object-cover" style={{ filter: "blur(3px)" }} />
+                <Icon size={20} className="relative text-canvas drop-shadow" />
+              </>
+            ) : (
+              <Icon size={20} />
+            )}
           </div>
           <div>
             <h3 className="text-base font-medium leading-tight text-ink">{job.role}</h3>
@@ -104,11 +121,22 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
 
       {!compact && job.languages.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {job.languages.map((lang) => (
-            <span key={lang} className="flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/60">
-              <span>{LANGUAGE_FLAGS[lang] ?? "🌐"}</span> {lang}
-            </span>
-          ))}
+          {job.languages.map((lang) => {
+            // Per-language match: only colour when we know the worker's languages.
+            const known = workerLanguages !== undefined;
+            const has = known && workerLanguages!.some((l) => l.toLowerCase() === lang.toLowerCase());
+            const cls = !known
+              ? "bg-ink/5 text-ink/60"
+              : has
+                ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                : "bg-red-50 text-red-600 ring-1 ring-red-200";
+            return (
+              <span key={lang} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${cls}`}>
+                <span>{LANGUAGE_FLAGS[lang] ?? "🌐"}</span> {lang}
+                {known && (has ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={3} />)}
+              </span>
+            );
+          })}
         </div>
       )}
 
