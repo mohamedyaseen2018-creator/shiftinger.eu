@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Loader2, Star, FileText, MapPin, Languages, Rocket, Clock, Briefcase, CheckCircle } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import type { WorkerProfile } from "@/data/types";
 import { getWorkerPublicDetails } from "@/lib/talent.functions";
+import { useAuth } from "@/lib/auth";
 import HaccpBadge from "@/components/features/HaccpBadge";
+import ShiftOfferModal from "@/components/features/ShiftOfferModal";
 import {
   getInitials,
   roleIcon,
