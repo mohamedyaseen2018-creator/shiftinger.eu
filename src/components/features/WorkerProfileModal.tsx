@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Loader2, Star, FileText, MapPin, Languages, Rocket, Clock, Briefcase, CheckCircle } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import type { WorkerProfile } from "@/data/types";
 import { getWorkerPublicDetails } from "@/lib/talent.functions";
+import { useAuth } from "@/lib/auth";
 import HaccpBadge from "@/components/features/HaccpBadge";
+import ShiftOfferModal from "@/components/features/ShiftOfferModal";
 import {
   getInitials,
   roleIcon,
@@ -53,7 +54,9 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const navigate = useNavigate();
+  const [offerOpen, setOfferOpen] = useState(false);
+  const { user, profile, isAdmin } = useAuth();
+  const canOffer = !!user && (profile?.account_type === "business" || isAdmin);
 
   const Icon = roleIcon(worker.mainRole);
   const initials = getInitials(worker.name);
@@ -294,14 +297,24 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
             )}
             Contact via WhatsApp
           </button>
-          <button
-            onClick={() => navigate({ to: "/post-job" })}
-            className="rounded-full bg-teal px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-teal-light"
-          >
-            Send Shift Offer
-          </button>
+          {canOffer && (
+            <button
+              onClick={() => setOfferOpen(true)}
+              className="rounded-full bg-teal px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-teal-light"
+            >
+              Send Shift Offer
+            </button>
+          )}
         </div>
       </DialogContent>
+      {canOffer && (
+        <ShiftOfferModal
+          workerId={worker.userId}
+          workerName={worker.name}
+          open={offerOpen}
+          onOpenChange={setOfferOpen}
+        />
+      )}
     </Dialog>
   );
 }

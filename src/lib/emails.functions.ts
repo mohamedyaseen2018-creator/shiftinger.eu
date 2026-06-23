@@ -115,3 +115,66 @@ export const sendAdminEmail = createServerFn({ method: "POST" })
 
     return { total: recipients.length, sent, queued, failed };
   });
+
+const COMMUNITY_LINK = "https://chat.whatsapp.com/E8Ovtrle2bs7AqQ1F4LdNq?s=sh&p=i&mlu=4";
+const INCOMPLETE_SUBJECT = "Complete your Shiftinger application";
+const INCOMPLETE_BODY = [
+  "Hi {{name}},",
+  "",
+  "Your application on Shiftinger is incomplete. Complete it here: {{app_url}}/onboarding",
+  "",
+  "If you have any issues or questions, reach out to us directly on the Shiftinger Community WhatsApp group:",
+  "",
+  COMMUNITY_LINK,
+  "",
+  "The Shiftinger Team",
+].join("\n");
+
+/**
+ * Email users whose profile/application is still incomplete. Admin-only.
+ * Pass a userId to email a single user, or omit it to email everyone with an
+ * incomplete profile in bulk.
+ */
+export const sendIncompleteApplicationEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid().optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { sendTemplatedEmail } = await import("@/lib/email.server");
+
+    let query = supabaseAdmin
+      .from("profiles")
+      .select("id, email, full_name, account_type, status")
+      .eq("status", "incomplete")
+      .limit(500);
+    if (data.userId) query = query.eq("id", data.userId);
+
+    const { data: recipients, error } = await query;
+    if (error) throw new Error(error.message);
+    if (!recipients || recipients.length === 0) throw new Error("No incomplete applications to email.");
+
+    let sent = 0;
+    let queued = 0;
+    let failed = 0;
+    for (const r of recipients) {
+      if (!r.email) continue;
+      const res = await sendTemplatedEmail({
+        templateKey: "incomplete_application",
+        recipientId: r.id,
+        recipientEmail: r.email,
+        recipientName: r.full_name,
+        subject: INCOMPLETE_SUBJECT,
+        body: INCOMPLETE_BODY,
+        triggeredBy: "admin",
+      });
+      if (res.sent) sent += 1;
+      else if (!res.configured) queued += 1;
+      else failed += 1;
+    }
+
+    return { total: recipients.length, sent, queued, failed };
+  });
+

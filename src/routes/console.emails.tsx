@@ -2,11 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Mail, Send } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Mail, Send, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Panel, Pill } from "@/components/console/ui";
 import { Field, TextInput, TextArea, SelectInput, PrimaryButton, ToggleRow } from "@/components/console/forms";
-import { getEmailAdminData, saveEmailTemplate, sendAdminEmail } from "@/lib/emails.functions";
+import { getEmailAdminData, saveEmailTemplate, sendAdminEmail, sendIncompleteApplicationEmails } from "@/lib/emails.functions";
 import { renderEmailTemplate, SAMPLE_VARS } from "@/lib/emailRender";
 import { timeAgo } from "@/data/utils";
 
@@ -48,7 +48,9 @@ function EmailsPage() {
   const fetchData = useServerFn(getEmailAdminData);
   const saveTemplate = useServerFn(saveEmailTemplate);
   const sendEmail = useServerFn(sendAdminEmail);
+  const sendIncomplete = useServerFn(sendIncompleteApplicationEmails);
   const queryClient = useQueryClient();
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-emails"],
@@ -116,6 +118,24 @@ function EmailsPage() {
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send"),
   });
+
+  const reportResult = (res: { total: number; sent: number; queued: number; failed: number }) => {
+    queryClient.invalidateQueries({ queryKey: ["admin-emails"] });
+    if (res.sent > 0) toast.success(`Sent ${res.sent} of ${res.total} email${res.total !== 1 ? "s" : ""}`);
+    else if (res.queued > 0) toast.info(`${res.queued} email${res.queued !== 1 ? "s" : ""} saved to the outbox as queued — email sending isn't configured yet`);
+    else toast.error(`All ${res.failed} sends failed — check the outbox for details`);
+  };
+
+  const incompleteMutation = useMutation({
+    mutationFn: (userId?: string) => sendIncomplete({ data: userId ? { userId } : {} }),
+    onSuccess: reportResult,
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send"),
+  });
+  const [incompletePending, setIncompletePending] = useState<string | null>(null);
+
+  const incompleteUsers = users.filter((u) => u.status === "incomplete");
+
+
 
   const audienceCount =
     audience === "all"
@@ -291,6 +311,61 @@ function EmailsPage() {
           </PrimaryButton>
         </div>
       </Panel>
+
+      {/* ── Incomplete applications ── */}
+      <Panel
+        title="Incomplete applications"
+        action={
+          <button
+            onClick={() => { setIncompletePending("all"); incompleteMutation.mutate(undefined, { onSettled: () => setIncompletePending(null) }); }}
+            disabled={incompleteMutation.isPending || incompleteUsers.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-pine px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {incompletePending === "all" ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+            Email all {incompleteUsers.length}
+          </button>
+        }
+      >
+        <p className="mb-3 text-sm text-slate">
+          Sends a reminder to complete the application, including the Shiftinger Community WhatsApp group link.
+        </p>
+        {incompleteUsers.length === 0 ? (
+          <div className="grid h-24 place-items-center text-sm text-slate">
+            <span className="inline-flex items-center gap-2"><UserPlus size={16} /> No incomplete applications</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-line">
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <thead className="border-b border-line bg-mist text-xs uppercase tracking-wide text-slate">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">User</th>
+                  <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {incompleteUsers.map((u) => (
+                  <tr key={u.id} className="border-b border-line/70 last:border-0">
+                    <td className="px-4 py-3 text-ink">{u.full_name || u.email}<span className="block text-[11px] text-slate">{u.email}</span></td>
+                    <td className="px-4 py-3"><Pill tone="slate">{u.account_type}</Pill></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => { setIncompletePending(u.id); incompleteMutation.mutate(u.id, { onSettled: () => setIncompletePending(null) }); }}
+                        disabled={incompleteMutation.isPending}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink hover:bg-mist disabled:opacity-50"
+                      >
+                        {incompletePending === u.id ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                        Email
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
 
       {/* ── Outbox ── */}
       <Panel title="Outbox" action={<Pill tone="slate">last {outbox.length}</Pill>}>

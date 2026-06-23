@@ -164,14 +164,22 @@ function BlockedNote() {
   );
 }
 
-function HubCard({ to, icon: Icon, title, body }: { to: string; icon: typeof Plus; title: string; body: string }) {
+function HubCard({ to, icon: Icon, title, body, badge, onClick }: { to: string; icon: typeof Plus; title: string; body: string; badge?: number; onClick?: () => void }) {
   return (
-    <Link to={to} className="flex flex-col rounded-2xl bg-white p-6 ring-1 ring-ink/5 transition-shadow hover:shadow-md">
+    <Link to={to} onClick={onClick} className="relative flex flex-col rounded-2xl bg-white p-6 ring-1 ring-ink/5 transition-shadow hover:shadow-md">
+      {badge != null && badge > 0 && (
+        <span className="absolute right-4 top-4 inline-flex min-w-[22px] items-center justify-center rounded-full bg-gold px-2 py-0.5 text-[11px] font-semibold text-canvas">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
       <div className="flex size-11 items-center justify-center rounded-xl bg-teal/5 text-teal">
         <Icon size={20} />
       </div>
       <h3 className="mt-4 font-medium text-ink">{title}</h3>
       <p className="mt-1 text-sm text-ink/60">{body}</p>
+      {badge != null && badge > 0 && (
+        <p className="mt-2 text-xs font-medium text-gold-dark">{badge} new {title === "Messages" ? "message" : "application"}{badge !== 1 ? "s" : ""}</p>
+      )}
     </Link>
   );
 }
@@ -188,16 +196,63 @@ function StatTile({ icon: Icon, label, value }: { icon: typeof Star; label: stri
   );
 }
 
+interface ReceivedReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  reviewer_name: string;
+}
+
+function ReceivedReviews({ userId, title }: { userId: string; title: string }) {
+  const [reviews, setReviews] = useState<ReceivedReview[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    supabase.rpc("get_public_reviews", { _reviewee_id: userId }).then(({ data }) => {
+      setReviews((data ?? []) as ReceivedReview[]);
+      setLoaded(true);
+    });
+  }, [userId]);
+
+  if (!loaded || reviews.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <h2 className="mb-3 flex items-center gap-2 font-serif text-xl text-ink">
+        <Star size={18} className="fill-gold text-gold" /> {title}
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {reviews.map((r) => (
+          <div key={r.id} className="rounded-2xl bg-white p-4 ring-1 ring-ink/5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star key={n} size={13} className={n <= r.rating ? "fill-gold text-gold" : "text-ink/15"} />
+                ))}
+              </span>
+              <span className="text-xs font-medium text-ink/60">{r.reviewer_name}</span>
+            </div>
+            {r.comment && <p className="mt-2 text-sm text-ink/70">{r.comment}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const CONFIRMED = ["confirmed", "working", "completed"];
 
 function WorkerHub({ userId }: { userId: string }) {
   const [stats, setStats] = useState({ applied: 0, confirmed: 0, done: 0, rating: 0 });
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [{ data: apps }, { data: wp }] = await Promise.all([
+      const [{ data: apps }, { data: wp }, { count: msgCount }] = await Promise.all([
         supabase.from("applications").select("status").eq("worker_id", userId),
         supabase.from("worker_profiles").select("rating").eq("user_id", userId).maybeSingle(),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("type", "message").eq("read", false),
       ]);
       const rows = apps ?? [];
       setStats({
@@ -206,8 +261,13 @@ function WorkerHub({ userId }: { userId: string }) {
         done: rows.filter((a) => a.status === "completed").length,
         rating: Number(wp?.rating ?? 0),
       });
+      setUnreadMessages(msgCount ?? 0);
     })();
   }, [userId]);
+
+  const markRead = (type: string) => {
+    supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("type", type).eq("read", false).then(() => {});
+  };
 
   return (
     <div>
@@ -223,22 +283,27 @@ function WorkerHub({ userId }: { userId: string }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <HubCard to="/jobs" icon={Briefcase} title="Browse shifts" body="Find shifts matching your skills and apply." />
         <HubCard to="/applications" icon={Users} title="My applications" body="Track applied, matched and working shifts." />
-        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with businesses after confirmation." />
+        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with businesses after confirmation." badge={unreadMessages} onClick={() => { setUnreadMessages(0); markRead("message"); }} />
         <HubCard to="/profile" icon={UserCog} title="My profile" body="Edit details, availability and rates." />
       </div>
+      <ReceivedReviews userId={userId} title="Ratings from businesses" />
     </div>
   );
 }
 
 function BusinessHub({ userId }: { userId: string }) {
   const [stats, setStats] = useState({ posted: 0, confirmed: 0, done: 0, reaches: 0 });
+  const [unreadApps, setUnreadApps] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [{ count: posted }, { data: apps }, { count: reaches }] = await Promise.all([
+      const [{ count: posted }, { data: apps }, { count: reaches }, { count: appCount }, { count: msgCount }] = await Promise.all([
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("owner_id", userId),
         supabase.from("applications").select("status").eq("owner_id", userId),
         supabase.from("conversations").select("id", { count: "exact", head: true }).eq("business_id", userId),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("type", "application").eq("read", false),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("type", "message").eq("read", false),
       ]);
       const rows = apps ?? [];
       setStats({
@@ -247,8 +312,14 @@ function BusinessHub({ userId }: { userId: string }) {
         done: rows.filter((a) => a.status === "completed").length,
         reaches: reaches ?? 0,
       });
+      setUnreadApps(appCount ?? 0);
+      setUnreadMessages(msgCount ?? 0);
     })();
   }, [userId]);
+
+  const markRead = (type: string) => {
+    supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("type", type).eq("read", false).then(() => {});
+  };
 
   return (
     <div>
@@ -263,11 +334,13 @@ function BusinessHub({ userId }: { userId: string }) {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <HubCard to="/post-job" icon={Plus} title="Post a shift" body="Create a single shift or part-time role." />
-        <HubCard to="/my-jobs" icon={Briefcase} title="My shifts" body="Manage jobs and review applicants." />
+        <HubCard to="/my-jobs" icon={Briefcase} title="My shifts" body="Manage jobs and review applicants." badge={unreadApps} onClick={() => { setUnreadApps(0); markRead("application"); }} />
         <HubCard to="/talent" icon={Users} title="Browse talent" body="Find verified, skill-matched workers." />
-        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with workers after confirmation." />
+        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with workers after confirmation." badge={unreadMessages} onClick={() => { setUnreadMessages(0); markRead("message"); }} />
         <HubCard to="/profile" icon={UserCog} title="Business profile" body="Edit your business details." />
       </div>
+      <ReceivedReviews userId={userId} title="Ratings from workers" />
     </div>
   );
 }
+
