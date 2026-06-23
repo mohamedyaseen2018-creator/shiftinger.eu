@@ -266,9 +266,24 @@ function SubmittedNote() {
         Thanks! Our team will review and confirm your account. You'll get an email once you're
         verified, and then you can start matching.
       </p>
+      <div className="mt-6 rounded-xl bg-canvas p-5 ring-1 ring-ink/5">
+        <p className="text-sm font-medium text-ink">Join the Shiftinger Community</p>
+        <p className="mt-1 text-xs text-ink/60">
+          Connect with other members, get tips and stay up to date while you wait.
+        </p>
+        <a
+          href="https://chat.whatsapp.com/E8Ovtrle2bs7AqQ1F4LdNq?s=sh&p=i&mlu=4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+        >
+          <MessageCircle size={16} /> Join our Community
+        </a>
+      </div>
     </div>
   );
 }
+
 
 /* ──────────────────────────── worker form ──────────────────────────── */
 
