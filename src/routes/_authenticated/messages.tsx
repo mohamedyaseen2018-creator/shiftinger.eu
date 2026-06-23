@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Loader2, ArrowLeft, Send, MapPin, Handshake, Flag, Star } from "lucide-react";
+import { Loader2, ArrowLeft, Send, MapPin, Handshake, Flag, Star, ChevronDown, Ban, Lock } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
