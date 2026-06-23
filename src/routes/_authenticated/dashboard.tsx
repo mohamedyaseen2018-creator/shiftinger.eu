@@ -245,12 +245,14 @@ const CONFIRMED = ["confirmed", "working", "completed"];
 
 function WorkerHub({ userId }: { userId: string }) {
   const [stats, setStats] = useState({ applied: 0, confirmed: 0, done: 0, rating: 0 });
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [{ data: apps }, { data: wp }] = await Promise.all([
+      const [{ data: apps }, { data: wp }, { count: msgCount }] = await Promise.all([
         supabase.from("applications").select("status").eq("worker_id", userId),
         supabase.from("worker_profiles").select("rating").eq("user_id", userId).maybeSingle(),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("type", "message").eq("read", false),
       ]);
       const rows = apps ?? [];
       setStats({
@@ -259,8 +261,13 @@ function WorkerHub({ userId }: { userId: string }) {
         done: rows.filter((a) => a.status === "completed").length,
         rating: Number(wp?.rating ?? 0),
       });
+      setUnreadMessages(msgCount ?? 0);
     })();
   }, [userId]);
+
+  const markRead = (type: string) => {
+    supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("type", type).eq("read", false).then(() => {});
+  };
 
   return (
     <div>
@@ -276,22 +283,27 @@ function WorkerHub({ userId }: { userId: string }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <HubCard to="/jobs" icon={Briefcase} title="Browse shifts" body="Find shifts matching your skills and apply." />
         <HubCard to="/applications" icon={Users} title="My applications" body="Track applied, matched and working shifts." />
-        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with businesses after confirmation." />
+        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with businesses after confirmation." badge={unreadMessages} onClick={() => { setUnreadMessages(0); markRead("message"); }} />
         <HubCard to="/profile" icon={UserCog} title="My profile" body="Edit details, availability and rates." />
       </div>
+      <ReceivedReviews userId={userId} title="Ratings from businesses" />
     </div>
   );
 }
 
 function BusinessHub({ userId }: { userId: string }) {
   const [stats, setStats] = useState({ posted: 0, confirmed: 0, done: 0, reaches: 0 });
+  const [unreadApps, setUnreadApps] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [{ count: posted }, { data: apps }, { count: reaches }] = await Promise.all([
+      const [{ count: posted }, { data: apps }, { count: reaches }, { count: appCount }, { count: msgCount }] = await Promise.all([
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("owner_id", userId),
         supabase.from("applications").select("status").eq("owner_id", userId),
         supabase.from("conversations").select("id", { count: "exact", head: true }).eq("business_id", userId),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("type", "application").eq("read", false),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("type", "message").eq("read", false),
       ]);
       const rows = apps ?? [];
       setStats({
@@ -300,8 +312,14 @@ function BusinessHub({ userId }: { userId: string }) {
         done: rows.filter((a) => a.status === "completed").length,
         reaches: reaches ?? 0,
       });
+      setUnreadApps(appCount ?? 0);
+      setUnreadMessages(msgCount ?? 0);
     })();
   }, [userId]);
+
+  const markRead = (type: string) => {
+    supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("type", type).eq("read", false).then(() => {});
+  };
 
   return (
     <div>
@@ -316,11 +334,13 @@ function BusinessHub({ userId }: { userId: string }) {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <HubCard to="/post-job" icon={Plus} title="Post a shift" body="Create a single shift or part-time role." />
-        <HubCard to="/my-jobs" icon={Briefcase} title="My shifts" body="Manage jobs and review applicants." />
+        <HubCard to="/my-jobs" icon={Briefcase} title="My shifts" body="Manage jobs and review applicants." badge={unreadApps} onClick={() => { setUnreadApps(0); markRead("application"); }} />
         <HubCard to="/talent" icon={Users} title="Browse talent" body="Find verified, skill-matched workers." />
-        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with workers after confirmation." />
+        <HubCard to="/messages" icon={MessageSquare} title="Messages" body="Chat with workers after confirmation." badge={unreadMessages} onClick={() => { setUnreadMessages(0); markRead("message"); }} />
         <HubCard to="/profile" icon={UserCog} title="Business profile" body="Edit your business details." />
       </div>
+      <ReceivedReviews userId={userId} title="Ratings from workers" />
     </div>
   );
 }
+
