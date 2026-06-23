@@ -2,11 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Mail, Send } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Mail, Send, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Panel, Pill } from "@/components/console/ui";
 import { Field, TextInput, TextArea, SelectInput, PrimaryButton, ToggleRow } from "@/components/console/forms";
-import { getEmailAdminData, saveEmailTemplate, sendAdminEmail } from "@/lib/emails.functions";
+import { getEmailAdminData, saveEmailTemplate, sendAdminEmail, sendIncompleteApplicationEmails } from "@/lib/emails.functions";
 import { renderEmailTemplate, SAMPLE_VARS } from "@/lib/emailRender";
 import { timeAgo } from "@/data/utils";
 
