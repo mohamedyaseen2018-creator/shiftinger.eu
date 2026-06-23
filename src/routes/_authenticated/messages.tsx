@@ -109,7 +109,11 @@ function ChatPanel({ conversation, userId, onChanged }: { conversation: Conv; us
   const [showReview, setShowReview] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [refuseMode, setRefuseMode] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
 
   const loadMessages = useCallback(async () => {
     const { data } = await supabase.from("messages").select("*").eq("conversation_id", conversation.id).order("created_at");
@@ -137,10 +141,24 @@ function ChatPanel({ conversation, userId, onChanged }: { conversation: Conv; us
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) setActionsOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const closed = conversation.status === "completed";
+
   const send = async () => {
-    if (!text.trim()) return;
-    const body = text.trim().slice(0, 2000);
+    if (!text.trim()) {
+      if (refuseMode) toast.error("Please type a reason before refusing.");
+      return;
+    }
+    const body = (refuseMode ? `Refused work: ${text.trim()}` : text.trim()).slice(0, 2000);
     setText("");
+    setRefuseMode(false);
     const { error } = await supabase.from("messages").insert({ conversation_id: conversation.id, sender_id: userId, body });
     if (error) toast.error("Could not send.");
   };
@@ -166,32 +184,45 @@ function ChatPanel({ conversation, userId, onChanged }: { conversation: Conv; us
   const myAgreed = isWorker ? conversation.worker_agreed : conversation.business_agreed;
   const bothEnded = conversation.worker_ended && conversation.business_ended;
 
+  const startRefuse = () => {
+    setRefuseMode(true);
+    setActionsOpen(false);
+    setText("");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  // Quick-reply chips populate the input; the user sends manually (#10).
+  const chips: { label: string; text: string }[] = [];
+  if (!closed) {
+    chips.push({ label: "I agree to work ✓", text: "I agree to work this shift ✓" });
+    if (!isWorker) chips.push({ label: "Agree & send location 📍", text: "Agreed — I'll send you the exact location now ✓" });
+    chips.push({ label: "Shift complete ✓", text: "This shift is now complete ✓" });
+    chips.push({ label: "I'm on my way 🏃", text: "I'm on my way ✓" });
+  }
+
+  // Actions in the dropdown perform the real state change (#11).
+  const actions: { label: string; icon: typeof Handshake; run: () => void; tone?: string }[] = [];
+  if (!myAgreed) {
+    if (isWorker) actions.push({ label: "Agree to Work", icon: Handshake, run: () => { agree(false); setActionsOpen(false); } });
+    else actions.push({ label: "Agree & Send Location", icon: MapPin, run: () => { agree(true); setActionsOpen(false); } });
+  }
+  if (myAgreed && conversation.status === "agreed" && !bothEnded) {
+    actions.push({ label: "End Job", icon: Flag, run: () => { end(); setActionsOpen(false); } });
+  }
+  actions.push({ label: "Refuse Work", icon: Ban, run: startRefuse, tone: "text-red-600" });
+
   return (
     <div className="flex h-[560px] flex-col rounded-2xl bg-white ring-1 ring-ink/5">
-      {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-ink/5 p-3">
-        {!myAgreed && conversation.status !== "completed" && (
-          isWorker ? (
-            <button onClick={() => agree(false)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3 py-1.5 text-xs font-medium text-canvas hover:bg-teal-light">
-              <Handshake size={14} /> Agree to work
-            </button>
-          ) : (
-            <button onClick={() => agree(true)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3 py-1.5 text-xs font-medium text-canvas hover:bg-teal-light">
-              <MapPin size={14} /> Agree & send location
-            </button>
-          )
-        )}
-        {myAgreed && conversation.status === "agreed" && !bothEnded && (
-          <button onClick={end} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-ink/15 hover:bg-ink/5">
-            <Flag size={14} /> End job
-          </button>
-        )}
-        {bothEnded && conversation.status !== "completed" && (
+      {/* Header bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/5 p-3">
+        <span className="text-sm font-medium text-ink">
+          {closed ? <span className="inline-flex items-center gap-1.5 text-teal"><Lock size={14} /> Shift complete</span> : "Conversation"}
+        </span>
+        {bothEnded && !closed && (
           <button onClick={() => setShowReview(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-xs font-medium text-canvas hover:bg-gold-dark">
             <Star size={14} /> Leave review to close
           </button>
         )}
-        {conversation.status === "completed" && <span className="text-xs text-teal">Job completed ✓</span>}
       </div>
 
       {isWorker && conversation.location_shared && address && (
@@ -229,17 +260,63 @@ function ChatPanel({ conversation, userId, onChanged }: { conversation: Conv; us
         </div>
       )}
 
-      {/* Composer */}
-      {conversation.status !== "completed" && (
-        <div className="flex items-center gap-2 border-t border-ink/5 p-3">
-          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Type a message…"
-            className="flex-1 rounded-full border-0 bg-canvas px-4 py-2.5 text-sm ring-1 ring-ink/10 focus:outline-none focus:ring-2 focus:ring-teal" />
-          <button onClick={send} className="flex size-10 items-center justify-center rounded-full bg-teal text-canvas hover:bg-teal-light">
-            <Send size={16} />
-          </button>
+      {/* Closed note (#12) */}
+      {closed ? (
+        <div className="border-t border-ink/5 bg-canvas/40 p-4 text-center text-sm text-ink/50">
+          This shift is complete. Start a new conversation by sending a shift request.
         </div>
+      ) : (
+        <>
+          {/* Quick-reply chips (#10) */}
+          <div className="flex flex-wrap gap-1.5 border-t border-ink/5 px-3 pt-3">
+            {chips.map((ch) => (
+              <button
+                key={ch.label}
+                onClick={() => { setRefuseMode(false); setText(ch.text); inputRef.current?.focus(); }}
+                className="rounded-full bg-teal/8 px-3 py-1 text-xs font-medium text-teal ring-1 ring-teal/15 transition-colors hover:bg-teal/15"
+              >
+                {ch.label}
+              </button>
+            ))}
+          </div>
+
+          {refuseMode && (
+            <p className="px-3 pt-2 text-xs text-red-600">Type your reason for refusing, then press send.</p>
+          )}
+
+          {/* Composer with Actions dropdown (#11) */}
+          <div className="flex items-center gap-2 border-t border-ink/5 p-3">
+            <div className="relative" ref={actionsRef}>
+              <button
+                onClick={() => setActionsOpen((o) => !o)}
+                className="inline-flex items-center gap-1 rounded-full px-3 py-2.5 text-xs font-medium text-ink ring-1 ring-ink/15 hover:bg-ink/5"
+              >
+                Actions <ChevronDown size={14} />
+              </button>
+              {actionsOpen && (
+                <div className="absolute bottom-full left-0 z-50 mb-2 w-52 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-ink/10">
+                  {actions.map((a) => (
+                    <button
+                      key={a.label}
+                      onClick={a.run}
+                      className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-ink/5 ${a.tone ?? "text-ink"}`}
+                    >
+                      <a.icon size={15} /> {a.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder={refuseMode ? "Reason for refusing…" : "Type a message…"}
+              className={`flex-1 rounded-full border-0 bg-canvas px-4 py-2.5 text-sm ring-1 focus:outline-none focus:ring-2 ${refuseMode ? "ring-red-300 focus:ring-red-400" : "ring-ink/10 focus:ring-teal"}`} />
+            <button onClick={send} className="flex size-10 items-center justify-center rounded-full bg-teal text-canvas hover:bg-teal-light">
+              <Send size={16} />
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
 }
+
