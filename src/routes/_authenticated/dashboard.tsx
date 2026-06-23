@@ -164,14 +164,22 @@ function BlockedNote() {
   );
 }
 
-function HubCard({ to, icon: Icon, title, body }: { to: string; icon: typeof Plus; title: string; body: string }) {
+function HubCard({ to, icon: Icon, title, body, badge, onClick }: { to: string; icon: typeof Plus; title: string; body: string; badge?: number; onClick?: () => void }) {
   return (
-    <Link to={to} className="flex flex-col rounded-2xl bg-white p-6 ring-1 ring-ink/5 transition-shadow hover:shadow-md">
+    <Link to={to} onClick={onClick} className="relative flex flex-col rounded-2xl bg-white p-6 ring-1 ring-ink/5 transition-shadow hover:shadow-md">
+      {badge != null && badge > 0 && (
+        <span className="absolute right-4 top-4 inline-flex min-w-[22px] items-center justify-center rounded-full bg-gold px-2 py-0.5 text-[11px] font-semibold text-canvas">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
       <div className="flex size-11 items-center justify-center rounded-xl bg-teal/5 text-teal">
         <Icon size={20} />
       </div>
       <h3 className="mt-4 font-medium text-ink">{title}</h3>
       <p className="mt-1 text-sm text-ink/60">{body}</p>
+      {badge != null && badge > 0 && (
+        <p className="mt-2 text-xs font-medium text-gold-dark">{badge} new {title === "Messages" ? "message" : "application"}{badge !== 1 ? "s" : ""}</p>
+      )}
     </Link>
   );
 }
@@ -184,6 +192,51 @@ function StatTile({ icon: Icon, label, value }: { icon: typeof Star; label: stri
         <Icon size={15} className="text-teal" />
       </div>
       <p className="mt-2 font-serif text-2xl text-ink">{value}</p>
+    </div>
+  );
+}
+
+interface ReceivedReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  reviewer_name: string;
+}
+
+function ReceivedReviews({ userId, title }: { userId: string; title: string }) {
+  const [reviews, setReviews] = useState<ReceivedReview[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    supabase.rpc("get_public_reviews", { _reviewee_id: userId }).then(({ data }) => {
+      setReviews((data ?? []) as ReceivedReview[]);
+      setLoaded(true);
+    });
+  }, [userId]);
+
+  if (!loaded || reviews.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <h2 className="mb-3 flex items-center gap-2 font-serif text-xl text-ink">
+        <Star size={18} className="fill-gold text-gold" /> {title}
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {reviews.map((r) => (
+          <div key={r.id} className="rounded-2xl bg-white p-4 ring-1 ring-ink/5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star key={n} size={13} className={n <= r.rating ? "fill-gold text-gold" : "text-ink/15"} />
+                ))}
+              </span>
+              <span className="text-xs font-medium text-ink/60">{r.reviewer_name}</span>
+            </div>
+            {r.comment && <p className="mt-2 text-sm text-ink/70">{r.comment}</p>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
