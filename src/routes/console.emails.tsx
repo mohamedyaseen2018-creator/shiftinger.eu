@@ -312,6 +312,61 @@ function EmailsPage() {
         </div>
       </Panel>
 
+      {/* ── Incomplete applications ── */}
+      <Panel
+        title="Incomplete applications"
+        action={
+          <button
+            onClick={() => { setIncompletePending("all"); incompleteMutation.mutate(undefined, { onSettled: () => setIncompletePending(null) }); }}
+            disabled={incompleteMutation.isPending || incompleteUsers.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-pine px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {incompletePending === "all" ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+            Email all {incompleteUsers.length}
+          </button>
+        }
+      >
+        <p className="mb-3 text-sm text-slate">
+          Sends a reminder to complete the application, including the Shiftinger Community WhatsApp group link.
+        </p>
+        {incompleteUsers.length === 0 ? (
+          <div className="grid h-24 place-items-center text-sm text-slate">
+            <span className="inline-flex items-center gap-2"><UserPlus size={16} /> No incomplete applications</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-line">
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <thead className="border-b border-line bg-mist text-xs uppercase tracking-wide text-slate">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">User</th>
+                  <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {incompleteUsers.map((u) => (
+                  <tr key={u.id} className="border-b border-line/70 last:border-0">
+                    <td className="px-4 py-3 text-ink">{u.full_name || u.email}<span className="block text-[11px] text-slate">{u.email}</span></td>
+                    <td className="px-4 py-3"><Pill tone="slate">{u.account_type}</Pill></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => { setIncompletePending(u.id); incompleteMutation.mutate(u.id, { onSettled: () => setIncompletePending(null) }); }}
+                        disabled={incompleteMutation.isPending}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink hover:bg-mist disabled:opacity-50"
+                      >
+                        {incompletePending === u.id ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                        Email
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+
       {/* ── Outbox ── */}
       <Panel title="Outbox" action={<Pill tone="slate">last {outbox.length}</Pill>}>
         {outbox.length === 0 ? (
