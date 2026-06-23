@@ -119,6 +119,24 @@ function EmailsPage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send"),
   });
 
+  const reportResult = (res: { total: number; sent: number; queued: number; failed: number }) => {
+    queryClient.invalidateQueries({ queryKey: ["admin-emails"] });
+    if (res.sent > 0) toast.success(`Sent ${res.sent} of ${res.total} email${res.total !== 1 ? "s" : ""}`);
+    else if (res.queued > 0) toast.info(`${res.queued} email${res.queued !== 1 ? "s" : ""} saved to the outbox as queued — email sending isn't configured yet`);
+    else toast.error(`All ${res.failed} sends failed — check the outbox for details`);
+  };
+
+  const incompleteMutation = useMutation({
+    mutationFn: (userId?: string) => sendIncomplete({ data: userId ? { userId } : {} }),
+    onSuccess: reportResult,
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send"),
+  });
+  const [incompletePending, setIncompletePending] = useState<string | null>(null);
+
+  const incompleteUsers = users.filter((u) => u.status === "incomplete");
+
+
+
   const audienceCount =
     audience === "all"
       ? users.length
