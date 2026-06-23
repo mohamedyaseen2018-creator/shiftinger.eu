@@ -54,7 +54,9 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const navigate = useNavigate();
+  const [offerOpen, setOfferOpen] = useState(false);
+  const { user, profile, isAdmin } = useAuth();
+  const canOffer = !!user && (profile?.account_type === "business" || isAdmin);
 
   const Icon = roleIcon(worker.mainRole);
   const initials = getInitials(worker.name);
