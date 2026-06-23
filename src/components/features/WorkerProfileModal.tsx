@@ -297,14 +297,24 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
             )}
             Contact via WhatsApp
           </button>
-          <button
-            onClick={() => navigate({ to: "/post-job" })}
-            className="rounded-full bg-teal px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-teal-light"
-          >
-            Send Shift Offer
-          </button>
+          {canOffer && (
+            <button
+              onClick={() => setOfferOpen(true)}
+              className="rounded-full bg-teal px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-teal-light"
+            >
+              Send Shift Offer
+            </button>
+          )}
         </div>
       </DialogContent>
+      {canOffer && (
+        <ShiftOfferModal
+          workerId={worker.userId}
+          workerName={worker.name}
+          open={offerOpen}
+          onOpenChange={setOfferOpen}
+        />
+      )}
     </Dialog>
   );
 }
