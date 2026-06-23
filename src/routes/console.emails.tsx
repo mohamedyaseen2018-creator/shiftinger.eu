@@ -48,7 +48,9 @@ function EmailsPage() {
   const fetchData = useServerFn(getEmailAdminData);
   const saveTemplate = useServerFn(saveEmailTemplate);
   const sendEmail = useServerFn(sendAdminEmail);
+  const sendIncomplete = useServerFn(sendIncompleteApplicationEmails);
   const queryClient = useQueryClient();
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-emails"],
