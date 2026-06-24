@@ -92,6 +92,9 @@ function MyJobsPage() {
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
   const [confirmMessage, setConfirmMessage] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [editTarget, setEditTarget] = useState<ShiftRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<JobLite | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
