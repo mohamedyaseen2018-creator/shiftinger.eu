@@ -187,16 +187,35 @@ function MyJobsPage() {
                 const jobApps = apps.filter((a) => a.job_id === job.id);
                 return (
                   <div key={job.id} className="rounded-2xl bg-white ring-1 ring-ink/5">
-                    <button onClick={() => setOpen(open === job.id ? null : job.id)} className="flex w-full items-center justify-between gap-3 p-5 text-left">
-                      <div>
-                        <h3 className="font-medium text-ink">{job.role}</h3>
-                        <p className="text-sm text-ink/50">€{job.rate}/hr · {job.type === "single" ? "Single shift" : "Part-time"} · {job.status}</p>
+                    <div className="flex w-full items-center gap-3 p-5">
+                      <button onClick={() => setOpen(open === job.id ? null : job.id)} className="flex flex-1 items-center justify-between gap-3 text-left">
+                        <div>
+                          <h3 className="font-medium text-ink">{job.role}</h3>
+                          <p className="text-sm text-ink/50">€{job.rate}/hr · {job.type === "single" ? "Single shift" : "Part-time"} · {job.status}</p>
+                        </div>
+                        <span className="flex items-center gap-2 text-sm text-ink/60">
+                          {jobApps.length} applicant{jobApps.length !== 1 ? "s" : ""}
+                          <ChevronDown size={16} className={open === job.id ? "rotate-180 transition-transform" : "transition-transform"} />
+                        </span>
+                      </button>
+                      <div className="flex flex-shrink-0 items-center gap-1.5">
+                        <button
+                          onClick={() => setEditTarget(job)}
+                          aria-label="Edit shift"
+                          className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-teal ring-1 ring-teal/20 hover:bg-teal/5"
+                        >
+                          <Pencil size={13} /> Edit
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(job)}
+                          aria-label="Delete shift"
+                          className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50"
+                        >
+                          <Trash2 size={13} /> Delete
+                        </button>
                       </div>
-                      <span className="flex items-center gap-2 text-sm text-ink/60">
-                        {jobApps.length} applicant{jobApps.length !== 1 ? "s" : ""}
-                        <ChevronDown size={16} className={open === job.id ? "rotate-180 transition-transform" : "transition-transform"} />
-                      </span>
-                    </button>
+                    </div>
+
 
                     {open === job.id && (
                       <div className="space-y-3 border-t border-ink/5 p-5">
