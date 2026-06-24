@@ -99,7 +99,7 @@ function MyJobsPage() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data: js } = await supabase.from("jobs").select("id, role, rate, type, status, spots_remaining").eq("owner_id", user.id).order("created_at", { ascending: false });
+    const { data: js } = await supabase.from("jobs").select("id, role, type, date, start_time, end_time, working_days, start_date, end_date, rate, spots, spots_remaining, languages, atividade, note, status").eq("owner_id", user.id).order("created_at", { ascending: false });
     setJobs((js ?? []) as JobLite[]);
     const { data: as } = await supabase.from("applications").select("*").eq("owner_id", user.id);
     const rows = (as ?? []) as AppLite[];
