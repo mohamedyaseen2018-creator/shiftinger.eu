@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/my-jobs")({
   component: MyJobsPage,
 });
 
-interface JobLite extends ShiftRow {}
+type JobLite = ShiftRow;
 
 interface AppLite {
   id: string;
