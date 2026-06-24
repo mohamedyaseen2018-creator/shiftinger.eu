@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ArrowLeft, ChevronDown, CheckCircle, MessageSquare, Plus, Star, X } from "lucide-react";
+import { Loader2, ArrowLeft, ChevronDown, CheckCircle, MessageSquare, Plus, Star, X, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
+import EditShiftModal, { type ShiftRow } from "@/components/features/EditShiftModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { matchColor } from "@/lib/matching";
