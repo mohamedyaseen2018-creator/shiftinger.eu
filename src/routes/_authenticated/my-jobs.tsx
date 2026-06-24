@@ -310,6 +310,40 @@ function MyJobsPage() {
           </div>
         </div>
       )}
+
+      {/* Edit shift modal */}
+      {editTarget && (
+        <EditShiftModal
+          shift={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => {
+            setEditTarget(null);
+            load();
+          }}
+        />
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 ring-1 ring-ink/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <h2 className="font-serif text-xl text-ink">Delete shift</h2>
+              <button onClick={() => !deleting && setDeleteTarget(null)} className="text-ink/40 hover:text-ink"><X size={18} /></button>
+            </div>
+            <p className="mt-2 text-sm text-ink/60">
+              Are you sure you want to delete this shift{deleteTarget.role ? ` (${deleteTarget.role})` : ""}? This cannot be undone.
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="rounded-full px-4 py-2 text-sm font-medium text-ink/60 hover:bg-ink/5">Cancel</button>
+              <button onClick={confirmDelete} disabled={deleting} className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+                {deleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />} Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SiteLayout>
+
   );
 }
