@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ArrowLeft, ChevronDown, CheckCircle, MessageSquare, Plus, Star, X } from "lucide-react";
+import { Loader2, ArrowLeft, ChevronDown, CheckCircle, MessageSquare, Plus, Star, X, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
+import EditShiftModal, { type ShiftRow } from "@/components/features/EditShiftModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { matchColor } from "@/lib/matching";
@@ -14,14 +15,8 @@ export const Route = createFileRoute("/_authenticated/my-jobs")({
   component: MyJobsPage,
 });
 
-interface JobLite {
-  id: string;
-  role: string;
-  rate: number;
-  type: string;
-  status: string;
-  spots_remaining: number;
-}
+type JobLite = ShiftRow;
+
 interface AppLite {
   id: string;
   job_id: string;
@@ -97,11 +92,14 @@ function MyJobsPage() {
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
   const [confirmMessage, setConfirmMessage] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [editTarget, setEditTarget] = useState<ShiftRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<JobLite | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data: js } = await supabase.from("jobs").select("id, role, rate, type, status, spots_remaining").eq("owner_id", user.id).order("created_at", { ascending: false });
+    const { data: js } = await supabase.from("jobs").select("id, role, type, date, start_time, end_time, working_days, start_date, end_date, rate, spots, spots_remaining, languages, atividade, note, status").eq("owner_id", user.id).order("created_at", { ascending: false });
     setJobs((js ?? []) as JobLite[]);
     const { data: as } = await supabase.from("applications").select("*").eq("owner_id", user.id);
     const rows = (as ?? []) as AppLite[];
@@ -147,6 +145,20 @@ function MyJobsPage() {
     load();
   };
 
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from("jobs").delete().eq("id", deleteTarget.id);
+    setDeleting(false);
+    if (error) {
+      toast.error("Could not delete the shift.");
+      return;
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    toast.success("Shift deleted.");
+  };
+
   if (profile && profile.account_type !== "business") {
     return <SiteLayout><div className="px-6 py-20 text-center text-ink/60">This page is for business accounts.</div></SiteLayout>;
   }
@@ -175,16 +187,35 @@ function MyJobsPage() {
                 const jobApps = apps.filter((a) => a.job_id === job.id);
                 return (
                   <div key={job.id} className="rounded-2xl bg-white ring-1 ring-ink/5">
-                    <button onClick={() => setOpen(open === job.id ? null : job.id)} className="flex w-full items-center justify-between gap-3 p-5 text-left">
-                      <div>
-                        <h3 className="font-medium text-ink">{job.role}</h3>
-                        <p className="text-sm text-ink/50">€{job.rate}/hr · {job.type === "single" ? "Single shift" : "Part-time"} · {job.status}</p>
+                    <div className="flex w-full items-center gap-3 p-5">
+                      <button onClick={() => setOpen(open === job.id ? null : job.id)} className="flex flex-1 items-center justify-between gap-3 text-left">
+                        <div>
+                          <h3 className="font-medium text-ink">{job.role}</h3>
+                          <p className="text-sm text-ink/50">€{job.rate}/hr · {job.type === "single" ? "Single shift" : "Part-time"} · {job.status}</p>
+                        </div>
+                        <span className="flex items-center gap-2 text-sm text-ink/60">
+                          {jobApps.length} applicant{jobApps.length !== 1 ? "s" : ""}
+                          <ChevronDown size={16} className={open === job.id ? "rotate-180 transition-transform" : "transition-transform"} />
+                        </span>
+                      </button>
+                      <div className="flex flex-shrink-0 items-center gap-1.5">
+                        <button
+                          onClick={() => setEditTarget(job)}
+                          aria-label="Edit shift"
+                          className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-teal ring-1 ring-teal/20 hover:bg-teal/5"
+                        >
+                          <Pencil size={13} /> Edit
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(job)}
+                          aria-label="Delete shift"
+                          className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50"
+                        >
+                          <Trash2 size={13} /> Delete
+                        </button>
                       </div>
-                      <span className="flex items-center gap-2 text-sm text-ink/60">
-                        {jobApps.length} applicant{jobApps.length !== 1 ? "s" : ""}
-                        <ChevronDown size={16} className={open === job.id ? "rotate-180 transition-transform" : "transition-transform"} />
-                      </span>
-                    </button>
+                    </div>
+
 
                     {open === job.id && (
                       <div className="space-y-3 border-t border-ink/5 p-5">
@@ -279,6 +310,40 @@ function MyJobsPage() {
           </div>
         </div>
       )}
+
+      {/* Edit shift modal */}
+      {editTarget && (
+        <EditShiftModal
+          shift={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => {
+            setEditTarget(null);
+            load();
+          }}
+        />
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 ring-1 ring-ink/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <h2 className="font-serif text-xl text-ink">Delete shift</h2>
+              <button onClick={() => !deleting && setDeleteTarget(null)} className="text-ink/40 hover:text-ink"><X size={18} /></button>
+            </div>
+            <p className="mt-2 text-sm text-ink/60">
+              Are you sure you want to delete this shift{deleteTarget.role ? ` (${deleteTarget.role})` : ""}? This cannot be undone.
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="rounded-full px-4 py-2 text-sm font-medium text-ink/60 hover:bg-ink/5">Cancel</button>
+              <button onClick={confirmDelete} disabled={deleting} className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+                {deleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />} Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SiteLayout>
+
   );
 }
