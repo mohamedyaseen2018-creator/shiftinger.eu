@@ -145,6 +145,20 @@ function MyJobsPage() {
     load();
   };
 
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from("jobs").delete().eq("id", deleteTarget.id);
+    setDeleting(false);
+    if (error) {
+      toast.error("Could not delete the shift.");
+      return;
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    toast.success("Shift deleted.");
+  };
+
   if (profile && profile.account_type !== "business") {
     return <SiteLayout><div className="px-6 py-20 text-center text-ink/60">This page is for business accounts.</div></SiteLayout>;
   }
