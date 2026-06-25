@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { useAdminStore } from "@/data/adminStore";
 
-const COLORS = ["#1D9E75", "#FAC775", "#0f766e", "#94a3b8", "#0ea5e9", "#f97316"];
+const COLORS = ["#06332A", "#D89733", "#0f766e", "#94a3b8", "#0ea5e9", "#f97316"];
 
 function countBy<T>(rows: T[], key: (r: T) => string): { name: string; value: number }[] {
   const map = new Map<string, number>();
@@ -57,7 +57,7 @@ export function BusinessCategoryBar() {
         <XAxis dataKey="name" tick={{ fontSize: 11 }} />
         <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
         <Tooltip />
-        <Bar dataKey="value" fill="#1D9E75" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="value" fill="#06332A" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -74,7 +74,7 @@ export function MatchStatusBar() {
         <XAxis dataKey="name" tick={{ fontSize: 11 }} />
         <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
         <Tooltip />
-        <Bar dataKey="value" fill="#FAC775" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="value" fill="#D89733" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
