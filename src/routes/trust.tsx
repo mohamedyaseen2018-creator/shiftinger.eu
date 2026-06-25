@@ -1,5 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ShieldCheck, Lock, Database, Users, Cookie, Trash2, FileSearch, MessageCircle } from "lucide-react";
+import {
+  ArrowRight,
+  ShieldCheck,
+  Lock,
+  Database,
+  Users,
+  Cookie,
+  Trash2,
+  FileSearch,
+  MessageCircle,
+} from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 
 export const Route = createFileRoute("/trust")({
@@ -109,11 +119,11 @@ function TrustPage() {
               <div>
                 <h2 className="mb-2 font-medium text-ink">Report a security or privacy concern</h2>
                 <p className="text-sm leading-relaxed text-ink/60">
-                  Found something that doesn't look right, or have a question about your data? Message our team and we'll
-                  respond as quickly as we can.
+                  Found something that doesn't look right, or have a question about your data? Message our team and
+                  we'll respond as quickly as we can.
                 </p>
                 <a
-                  href="https://wa.me/351938847723"
+                  href="https://wa.me/351926579665"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
