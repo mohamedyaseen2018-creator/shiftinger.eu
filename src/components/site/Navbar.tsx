@@ -7,9 +7,12 @@ import NotificationBell from "@/components/site/NotificationBell";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`text-xl font-medium tracking-tight ${className}`}>
-      <span className="text-teal">Shift</span>
-      <span className="font-serif italic text-gold">inger</span>
+    <span className={`flex items-center gap-2.5 ${className}`}>
+      <LogoMark size={36} />
+      <span className="text-xl font-medium tracking-tight">
+        <span className="text-teal">Shift</span>
+        <span className="font-serif italic text-gold">inger</span>
+      </span>
     </span>
   );
 }
