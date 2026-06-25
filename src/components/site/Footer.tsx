@@ -30,9 +30,7 @@ export default function Footer() {
                 <span className="font-serif italic text-gold">inger</span>
               </span>
             </span>
-            <p className="mt-3 text-sm leading-relaxed text-canvas/60">
-              {c("footer.tagline")}
-            </p>
+            <p className="mt-3 text-sm leading-relaxed text-canvas/60">{c("footer.tagline")}</p>
           </div>
 
           <div>
@@ -64,7 +62,7 @@ export default function Footer() {
           <div>
             <h4 className="mb-4 font-medium text-canvas">{c("footer.contact_title")}</h4>
             <a
-              href="https://wa.me/351938847723"
+              href="https://wa.me/351926579665"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
