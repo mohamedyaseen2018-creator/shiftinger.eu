@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { LogoMark } from "@/components/brand/Logo";
 
 const WORKER_LINKS = [
   { label: "Browse shifts", to: "/jobs" },
