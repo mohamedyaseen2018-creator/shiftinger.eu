@@ -4,12 +4,16 @@ import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
 import NotificationBell from "@/components/site/NotificationBell";
+import { LogoMark } from "@/components/brand/Logo";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`text-xl font-medium tracking-tight ${className}`}>
-      <span className="text-teal">Shift</span>
-      <span className="font-serif italic text-gold">inger</span>
+    <span className={`flex items-center gap-2.5 ${className}`}>
+      <LogoMark size={36} />
+      <span className="text-xl font-medium tracking-tight">
+        <span className="text-teal">Shift</span>
+        <span className="font-serif italic text-gold">inger</span>
+      </span>
     </span>
   );
 }

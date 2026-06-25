@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { LogoMark } from "@/components/brand/Logo";
 
 const WORKER_LINKS = [
   { label: "Browse shifts", to: "/jobs" },
@@ -22,9 +23,12 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <span className="text-2xl font-medium tracking-tight">
-              <span className="text-canvas">Shift</span>
-              <span className="font-serif italic text-gold">inger</span>
+            <span className="flex items-center gap-2.5">
+              <LogoMark size={32} />
+              <span className="text-2xl font-medium tracking-tight">
+                <span className="text-canvas">Shift</span>
+                <span className="font-serif italic text-gold">inger</span>
+              </span>
             </span>
             <p className="mt-3 text-sm leading-relaxed text-canvas/60">
               {c("footer.tagline")}

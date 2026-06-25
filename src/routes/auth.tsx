@@ -186,7 +186,7 @@ function AuthPage() {
         <div className="mx-auto max-w-md">
           <div className="text-center">
             <Link to="/" className="inline-flex justify-center">
-              <Logo variant="full" theme="light" size={44} />
+              <Logo variant="full" theme="light" size={48} />
             </Link>
             <h1 className="mt-6 font-serif text-3xl text-ink">
               {tab === "signin" ? "Welcome back" : "Create your account"}
