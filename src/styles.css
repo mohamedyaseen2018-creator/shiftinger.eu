@@ -6,36 +6,43 @@
 
 /* ── Shiftinger brand tokens (official brand guidelines) ── */
 @theme {
-  /* Primary teal scale */
-  --color-teal: #1D9E75;
-  --color-teal-deep: #0F6E56;
-  --color-teal-dark: #04342C;
-  --color-teal-mid: #085041;
-  --color-teal-light: #E1F5EE;
-  --color-teal-soft: #9FE1CB;
-  --color-teal-pale: #5DCAA5;
+  /* ── Final brand identity ──
+     primary (Deep Forest)  #06332A   hover #0A4A3A   tint #E8F4F0
+     accent  (Brand Gold)   #D89733   hover #B87E28   tint #F5E6C0
+     text-dark #06332A   text-muted #486962
+     Existing token names are remapped onto these values so all
+     components inherit the new brand automatically. */
 
-  /* Accent amber scale */
-  --color-amber: #FAC775;
-  --color-amber-deep: #EF9F27;
-  --color-amber-dark: #BA7517;
-  --color-amber-light: #FAEEDA;
-  --color-amber-text: #633806;
+  /* Primary — Deep Forest scale */
+  --color-teal: #06332A;
+  --color-teal-deep: #0A4A3A;
+  --color-teal-dark: #06332A;
+  --color-teal-mid: #0A4A3A;
+  --color-teal-light: #E8F4F0;
+  --color-teal-soft: #A9CFC4;
+  --color-teal-pale: #4E8C7D;
+
+  /* Accent — Brand Gold scale */
+  --color-amber: #D89733;
+  --color-amber-deep: #B87E28;
+  --color-amber-dark: #8A5E1C;
+  --color-amber-light: #F5E6C0;
+  --color-amber-text: #5C3D0A;
 
   /* Neutrals */
-  --color-charcoal: #1A1A1A;
+  --color-charcoal: #06332A;
   --color-offwhite: #F5F5F3;
   --color-gray-light: #D3D1C7;
-  --color-gray-mid: #888780;
-  --color-gray-dark: #444441;
+  --color-gray-mid: #486962;
+  --color-gray-dark: #2E4A44;
 
   /* Semantic */
   --color-danger: #E24B4A;
   --color-danger-light: #FCEBEB;
   --color-danger-dark: #A32D2D;
-  --color-success: #1D9E75;
-  --color-warning: #FAC775;
-  --color-warning-text: #854F0B;
+  --color-success: #0A4A3A;
+  --color-warning: #D89733;
+  --color-warning-text: #5C3D0A;
   --color-info: #378ADD;
   --color-info-light: #E6F1FB;
   --color-info-text: #185FA5;
@@ -43,23 +50,23 @@
   /* Surfaces */
   --color-surface-page: #F5F5F3;
   --color-surface-card: #FFFFFF;
-  --color-surface-hover: #E1F5EE;
+  --color-surface-hover: #E8F4F0;
 
   /* ── Legacy aliases remapped onto the brand palette so existing
         components inherit the brand colors automatically ── */
-  --color-gold: #FAC775;
-  --color-gold-light: #FAEEDA;
-  --color-gold-dark: #BA7517;
-  --color-ink: #1A1A1A;
+  --color-gold: #D89733;
+  --color-gold-light: #F5E6C0;
+  --color-gold-dark: #B87E28;
+  --color-ink: #06332A;
   --color-canvas: #F5F5F3;
   --color-canvas-dark: #D3D1C7;
   /* Admin console palette → brand */
-  --color-pine: #1D9E75;
-  --color-pine-dark: #04342C;
-  --color-pine-soft: #E1F5EE;
-  --color-amber-soft: #FAEEDA;
+  --color-pine: #06332A;
+  --color-pine-dark: #06332A;
+  --color-pine-soft: #E8F4F0;
+  --color-amber-soft: #F5E6C0;
 
-  --color-slate: #888780;
+  --color-slate: #486962;
   --color-mist: #F5F5F3;
   --color-line: #D3D1C7;
 
