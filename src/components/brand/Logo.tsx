@@ -165,8 +165,8 @@ function IconLogo({ size, className }: { size: number; className?: string }) {
       className={className}
       aria-hidden="true"
     >
-      <rect width="48" height="48" rx={(radius / size) * 48} fill="#1D9E75" />
-      <rect x="13" y="12" width="9" height="24" rx="3" fill="#FAC775" />
+      <rect width="48" height="48" rx={(radius / size) * 48} fill="#06332A" />
+      <rect x="13" y="12" width="9" height="24" rx="3" fill="#D89733" />
       <rect x="26" y="12" width="9" height="17" rx="3" fill="#FFFFFF" opacity="0.95" />
       <rect x="26" y="32" width="9" height="4" rx="2" fill="#FFFFFF" opacity="0.4" />
     </svg>
