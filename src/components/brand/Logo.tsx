@@ -136,8 +136,8 @@ function FullLogo({ theme, size, className }: { theme: LogoTheme; size: number; 
 function MarkLogo({ theme, size, className }: { theme: LogoTheme; size: number; className?: string }) {
   const dark = theme === "dark";
   const colors = dark
-    ? { tallBar: "#FAC775", shortBar: "#FFFFFF", shortBarOpacity: 1, stub: "#FFFFFF", stubOpacity: 0.35 }
-    : { tallBar: "#1D9E75", shortBar: "#FAC775", shortBarOpacity: 1, stub: "#9FE1CB", stubOpacity: 1 };
+    ? { tallBar: "#D89733", shortBar: "#FFFFFF", shortBarOpacity: 1, stub: "#FFFFFF", stubOpacity: 0.35 }
+    : { tallBar: "#06332A", shortBar: "#D89733", shortBarOpacity: 1, stub: "#A9CFC4", stubOpacity: 1 };
   return (
     <svg
       width={size}
