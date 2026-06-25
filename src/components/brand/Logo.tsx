@@ -28,40 +28,40 @@ function fullThemeColors(theme: LogoTheme): MarkColors & {
   switch (theme) {
     case "dark":
       return {
-        iconBg: "#FAC775",
-        tallBar: "#04342C",
-        shortBar: "#04342C",
+        iconBg: "#D89733",
+        tallBar: "#06332A",
+        shortBar: "#06332A",
         shortBarOpacity: 0.8,
-        stub: "#04342C",
+        stub: "#06332A",
         stubOpacity: 0.4,
         shiftText: "#FFFFFF",
-        ingerText: "#FAC775",
-        tagline: "#5DCAA5",
+        ingerText: "#D89733",
+        tagline: "#A9CFC4",
       };
     case "amber":
       return {
-        iconBg: "#04342C",
-        tallBar: "#FAC775",
+        iconBg: "#06332A",
+        tallBar: "#D89733",
         shortBar: "#FFFFFF",
         shortBarOpacity: 0.9,
         stub: "#FFFFFF",
         stubOpacity: 0.4,
-        shiftText: "#04342C",
-        ingerText: "#04342C",
-        tagline: "#085041",
+        shiftText: "#06332A",
+        ingerText: "#06332A",
+        tagline: "#0A4A3A",
       };
     case "light":
     default:
       return {
-        iconBg: "#1D9E75",
-        tallBar: "#FAC775",
+        iconBg: "#06332A",
+        tallBar: "#D89733",
         shortBar: "#FFFFFF",
         shortBarOpacity: 0.9,
         stub: "#FFFFFF",
         stubOpacity: 0.4,
-        shiftText: "#1A1A1A",
-        ingerText: "#1D9E75",
-        tagline: "#888780",
+        shiftText: "#06332A",
+        ingerText: "#D89733",
+        tagline: "#486962",
       };
   }
 }
