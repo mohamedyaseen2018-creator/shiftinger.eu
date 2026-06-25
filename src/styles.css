@@ -6,36 +6,43 @@
 
 /* ── Shiftinger brand tokens (official brand guidelines) ── */
 @theme {
-  /* Primary teal scale */
-  --color-teal: #1D9E75;
-  --color-teal-deep: #0F6E56;
-  --color-teal-dark: #04342C;
-  --color-teal-mid: #085041;
-  --color-teal-light: #E1F5EE;
-  --color-teal-soft: #9FE1CB;
-  --color-teal-pale: #5DCAA5;
+  /* ── Final brand identity ──
+     primary (Deep Forest)  #06332A   hover #0A4A3A   tint #E8F4F0
+     accent  (Brand Gold)   #D89733   hover #B87E28   tint #F5E6C0
+     text-dark #06332A   text-muted #486962
+     Existing token names are remapped onto these values so all
+     components inherit the new brand automatically. */
 
-  /* Accent amber scale */
-  --color-amber: #FAC775;
-  --color-amber-deep: #EF9F27;
-  --color-amber-dark: #BA7517;
-  --color-amber-light: #FAEEDA;
-  --color-amber-text: #633806;
+  /* Primary — Deep Forest scale */
+  --color-teal: #06332A;
+  --color-teal-deep: #0A4A3A;
+  --color-teal-dark: #06332A;
+  --color-teal-mid: #0A4A3A;
+  --color-teal-light: #E8F4F0;
+  --color-teal-soft: #A9CFC4;
+  --color-teal-pale: #4E8C7D;
+
+  /* Accent — Brand Gold scale */
+  --color-amber: #D89733;
+  --color-amber-deep: #B87E28;
+  --color-amber-dark: #8A5E1C;
+  --color-amber-light: #F5E6C0;
+  --color-amber-text: #5C3D0A;
 
   /* Neutrals */
-  --color-charcoal: #1A1A1A;
+  --color-charcoal: #06332A;
   --color-offwhite: #F5F5F3;
   --color-gray-light: #D3D1C7;
-  --color-gray-mid: #888780;
-  --color-gray-dark: #444441;
+  --color-gray-mid: #486962;
+  --color-gray-dark: #2E4A44;
 
   /* Semantic */
   --color-danger: #E24B4A;
   --color-danger-light: #FCEBEB;
   --color-danger-dark: #A32D2D;
-  --color-success: #1D9E75;
-  --color-warning: #FAC775;
-  --color-warning-text: #854F0B;
+  --color-success: #0A4A3A;
+  --color-warning: #D89733;
+  --color-warning-text: #5C3D0A;
   --color-info: #378ADD;
   --color-info-light: #E6F1FB;
   --color-info-text: #185FA5;
@@ -43,23 +50,23 @@
   /* Surfaces */
   --color-surface-page: #F5F5F3;
   --color-surface-card: #FFFFFF;
-  --color-surface-hover: #E1F5EE;
+  --color-surface-hover: #E8F4F0;
 
   /* ── Legacy aliases remapped onto the brand palette so existing
         components inherit the brand colors automatically ── */
-  --color-gold: #FAC775;
-  --color-gold-light: #FAEEDA;
-  --color-gold-dark: #BA7517;
-  --color-ink: #1A1A1A;
+  --color-gold: #D89733;
+  --color-gold-light: #F5E6C0;
+  --color-gold-dark: #B87E28;
+  --color-ink: #06332A;
   --color-canvas: #F5F5F3;
   --color-canvas-dark: #D3D1C7;
   /* Admin console palette → brand */
-  --color-pine: #1D9E75;
-  --color-pine-dark: #04342C;
-  --color-pine-soft: #E1F5EE;
-  --color-amber-soft: #FAEEDA;
+  --color-pine: #06332A;
+  --color-pine-dark: #06332A;
+  --color-pine-soft: #E8F4F0;
+  --color-amber-soft: #F5E6C0;
 
-  --color-slate: #888780;
+  --color-slate: #486962;
   --color-mist: #F5F5F3;
   --color-line: #D3D1C7;
 
@@ -137,72 +144,72 @@
 :root {
   --radius: 0.5rem;
   --background: #F5F5F3;
-  --foreground: #1A1A1A;
+  --foreground: #06332A;
   --card: #FFFFFF;
-  --card-foreground: #1A1A1A;
+  --card-foreground: #06332A;
   --popover: #FFFFFF;
-  --popover-foreground: #1A1A1A;
-  --primary: #1D9E75;
+  --popover-foreground: #06332A;
+  --primary: #06332A;
   --primary-foreground: #FFFFFF;
   --secondary: #FFFFFF;
-  --secondary-foreground: #1A1A1A;
+  --secondary-foreground: #06332A;
   --muted: #F5F5F3;
-  --muted-foreground: #888780;
-  --accent: #E1F5EE;
-  --accent-foreground: #085041;
+  --muted-foreground: #486962;
+  --accent: #E8F4F0;
+  --accent-foreground: #06332A;
   --destructive: #E24B4A;
   --destructive-foreground: #FFFFFF;
   --border: #D3D1C7;
   --input: #D3D1C7;
-  --ring: #1D9E75;
-  --chart-1: #1D9E75;
-  --chart-2: #FAC775;
-  --chart-3: #9FE1CB;
+  --ring: #06332A;
+  --chart-1: #06332A;
+  --chart-2: #D89733;
+  --chart-3: #A9CFC4;
   --chart-4: #E24B4A;
   --chart-5: #D3D1C7;
-  --sidebar: #04342C;
-  --sidebar-foreground: #9FE1CB;
-  --sidebar-primary: #1D9E75;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar: #06332A;
+  --sidebar-foreground: #A9CFC4;
+  --sidebar-primary: #D89733;
+  --sidebar-primary-foreground: #06332A;
   --sidebar-accent: rgba(255, 255, 255, 0.06);
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #1D9E75;
+  --sidebar-ring: #D89733;
 }
 
 .dark {
-  --background: #04342C;
+  --background: #06332A;
   --foreground: #F5F5F3;
-  --card: #085041;
+  --card: #0A4A3A;
   --card-foreground: #F5F5F3;
-  --popover: #085041;
+  --popover: #0A4A3A;
   --popover-foreground: #F5F5F3;
-  --primary: #1D9E75;
-  --primary-foreground: #FFFFFF;
-  --secondary: #0F6E56;
+  --primary: #D89733;
+  --primary-foreground: #06332A;
+  --secondary: #0A4A3A;
   --secondary-foreground: #F5F5F3;
-  --muted: #0F6E56;
-  --muted-foreground: #9FE1CB;
-  --accent: #0F6E56;
+  --muted: #0A4A3A;
+  --muted-foreground: #A9CFC4;
+  --accent: #0A4A3A;
   --accent-foreground: #FFFFFF;
   --destructive: #E24B4A;
   --destructive-foreground: #FFFFFF;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
-  --ring: #1D9E75;
-  --chart-1: #1D9E75;
-  --chart-2: #FAC775;
-  --chart-3: #9FE1CB;
+  --ring: #D89733;
+  --chart-1: #D89733;
+  --chart-2: #A9CFC4;
+  --chart-3: #4E8C7D;
   --chart-4: #E24B4A;
   --chart-5: #D3D1C7;
-  --sidebar: #04342C;
-  --sidebar-foreground: #9FE1CB;
-  --sidebar-primary: #1D9E75;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar: #06332A;
+  --sidebar-foreground: #A9CFC4;
+  --sidebar-primary: #D89733;
+  --sidebar-primary-foreground: #06332A;
   --sidebar-accent: rgba(255, 255, 255, 0.06);
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #1D9E75;
+  --sidebar-ring: #D89733;
 }
 
 @layer base {

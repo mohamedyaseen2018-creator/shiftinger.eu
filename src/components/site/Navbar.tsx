@@ -65,7 +65,7 @@ export default function Navbar() {
                 <Link
                   to="/post-job"
                   className="rounded-full px-5 py-2 text-sm font-medium text-canvas transition-colors hover:opacity-90"
-                  style={{ backgroundColor: "#1D9E75" }}
+                  style={{ backgroundColor: "#06332A" }}
                 >
                   Post Shift
                 </Link>
@@ -136,7 +136,7 @@ export default function Navbar() {
                   <Link
                     to="/post-job"
                     className="rounded-full px-5 py-2 text-center text-sm font-medium text-canvas"
-                    style={{ backgroundColor: "#1D9E75" }}
+                    style={{ backgroundColor: "#06332A" }}
                     onClick={() => setOpen(false)}
                   >
                     Post Shift

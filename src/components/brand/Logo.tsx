@@ -28,40 +28,40 @@ function fullThemeColors(theme: LogoTheme): MarkColors & {
   switch (theme) {
     case "dark":
       return {
-        iconBg: "#FAC775",
-        tallBar: "#04342C",
-        shortBar: "#04342C",
+        iconBg: "#D89733",
+        tallBar: "#06332A",
+        shortBar: "#06332A",
         shortBarOpacity: 0.8,
-        stub: "#04342C",
+        stub: "#06332A",
         stubOpacity: 0.4,
         shiftText: "#FFFFFF",
-        ingerText: "#FAC775",
-        tagline: "#5DCAA5",
+        ingerText: "#D89733",
+        tagline: "#A9CFC4",
       };
     case "amber":
       return {
-        iconBg: "#04342C",
-        tallBar: "#FAC775",
+        iconBg: "#06332A",
+        tallBar: "#D89733",
         shortBar: "#FFFFFF",
         shortBarOpacity: 0.9,
         stub: "#FFFFFF",
         stubOpacity: 0.4,
-        shiftText: "#04342C",
-        ingerText: "#04342C",
-        tagline: "#085041",
+        shiftText: "#06332A",
+        ingerText: "#06332A",
+        tagline: "#0A4A3A",
       };
     case "light":
     default:
       return {
-        iconBg: "#1D9E75",
-        tallBar: "#FAC775",
+        iconBg: "#06332A",
+        tallBar: "#D89733",
         shortBar: "#FFFFFF",
         shortBarOpacity: 0.9,
         stub: "#FFFFFF",
         stubOpacity: 0.4,
-        shiftText: "#1A1A1A",
-        ingerText: "#1D9E75",
-        tagline: "#888780",
+        shiftText: "#06332A",
+        ingerText: "#D89733",
+        tagline: "#486962",
       };
   }
 }
@@ -136,8 +136,8 @@ function FullLogo({ theme, size, className }: { theme: LogoTheme; size: number; 
 function MarkLogo({ theme, size, className }: { theme: LogoTheme; size: number; className?: string }) {
   const dark = theme === "dark";
   const colors = dark
-    ? { tallBar: "#FAC775", shortBar: "#FFFFFF", shortBarOpacity: 1, stub: "#FFFFFF", stubOpacity: 0.35 }
-    : { tallBar: "#1D9E75", shortBar: "#FAC775", shortBarOpacity: 1, stub: "#9FE1CB", stubOpacity: 1 };
+    ? { tallBar: "#D89733", shortBar: "#FFFFFF", shortBarOpacity: 1, stub: "#FFFFFF", stubOpacity: 0.35 }
+    : { tallBar: "#06332A", shortBar: "#D89733", shortBarOpacity: 1, stub: "#A9CFC4", stubOpacity: 1 };
   return (
     <svg
       width={size}
@@ -165,8 +165,8 @@ function IconLogo({ size, className }: { size: number; className?: string }) {
       className={className}
       aria-hidden="true"
     >
-      <rect width="48" height="48" rx={(radius / size) * 48} fill="#1D9E75" />
-      <rect x="13" y="12" width="9" height="24" rx="3" fill="#FAC775" />
+      <rect width="48" height="48" rx={(radius / size) * 48} fill="#06332A" />
+      <rect x="13" y="12" width="9" height="24" rx="3" fill="#D89733" />
       <rect x="26" y="12" width="9" height="17" rx="3" fill="#FFFFFF" opacity="0.95" />
       <rect x="26" y="32" width="9" height="4" rx="2" fill="#FFFFFF" opacity="0.4" />
     </svg>
