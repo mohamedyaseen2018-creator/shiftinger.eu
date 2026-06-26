@@ -161,17 +161,27 @@ export function BusinessModal({
               </Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Contact name">
                 <TextInput value={form.contactName} onChange={(e) => set({ contactName: e.target.value })} />
               </Field>
               <Field label="Contact phone">
                 <TextInput value={form.contactPhone} onChange={(e) => set({ contactPhone: e.target.value })} />
               </Field>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="Contact email" hint="Updates the business login email">
+                <TextInput type="email" value={form.email} onChange={(e) => set({ email: e.target.value })} />
+              </Field>
               <Field label="NIF (tax number)">
                 <TextInput value={form.nif} onChange={(e) => set({ nif: e.target.value })} />
               </Field>
+              <Field label="Alvará number">
+                <TextInput value={form.alvara} onChange={(e) => set({ alvara: e.target.value })} placeholder="License no." />
+              </Field>
             </div>
+
 
             <Field label="Languages required for workers">
               <TagMultiSelect
