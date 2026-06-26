@@ -247,6 +247,7 @@ export type Database = {
       business_profiles: {
         Row: {
           admin_notes: string
+          alvara: string | null
           area: string | null
           avatar_url: string | null
           business_name: string | null
@@ -274,6 +275,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string
+          alvara?: string | null
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -301,6 +303,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string
+          alvara?: string | null
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null

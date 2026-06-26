@@ -95,6 +95,10 @@ export interface Worker {
   portfolioUrl: string;
   bio: string;
   adminNotes: string;
+  lookingFor: string[];
+  availableDays: string[];
+  timeSlots: string[];
+  availabilityVisible: boolean;
   hasCv: boolean;
   hasDocuments: boolean;
   idDocumentPath: string;
@@ -127,6 +131,7 @@ export interface Business {
   description: string;
   adminNotes: string;
   nif: string;
+  alvara: string;
   subSector: string;
   displayInitials: string;
   languagesRequired: string[];
@@ -147,6 +152,8 @@ export interface Shift {
   spots: number;
   spotsRemaining: number;
   note: string;
+  skills: string[];
+  languages: string[];
   city: string;
   status: JobStatus;
   applications: number;
@@ -342,7 +349,7 @@ interface StoreValue {
   refresh: () => Promise<void>;
   saveWorker: (w: Worker) => Promise<void>;
   saveBusiness: (b: Business) => Promise<void>;
-  saveShift: (s: Pick<Shift, "id" | "role" | "rate" | "spots" | "status" | "note">) => Promise<void>;
+  saveShift: (s: Pick<Shift, "id" | "role" | "rate" | "spots" | "status" | "note" | "date" | "startTime" | "endTime" | "skills">) => Promise<void>;
   setMatchStatus: (id: string, status: ApplicationStatus) => Promise<void>;
   setStatus: (
     userId: string,
@@ -450,6 +457,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           data: {
             id: w.id,
             name: w.name,
+            email: w.email,
             phone: w.phone,
             nationality: w.nationality,
             city: w.city,
@@ -465,6 +473,11 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             adminNotes: w.adminNotes,
             atividadeNumber: w.atividadeNumber,
             haccpVerified: w.haccpVerified,
+            verified: w.verified,
+            lookingFor: w.lookingFor,
+            availableDays: w.availableDays,
+            timeSlots: w.timeSlots,
+            availabilityVisible: w.availabilityVisible,
           },
         });
         await refresh();
@@ -474,6 +487,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           data: {
             id: b.id,
             name: b.name,
+            email: b.email,
             city: b.city,
             area: b.area,
             category: b.category,
@@ -485,6 +499,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             isEarlyBird: b.isEarlyBird,
             adminNotes: b.adminNotes,
             nif: b.nif,
+            alvara: b.alvara,
             subSector: b.subSector,
             displayInitials: b.displayInitials,
             languagesRequired: b.languagesRequired,
@@ -495,10 +510,22 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       },
       saveShift: async (s) => {
         await consoleUpdateShift({
-          data: { id: s.id, role: s.role, rate: s.rate, spots: s.spots, status: s.status, note: s.note },
+          data: {
+            id: s.id,
+            role: s.role,
+            rate: s.rate,
+            spots: s.spots,
+            status: s.status,
+            note: s.note,
+            date: s.date,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            skills: s.skills,
+          },
         });
         await refresh();
       },
+
       setMatchStatus: async (id, status) => {
         await consoleSetMatchStatus({ data: { id, status } });
         await refresh();

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Trash2, Star, Mail, BadgeCheck, Ban } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Trash2, Star, Mail, BadgeCheck, Ban, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -108,8 +109,17 @@ export function BusinessModal({
             <DialogDescription className="flex flex-wrap items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1"><Mail size={12} /> {form.email || "—"}</span>
               <span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber text-amber" /> {form.rating.toFixed(1)} ({form.ratingCount})</span>
+              <Link
+                to="/console/businesses/$businessId"
+                params={{ businessId: form.id }}
+                onClick={onClose}
+                className="inline-flex items-center gap-1 font-medium text-pine-dark hover:underline"
+              >
+                <Building2 size={12} /> View full profile
+              </Link>
             </DialogDescription>
           </DialogHeader>
+
 
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
@@ -160,17 +170,27 @@ export function BusinessModal({
               </Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Contact name">
                 <TextInput value={form.contactName} onChange={(e) => set({ contactName: e.target.value })} />
               </Field>
               <Field label="Contact phone">
                 <TextInput value={form.contactPhone} onChange={(e) => set({ contactPhone: e.target.value })} />
               </Field>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="Contact email" hint="Updates the business login email">
+                <TextInput type="email" value={form.email} onChange={(e) => set({ email: e.target.value })} />
+              </Field>
               <Field label="NIF (tax number)">
                 <TextInput value={form.nif} onChange={(e) => set({ nif: e.target.value })} />
               </Field>
+              <Field label="Alvará number">
+                <TextInput value={form.alvara} onChange={(e) => set({ alvara: e.target.value })} placeholder="License no." />
+              </Field>
             </div>
+
 
             <Field label="Languages required for workers">
               <TagMultiSelect

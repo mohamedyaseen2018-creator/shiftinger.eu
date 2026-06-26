@@ -116,6 +116,10 @@ export const getConsoleData = createServerFn({ method: "GET" })
         bio: w.bio ?? "",
         adminNotes: w.admin_notes ?? "",
         atividadeNumber: w.atividade_number ?? "",
+        lookingFor: arr(w.looking_for),
+        availableDays: arr(w.available_days),
+        timeSlots: arr(w.time_slots),
+        availabilityVisible: !!w.availability_visible,
         hasCv: !!(w.portfolio_url && String(w.portfolio_url).trim()),
         hasDocuments: !!(docByUser.get(w.user_id) ?? "").toString().trim(),
         idDocumentPath: (docByUser.get(w.user_id) ?? "") as string,
@@ -143,6 +147,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         description: b.description ?? "",
         adminNotes: b.admin_notes ?? "",
         nif: b.nif ?? "",
+        alvara: b.alvara ?? "",
         subSector: b.sub_sector ?? "",
         displayInitials: b.display_initials || maskInitials(b.business_name ?? ""),
         languagesRequired: arr(b.languages_required),
@@ -166,6 +171,8 @@ export const getConsoleData = createServerFn({ method: "GET" })
         spots: j.spots ?? 0,
         spotsRemaining: j.spots_remaining ?? 0,
         note: j.note ?? "",
+        skills: arr(j.skills),
+        languages: arr(j.languages),
         city: b?.city ?? "",
         status: (j.status ?? "open") as (typeof JOB_STATUS)[number],
         applications: appCountByJob.get(j.id) ?? 0,
@@ -304,6 +311,7 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid(),
         name: z.string().min(1).max(120),
+        email: z.string().email().max(200).optional().default(""),
         phone: z.string().max(40).optional().default(""),
         nationality: z.string().max(80).optional().default(""),
         city: z.string().max(80).optional().default(""),
@@ -319,6 +327,11 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         adminNotes: z.string().max(2000).optional().default(""),
         atividadeNumber: z.string().max(80).optional().default(""),
         haccpVerified: z.boolean().optional().default(false),
+        verified: z.boolean().optional(),
+        lookingFor: z.array(z.string().max(60)).max(40).optional().default([]),
+        availableDays: z.array(z.string().max(20)).max(14).optional().default([]),
+        timeSlots: z.array(z.string().max(40)).max(20).optional().default([]),
+        availabilityVisible: z.boolean().optional(),
       })
       .parse(i),
   )
@@ -344,6 +357,11 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         admin_notes: data.adminNotes,
         atividade_number: data.atividadeNumber,
         haccp_verified: data.haccpVerified,
+        looking_for: data.lookingFor,
+        available_days: data.availableDays,
+        time_slots: data.timeSlots,
+        ...(data.verified !== undefined ? { verified: data.verified } : {}),
+        ...(data.availabilityVisible !== undefined ? { availability_visible: data.availabilityVisible } : {}),
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);
@@ -353,6 +371,23 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         .from("worker_contacts")
         .upsert({ user_id: data.id, phone: data.phone }, { onConflict: "user_id" });
     }
+
+    // Optional login-email change (admin only). Skipped when unchanged.
+    if (data.email) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (prof && (prof.email ?? "").toLowerCase() !== data.email.toLowerCase()) {
+        const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+          email: data.email,
+        });
+        if (authErr) throw new Error(authErr.message);
+        await supabaseAdmin.from("profiles").update({ email: data.email }).eq("id", data.id);
+      }
+    }
+
     await supabaseAdmin.from("profiles").update({ full_name: data.name }).eq("id", data.id);
     return { ok: true };
   });
@@ -365,6 +400,7 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid(),
         name: z.string().min(1).max(160),
+        email: z.string().email().max(200).optional().default(""),
         city: z.string().max(80).optional().default(""),
         area: z.string().max(120).optional().default(""),
         category: z.string().max(80).optional().default(""),
@@ -376,6 +412,7 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         isEarlyBird: z.boolean().optional().default(false),
         adminNotes: z.string().max(2000).optional().default(""),
         nif: z.string().max(40).optional().default(""),
+        alvara: z.string().max(80).optional().default(""),
         subSector: z.string().max(120).optional().default(""),
         displayInitials: z.string().max(40).optional().default(""),
         languagesRequired: z.array(z.string().max(60)).max(40).optional().default([]),
@@ -399,6 +436,7 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         is_early_bird: data.isEarlyBird,
         admin_notes: data.adminNotes,
         nif: data.nif,
+        alvara: data.alvara,
         sub_sector: data.subSector,
         display_initials: data.displayInitials,
         languages_required: data.languagesRequired,
@@ -416,6 +454,23 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
       },
       { onConflict: "user_id" },
     );
+
+    // Optional login / contact email change (admin only). Skipped when unchanged.
+    if (data.email) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (prof && (prof.email ?? "").toLowerCase() !== data.email.toLowerCase()) {
+        const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+          email: data.email,
+        });
+        if (authErr) throw new Error(authErr.message);
+        await supabaseAdmin.from("profiles").update({ email: data.email }).eq("id", data.id);
+      }
+    }
+
     await supabaseAdmin.from("profiles").update({ full_name: data.name }).eq("id", data.id);
     return { ok: true };
   });
@@ -432,6 +487,10 @@ export const consoleUpdateShift = createServerFn({ method: "POST" })
         spots: z.number().int().min(0).max(500),
         status: z.enum(JOB_STATUS),
         note: z.string().max(1000).optional().default(""),
+        date: z.string().max(20).nullable().optional(),
+        startTime: z.string().max(20).nullable().optional(),
+        endTime: z.string().max(20).nullable().optional(),
+        skills: z.array(z.string().max(60)).max(40).optional().default([]),
       })
       .parse(i),
   )
@@ -440,11 +499,22 @@ export const consoleUpdateShift = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("jobs")
-      .update({ role: data.role, rate: data.rate, spots: data.spots, status: data.status, note: data.note })
+      .update({
+        role: data.role,
+        rate: data.rate,
+        spots: data.spots,
+        status: data.status,
+        note: data.note,
+        skills: data.skills,
+        ...(data.date !== undefined ? { date: data.date || null } : {}),
+        ...(data.startTime !== undefined ? { start_time: data.startTime || null } : {}),
+        ...(data.endTime !== undefined ? { end_time: data.endTime || null } : {}),
+      })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 // ── WRITE: match (application) status ─────────────────────────────────────────
 export const consoleSetMatchStatus = createServerFn({ method: "POST" })
