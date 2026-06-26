@@ -131,6 +131,7 @@ export interface Business {
   description: string;
   adminNotes: string;
   nif: string;
+  alvara: string;
   subSector: string;
   displayInitials: string;
   languagesRequired: string[];
