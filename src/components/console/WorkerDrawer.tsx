@@ -44,6 +44,11 @@ const STATUS_OPTIONS = (Object.keys(STATUS_LABEL) as ConsoleStatus[]).map((value
   label: STATUS_LABEL[value],
 }));
 
+const DAY_OPTIONS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const SLOT_OPTIONS = ["Morning", "Afternoon", "Evening", "Night", "Weekends"];
+
+
+
 export function WorkerDrawer({
   worker,
   open,
