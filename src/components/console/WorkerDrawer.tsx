@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Trash2, Star, Mail, Phone, ExternalLink, Ban, UserSearch } from "lucide-react";
+import { Trash2, Star, Phone, ExternalLink, Ban, UserSearch } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
