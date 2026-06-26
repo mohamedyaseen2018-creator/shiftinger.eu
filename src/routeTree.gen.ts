@@ -39,6 +39,7 @@ import { Route as AuthenticatedMyJobsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as ConsoleWorkersWorkerIdRouteImport } from './routes/console.workers.$workerId'
 
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
@@ -190,6 +191,11 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ConsoleWorkersWorkerIdRoute = ConsoleWorkersWorkerIdRouteImport.update({
+  id: '/$workerId',
+  path: '/$workerId',
+  getParentRoute: () => ConsoleWorkersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -219,8 +225,9 @@ export interface FileRoutesByFullPath {
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
-  '/console/workers': typeof ConsoleWorkersRoute
+  '/console/workers': typeof ConsoleWorkersRouteWithChildren
   '/console/': typeof ConsoleIndexRoute
+  '/console/workers/$workerId': typeof ConsoleWorkersWorkerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -249,8 +256,9 @@ export interface FileRoutesByTo {
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
-  '/console/workers': typeof ConsoleWorkersRoute
+  '/console/workers': typeof ConsoleWorkersRouteWithChildren
   '/console': typeof ConsoleIndexRoute
+  '/console/workers/$workerId': typeof ConsoleWorkersWorkerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -282,8 +290,9 @@ export interface FileRoutesById {
   '/console/matches': typeof ConsoleMatchesRoute
   '/console/settings': typeof ConsoleSettingsRoute
   '/console/shifts': typeof ConsoleShiftsRoute
-  '/console/workers': typeof ConsoleWorkersRoute
+  '/console/workers': typeof ConsoleWorkersRouteWithChildren
   '/console/': typeof ConsoleIndexRoute
+  '/console/workers/$workerId': typeof ConsoleWorkersWorkerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/console/shifts'
     | '/console/workers'
     | '/console/'
+    | '/console/workers/$workerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/console/shifts'
     | '/console/workers'
     | '/console'
+    | '/console/workers/$workerId'
   id:
     | '__root__'
     | '/'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/console/shifts'
     | '/console/workers'
     | '/console/'
+    | '/console/workers/$workerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -609,6 +621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/console/workers/$workerId': {
+      id: '/console/workers/$workerId'
+      path: '/$workerId'
+      fullPath: '/console/workers/$workerId'
+      preLoaderRoute: typeof ConsoleWorkersWorkerIdRouteImport
+      parentRoute: typeof ConsoleWorkersRoute
+    }
   }
 }
 
@@ -633,6 +652,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ConsoleWorkersRouteChildren {
+  ConsoleWorkersWorkerIdRoute: typeof ConsoleWorkersWorkerIdRoute
+}
+
+const ConsoleWorkersRouteChildren: ConsoleWorkersRouteChildren = {
+  ConsoleWorkersWorkerIdRoute: ConsoleWorkersWorkerIdRoute,
+}
+
+const ConsoleWorkersRouteWithChildren = ConsoleWorkersRoute._addFileChildren(
+  ConsoleWorkersRouteChildren,
+)
+
 interface ConsoleRouteChildren {
   ConsoleAccessRoute: typeof ConsoleAccessRoute
   ConsoleBusinessesRoute: typeof ConsoleBusinessesRoute
@@ -643,7 +674,7 @@ interface ConsoleRouteChildren {
   ConsoleMatchesRoute: typeof ConsoleMatchesRoute
   ConsoleSettingsRoute: typeof ConsoleSettingsRoute
   ConsoleShiftsRoute: typeof ConsoleShiftsRoute
-  ConsoleWorkersRoute: typeof ConsoleWorkersRoute
+  ConsoleWorkersRoute: typeof ConsoleWorkersRouteWithChildren
   ConsoleIndexRoute: typeof ConsoleIndexRoute
 }
 
@@ -657,7 +688,7 @@ const ConsoleRouteChildren: ConsoleRouteChildren = {
   ConsoleMatchesRoute: ConsoleMatchesRoute,
   ConsoleSettingsRoute: ConsoleSettingsRoute,
   ConsoleShiftsRoute: ConsoleShiftsRoute,
-  ConsoleWorkersRoute: ConsoleWorkersRoute,
+  ConsoleWorkersRoute: ConsoleWorkersRouteWithChildren,
   ConsoleIndexRoute: ConsoleIndexRoute,
 }
 
