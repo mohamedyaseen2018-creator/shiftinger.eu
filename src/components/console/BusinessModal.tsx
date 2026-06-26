@@ -109,8 +109,17 @@ export function BusinessModal({
             <DialogDescription className="flex flex-wrap items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1"><Mail size={12} /> {form.email || "—"}</span>
               <span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber text-amber" /> {form.rating.toFixed(1)} ({form.ratingCount})</span>
+              <Link
+                to="/console/businesses/$businessId"
+                params={{ businessId: form.id }}
+                onClick={onClose}
+                className="inline-flex items-center gap-1 font-medium text-pine-dark hover:underline"
+              >
+                <Building2 size={12} /> View full profile
+              </Link>
             </DialogDescription>
           </DialogHeader>
+
 
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
