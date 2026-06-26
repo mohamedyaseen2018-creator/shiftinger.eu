@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ArrowLeft, Pencil, Star, BadgeCheck } from "lucide-react";
 import { PageHeader, Pill } from "@/components/console/ui";
 import { BusinessModal } from "@/components/console/BusinessModal";
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/console/businesses/$businessId")({
   component: BusinessProfilePage,
 });
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 border-b border-line py-2.5 last:border-0 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-xs font-medium text-slate">{label}</span>
@@ -19,7 +19,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-5">
       <h2 className="mb-2 text-sm font-semibold text-ink">{title}</h2>
