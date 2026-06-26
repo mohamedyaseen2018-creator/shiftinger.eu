@@ -457,6 +457,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           data: {
             id: w.id,
             name: w.name,
+            email: w.email,
             phone: w.phone,
             nationality: w.nationality,
             city: w.city,
@@ -472,6 +473,11 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             adminNotes: w.adminNotes,
             atividadeNumber: w.atividadeNumber,
             haccpVerified: w.haccpVerified,
+            verified: w.verified,
+            lookingFor: w.lookingFor,
+            availableDays: w.availableDays,
+            timeSlots: w.timeSlots,
+            availabilityVisible: w.availabilityVisible,
           },
         });
         await refresh();
@@ -481,6 +487,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           data: {
             id: b.id,
             name: b.name,
+            email: b.email,
             city: b.city,
             area: b.area,
             category: b.category,
@@ -492,6 +499,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             isEarlyBird: b.isEarlyBird,
             adminNotes: b.adminNotes,
             nif: b.nif,
+            alvara: b.alvara,
             subSector: b.subSector,
             displayInitials: b.displayInitials,
             languagesRequired: b.languagesRequired,
@@ -502,10 +510,22 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       },
       saveShift: async (s) => {
         await consoleUpdateShift({
-          data: { id: s.id, role: s.role, rate: s.rate, spots: s.spots, status: s.status, note: s.note },
+          data: {
+            id: s.id,
+            role: s.role,
+            rate: s.rate,
+            spots: s.spots,
+            status: s.status,
+            note: s.note,
+            date: s.date,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            skills: s.skills,
+          },
         });
         await refresh();
       },
+
       setMatchStatus: async (id, status) => {
         await consoleSetMatchStatus({ data: { id, status } });
         await refresh();
