@@ -349,7 +349,7 @@ interface StoreValue {
   refresh: () => Promise<void>;
   saveWorker: (w: Worker) => Promise<void>;
   saveBusiness: (b: Business) => Promise<void>;
-  saveShift: (s: Pick<Shift, "id" | "role" | "rate" | "spots" | "status" | "note">) => Promise<void>;
+  saveShift: (s: Pick<Shift, "id" | "role" | "rate" | "spots" | "status" | "note" | "date" | "startTime" | "endTime" | "skills">) => Promise<void>;
   setMatchStatus: (id: string, status: ApplicationStatus) => Promise<void>;
   setStatus: (
     userId: string,
