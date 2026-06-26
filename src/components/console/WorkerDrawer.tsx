@@ -113,12 +113,19 @@ export function WorkerDrawer({
           <SheetHeader className="border-b border-line bg-white px-6 py-4">
             <SheetTitle className="font-sans">Edit worker</SheetTitle>
             <SheetDescription>Edit profile details and review status. Changes are saved to the database.</SheetDescription>
+            <Link
+              to="/console/workers/$workerId"
+              params={{ workerId: form.id }}
+              onClick={onClose}
+              className="mt-1 inline-flex w-fit items-center gap-1.5 text-xs font-medium text-pine-dark hover:underline"
+            >
+              <UserSearch size={13} /> View full profile
+            </Link>
           </SheetHeader>
 
           <div className="space-y-4 px-6 py-5">
             <div className="rounded-xl border border-line bg-white px-4 py-3 text-xs text-slate">
-              <p className="flex items-center gap-2"><Mail size={13} /> {form.email || "—"}</p>
-              <p className="mt-1 flex items-center gap-2"><Phone size={13} /> {form.phone || "—"}</p>
+              <p className="flex items-center gap-2"><Phone size={13} /> {form.phone || "—"}</p>
               <p className="mt-1 flex items-center gap-3">
                 <span className="inline-flex items-center gap-1"><Star size={13} className="fill-amber text-amber" /> {form.rating.toFixed(1)} ({form.ratingCount})</span>
                 <span>· {form.shiftsCompleted} shifts</span>
@@ -133,6 +140,23 @@ export function WorkerDrawer({
                 <TextInput value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
               </Field>
             </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Email" hint="Changing this updates the worker's login email">
+                <TextInput type="email" value={form.email} onChange={(e) => set({ email: e.target.value })} />
+              </Field>
+              <Field label="City / location">
+                <ManagedSelect
+                  value={form.city}
+                  onChange={(v) => set({ city: v })}
+                  options={cityOptions}
+                  onAddOption={addOption("city")}
+                  placeholder="New city…"
+                  allowEmpty
+                />
+              </Field>
+            </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nationality">
