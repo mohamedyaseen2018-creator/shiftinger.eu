@@ -158,28 +158,17 @@ export function WorkerDrawer({
             </div>
 
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Nationality">
-                <ManagedSelect
-                  value={form.nationality}
-                  onChange={(v) => set({ nationality: v })}
-                  options={nationalityOptions}
-                  onAddOption={addOption("nationality")}
-                  placeholder="New nationality…"
-                  allowEmpty
-                />
-              </Field>
-              <Field label="City">
-                <ManagedSelect
-                  value={form.city}
-                  onChange={(v) => set({ city: v })}
-                  options={cityOptions}
-                  onAddOption={addOption("city")}
-                  placeholder="New city…"
-                  allowEmpty
-                />
-              </Field>
-            </div>
+            <Field label="Nationality">
+              <ManagedSelect
+                value={form.nationality}
+                onChange={(v) => set({ nationality: v })}
+                options={nationalityOptions}
+                onAddOption={addOption("nationality")}
+                placeholder="New nationality…"
+                allowEmpty
+              />
+            </Field>
+
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Main role">
