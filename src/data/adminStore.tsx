@@ -152,6 +152,8 @@ export interface Shift {
   spots: number;
   spotsRemaining: number;
   note: string;
+  skills: string[];
+  languages: string[];
   city: string;
   status: JobStatus;
   applications: number;
