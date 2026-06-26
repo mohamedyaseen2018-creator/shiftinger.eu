@@ -211,6 +211,41 @@ export function WorkerDrawer({
               />
             </Field>
 
+            <div className="rounded-xl border border-line bg-white p-3">
+              <p className="mb-2 text-xs font-semibold text-ink">Availability</p>
+              <div className="space-y-3">
+                <Field label="Looking for">
+                  <TagMultiSelect
+                    selected={form.lookingFor}
+                    options={roleOptions}
+                    onChange={(v) => set({ lookingFor: v })}
+                    onAddOption={addOption("skill")}
+                    placeholder="New role…"
+                  />
+                </Field>
+                <Field label="Available days">
+                  <TagMultiSelect
+                    selected={form.availableDays}
+                    options={DAY_OPTIONS}
+                    onChange={(v) => set({ availableDays: v })}
+                  />
+                </Field>
+                <Field label="Time slots">
+                  <TagMultiSelect
+                    selected={form.timeSlots}
+                    options={SLOT_OPTIONS}
+                    onChange={(v) => set({ timeSlots: v })}
+                  />
+                </Field>
+                <ToggleRow
+                  label="Availability visible"
+                  description="Show this worker in the public talent feed"
+                  checked={form.availabilityVisible}
+                  onChange={(v) => set({ availabilityVisible: v })}
+                />
+              </div>
+            </div>
+
             <ToggleRow
               label="Atividade (self-employed status)"
               description="Registered as independent worker with Finanças"
@@ -224,11 +259,19 @@ export function WorkerDrawer({
             )}
 
             <ToggleRow
+              label="ID verified"
+              description="Confirms the worker's identity document has been checked"
+              checked={form.verified}
+              onChange={(v) => set({ verified: v })}
+            />
+
+            <ToggleRow
               label="HACCP certified"
               description="Show the HACCP badge after verifying the worker's food-hygiene certificate"
               checked={form.haccpVerified}
               onChange={(v) => set({ haccpVerified: v })}
             />
+
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Review status">
