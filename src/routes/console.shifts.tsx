@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, TextInput, TextArea, SelectInput, PrimaryButton, GhostButton } from "@/components/console/forms";
+import { Field, TextInput, TextArea, SelectInput, TagMultiSelect, PrimaryButton, GhostButton } from "@/components/console/forms";
 import { useAdminStore, maskBusiness, type Shift, type JobStatus } from "@/data/adminStore";
 
 export const Route = createFileRoute("/console/shifts")({
