@@ -95,6 +95,10 @@ export interface Worker {
   portfolioUrl: string;
   bio: string;
   adminNotes: string;
+  lookingFor: string[];
+  availableDays: string[];
+  timeSlots: string[];
+  availabilityVisible: boolean;
   hasCv: boolean;
   hasDocuments: boolean;
   idDocumentPath: string;
