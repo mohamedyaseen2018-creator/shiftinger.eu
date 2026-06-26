@@ -171,6 +171,8 @@ export const getConsoleData = createServerFn({ method: "GET" })
         spots: j.spots ?? 0,
         spotsRemaining: j.spots_remaining ?? 0,
         note: j.note ?? "",
+        skills: arr(j.skills),
+        languages: arr(j.languages),
         city: b?.city ?? "",
         status: (j.status ?? "open") as (typeof JOB_STATUS)[number],
         applications: appCountByJob.get(j.id) ?? 0,
