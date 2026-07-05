@@ -80,3 +80,33 @@ the PostgREST Data API). The bundled `db` service is **only PostgreSQL**. So:
   self-hosted stack (which adds Auth + PostgREST on top of Postgres) and point
   `SUPABASE_URL` at it, or migrate the app to talk to `DATABASE_URL` directly.
   A bare Postgres container alone cannot serve the app's auth/REST calls.
+
+---
+
+## Deploy to DigitalOcean App Platform (from GitHub, via Docker)
+
+App Platform builds and runs the Docker image directly — you don't set separate
+build/start commands, they come from the `Dockerfile`:
+
+- **Build command:** `docker build` of the root `Dockerfile`
+  (internally runs `npx vite build --config vite.config.docker.ts`).
+- **Start command:** the image `CMD` → `node .output/server/index.mjs`.
+- **Port:** App Platform sets `PORT` to `http_port` (3000 here); the server binds to it.
+
+### Steps
+1. Make sure the repo is on GitHub (Lovable's GitHub sync pushes automatically
+   once connected — Plus (+) menu → GitHub → Connect project).
+2. In DigitalOcean → **Apps → Create App → GitHub**, select this repo + branch.
+   It auto-detects the `Dockerfile` and [`.do/app.yaml`](.do/app.yaml).
+   Or from the CLI: `doctl apps create --spec .do/app.yaml`.
+3. Edit [`.do/app.yaml`](.do/app.yaml): set the `github.repo` / `branch`, and the
+   `VITE_*` (BUILD_TIME) + `SUPABASE_*` (RUN_TIME) env values. Mark true secrets
+   as `type: SECRET`.
+4. Deploy. `deploy_on_push: true` redeploys on every push to the branch.
+
+### Database on DigitalOcean
+The app uses **Supabase** for DB + Auth + REST, so App Platform just talks to
+Supabase over HTTPS — no DB component required. If you'd rather use DO Managed
+Postgres, uncomment the `databases:` block in `.do/app.yaml` and run the
+migrations in `supabase/migrations/` against it (note: you'd still need an
+Auth/REST layer to fully replace Supabase — see the section above).
