@@ -45,8 +45,8 @@ USER node
 
 EXPOSE 3000
 
-# Simple healthcheck: the SSR server should answer on the root route
+# Healthcheck honours the runtime PORT (DigitalOcean App Platform injects its own).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider "http://127.0.0.1:${PORT:-3000}/" || exit 1
 
 CMD ["node", ".output/server/index.mjs"]
