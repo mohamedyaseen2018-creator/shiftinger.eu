@@ -14,7 +14,6 @@
 # ----- Stage 1: build the static assets -----
 FROM node:22-alpine AS build
 WORKDIR /app
-ENV NITRO_PRESET=node-server
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -26,7 +25,8 @@ ARG VITE_SUPABASE_PROJECT_ID
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
     VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY \
     VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
-RUN npm run build
+# Node-server build; we only take the static client assets (.output/public) for Nginx.
+RUN npx vite build --config vite.config.docker.ts
 
 # ----- Stage 2: lightweight Nginx runtime -----
 FROM nginx:1.27-alpine AS runtime
