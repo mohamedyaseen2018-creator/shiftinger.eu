@@ -11,9 +11,6 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# Nitro output target: a standalone Node server (instead of the default edge/Cloudflare build)
-ENV NITRO_PRESET=node-server
-
 # Install ALL deps (incl. dev) using the lockfile for reproducible builds
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -28,7 +25,9 @@ ARG VITE_SUPABASE_PROJECT_ID
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
     VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY \
     VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
-RUN npm run build
+# Uses vite.config.docker.ts to emit the standalone Node-server output
+# (.output/) instead of the default Cloudflare Workers target.
+RUN npx vite build --config vite.config.docker.ts
 
 # ----- Stage 2: slim runtime -----
 FROM node:22-alpine AS runtime
