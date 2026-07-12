@@ -9,9 +9,9 @@
 # ----- Stage 1: build -----
 FROM node:22-alpine AS build
 WORKDIR /app
-# Install ALL deps (incl. dev) from the npm lockfile
+# Install ALL deps (incl. dev)
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 # Copy source and build.
 # VITE_* vars are baked into the client bundle at build time, so they must be
 # present here (passed as build args from docker-compose).
