@@ -8,12 +8,12 @@
 # =============================================================================
 
 # ----- Stage 1: build -----
-FROM node:22-alpine AS build
+FROM oven/bun:1-alpine AS build
 WORKDIR /app
 
-# Install ALL deps (incl. dev) using the lockfile for reproducible builds
-COPY package.json package-lock.json ./
-RUN npm ci
+# Install ALL deps (incl. dev) from the Bun lockfile Lovable keeps in sync
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 # Copy source and build.
 # VITE_* vars are baked into the client bundle at build time, so they must be
@@ -27,7 +27,7 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
     VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
 # Uses vite.config.docker.ts to emit the standalone Node-server output
 # (.output/) instead of the default Cloudflare Workers target.
-RUN npx vite build --config vite.config.docker.ts
+RUN bunx vite build --config vite.config.docker.ts
 
 # ----- Stage 2: slim runtime -----
 FROM node:22-alpine AS runtime
