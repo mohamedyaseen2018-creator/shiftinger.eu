@@ -1,6 +1,5 @@
 # Dependencies (reinstalled inside the image)
 node_modules
-bun.lock
 
 # Build output / caches
 .output
