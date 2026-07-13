@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
-import markAsset from "@/assets/shiftinger-mark.png.asset.json";
+
+// Self-hosted from /public so it works on any host (no Lovable asset proxy).
+const markAsset = { url: "/shiftinger-mark.png" };
 
 export type LogoVariant = "full" | "mark" | "icon";
 export type LogoTheme = "light" | "dark" | "amber";
