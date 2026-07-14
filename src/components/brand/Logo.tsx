@@ -1,33 +1,54 @@
 import { cn } from "@/lib/utils";
 
-interface LogoProps {
+const MARK_SRC = "/shiftinger-mark.png";
+
+interface LogoMarkProps {
+  size?: number;
   className?: string;
-  showText?: boolean;
-  size?: "sm" | "md" | "lg" | "xl";
 }
 
-const sizes = {
-  sm: { mark: "h-8", text: "text-xl" },
-  md: { mark: "h-10", text: "text-2xl" },
-  lg: { mark: "h-12", text: "text-3xl" },
-  xl: { mark: "h-16", text: "text-4xl" },
-};
+export function LogoMark({ size = 36, className }: LogoMarkProps) {
+  return (
+    <img
+      src={MARK_SRC}
+      alt="Shiftinger"
+      width={size}
+      height={size}
+      className={cn("object-contain", className)}
+      style={{ height: size, width: size }}
+    />
+  );
+}
 
-export function Logo({ className, showText = true, size = "md" }: LogoProps) {
-  const { mark, text } = sizes[size];
+interface LogoProps {
+  variant?: "full" | "mark";
+  theme?: "light" | "dark";
+  size?: number;
+  className?: string;
+}
+
+export default function Logo({
+  variant = "full",
+  theme = "light",
+  size = 40,
+  className,
+}: LogoProps) {
+  if (variant === "mark") {
+    return <LogoMark size={size} className={className} />;
+  }
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <img
-        src="/shiftinger-mark.png"
-        alt="Shiftinger"
-        className={cn(mark, "w-auto object-contain")}
-      />
-      {showText && (
-        <span className={cn("font-bold tracking-tight text-foreground", text)}>
-          Shiftinger
-        </span>
-      )}
-    </div>
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <LogoMark size={size} />
+      <span
+        className={cn(
+          "font-serif font-semibold tracking-tight",
+          theme === "dark" ? "text-white" : "text-ink",
+        )}
+        style={{ fontSize: Math.round(size * 0.55) }}
+      >
+        Shiftinger
+      </span>
+    </span>
   );
 }
