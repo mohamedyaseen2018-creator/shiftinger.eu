@@ -156,4 +156,11 @@ export const NATIONALITY_OPTIONS: { name: string; flag: string }[] = [
   { name: "Venezuelan", flag: "🇻🇪" }, { name: "Peruvian", flag: "🇵🇪" },
   { name: "Chilean", flag: "🇨🇱" }, { name: "Australian", flag: "🇦🇺" },
   { name: "Other", flag: "🌍" },
-];
+]
+  // Sort alphabetically by the visible nationality name (A→Z),
+  // keeping the "Other" catch-all pinned to the end.
+  .sort((a, b) => {
+    if (a.name === "Other") return 1;
+    if (b.name === "Other") return -1;
+    return a.name.localeCompare(b.name);
+  });
