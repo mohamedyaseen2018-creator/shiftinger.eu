@@ -97,7 +97,7 @@ export const LANGUAGE_LEVELS = [
 
 export const LANGUAGE_FLAGS: Record<string, string> = {
   Portuguese: "🇵🇹", English: "🇬🇧", Spanish: "🇪🇸", French: "🇫🇷",
-  Arabic: "🇲🇦", Mandarin: "🇨🇳", Romanian: "🇷🇴", Ukrainian: "🇺🇦",
+  Arabic: "🇪🇬", Mandarin: "🇨🇳", Romanian: "🇷🇴", Ukrainian: "🇺🇦",
   Hindi: "🇮🇳", Other: "🌐",
 };
 
