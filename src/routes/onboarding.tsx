@@ -352,7 +352,127 @@ function WorkerForm({
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [days, setDays] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  // Draft handling — nothing typed in onboarding should ever be lost.
+  const [hydrated, setHydrated] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
 
+  // Re-load any partially completed profile so refreshing, signing out or
+  // coming back later resumes exactly where the worker stopped.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: wp }, { data: wc }, { data: wd }] = await Promise.all([
+        supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("worker_contacts").select("phone").eq("user_id", userId).maybeSingle(),
+        supabase.from("worker_documents").select("*").eq("user_id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (wp) {
+        if (wp.name) setName(wp.name);
+        if (wp.city) setCity(wp.city);
+        if (wp.nationality) setNationality(wp.nationality);
+        if (wp.residence) setResidence(wp.residence);
+        if (wp.main_role) setMainRole(wp.main_role);
+        if (wp.main_role_years) setMainRoleYears(String(wp.main_role_years));
+        const savedSubRoles = (wp.sub_roles ?? []) as unknown as { role: string; years: number | string }[];
+        if (savedSubRoles.length)
+          setSubRoles(savedSubRoles.map((s) => ({ role: s.role, years: String(s.years ?? 0) })));
+        const savedExp = (wp.experience ?? []) as unknown as ExpEntry[];
+        if (savedExp.length) setExperiences(savedExp);
+        const savedLangs = (wp.languages ?? []) as unknown as LangEntry[];
+        if (savedLangs.length) setLanguages(savedLangs);
+        setAtividade(wp.atividade ? "yes" : "no");
+        if (wp.min_rate) setMinRate(String(wp.min_rate));
+        if (wp.bio) setBio(wp.bio);
+        const savedLookingFor = (wp.looking_for ?? []) as unknown as string[];
+        if (savedLookingFor.length) setLookingFor(savedLookingFor);
+        const savedDays = (wp.available_days ?? []) as unknown as string[];
+        if (savedDays.length) setDays(savedDays);
+        const savedSlots = (wp.time_slots ?? []) as unknown as string[];
+        if (savedSlots.length) setTimeSlots(savedSlots);
+      }
+      if (wc?.phone) setPhone(wc.phone);
+      if (wd) {
+        if (wd.id_document_type) setIdDocType(wd.id_document_type);
+        if (wd.id_document_url) {
+          setDocPath(wd.id_document_url);
+          setDocName(wd.id_document_url.split("/").pop() ?? "Uploaded document");
+        }
+        if (wd.haccp_document_url) {
+          setHaccpPath(wd.haccp_document_url);
+          setHaccpName(wd.haccp_document_url.split("/").pop() ?? "Uploaded certificate");
+        }
+      }
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const profilePayload = () => ({
+    name: name || null,
+    city: city || null,
+    nationality: nationality || null,
+    residence: residence || null,
+    main_role: mainRole || null,
+    main_role_years: Number(mainRoleYears) || 0,
+    sub_roles: subRoles.filter((s) => s.role) as unknown as Json,
+    experience: experiences.filter((x) => x.position || x.employer) as unknown as Json,
+    languages: languages.filter((l) => l.language) as unknown as Json,
+    atividade: atividade === "yes",
+    min_rate: Number(minRate) || 0,
+    bio: bio || null,
+    looking_for: lookingFor,
+    available_days: days,
+    time_slots: timeSlots,
+  });
+
+  /** Persist everything captured so far. Returns false when saving failed. */
+  const saveDraft = async (): Promise<boolean> => {
+    if (!hydrated) return true;
+    setSavingDraft(true);
+    try {
+      if (phone.trim()) {
+        const { error } = await supabase
+          .from("worker_contacts")
+          .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
+        if (error) {
+          toast.error(phoneErrorMessage(error));
+          return false;
+        }
+      }
+      const { error: wErr } = await supabase
+        .from("worker_profiles")
+        .update(profilePayload())
+        .eq("user_id", userId);
+      if (wErr) {
+        toast.error("Could not save your progress. Please try again.");
+        return false;
+      }
+      if (docPath || haccpPath || idDocType) {
+        await supabase.from("worker_documents").upsert(
+          {
+            user_id: userId,
+            id_document_url: docPath ?? undefined,
+            id_document_type: idDocType ?? undefined,
+            haccp_document_url: haccpPath ?? undefined,
+          },
+          { onConflict: "user_id" },
+        );
+      }
+      return true;
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const goToStep = async (next: number) => {
+    // Always save before moving so partial answers survive a drop-off.
+    const ok = await saveDraft();
+    if (!ok && next > step) return;
+    setStep(next);
+  };
 
   const toggleLookingFor = (v: string) =>
     setLookingFor((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
@@ -362,10 +482,28 @@ function WorkerForm({
     setTimeSlots((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
   const canNext = () => {
-    if (step === 0) return name.trim() && city && phone.trim();
+    if (step === 0) return Boolean(name.trim() && city && isValidPhone(phone));
     if (step === 1) return Boolean(mainRole);
+    // Rate, availability and bio are now mandatory and asked early.
+    if (step === 2) return Boolean(Number(minRate) > 0 && days.length > 0 && bio.trim().length >= 20);
     return true;
   };
+
+  const stepError = () => {
+    if (step === 0) {
+      if (!name.trim()) return "Please enter your full name.";
+      if (!city) return "Please select your city.";
+      return "Please enter a valid WhatsApp / phone number.";
+    }
+    if (step === 1) return "Please choose your main role.";
+    if (step === 2) {
+      if (!(Number(minRate) > 0)) return "Please set your minimum hourly rate.";
+      if (days.length === 0) return "Please pick at least one available day.";
+      return "Please write a short bio (at least 20 characters).";
+    }
+    return "Please fill the required fields.";
+  };
+
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
