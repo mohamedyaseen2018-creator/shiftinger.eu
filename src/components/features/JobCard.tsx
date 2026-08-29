@@ -2,7 +2,8 @@ import { Lock, Clock, Users, Check, X, BadgeCheck } from "lucide-react";
 import type { Job, MatchCriterion } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { matchColor } from "@/lib/matching";
-import { timeAgo, formatDate, roleIcon, LANGUAGE_FLAGS } from "@/data/utils";
+import { timeAgo, formatDate, roleIcon } from "@/data/utils";
+import { LanguageFlag } from "@/components/ui/Flag";
 
 interface JobCardProps {
   job: Job;
@@ -132,7 +133,7 @@ export default function JobCard({ job, matchScore, matchCriteria, applied, onApp
                 : "bg-red-50 text-red-600 ring-1 ring-red-200";
             return (
               <span key={lang} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${cls}`}>
-                <span>{LANGUAGE_FLAGS[lang] ?? "🌐"}</span> {lang}
+                <LanguageFlag language={lang} size={11} /> {lang}
                 {known && (has ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={3} />)}
               </span>
             );

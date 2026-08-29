@@ -12,11 +12,11 @@ import { getWorkerPublicDetails } from "@/lib/talent.functions";
 import { useAuth } from "@/lib/auth";
 import HaccpBadge from "@/components/features/HaccpBadge";
 import ShiftOfferModal from "@/components/features/ShiftOfferModal";
+import { Flag, LanguageFlag } from "@/components/ui/Flag";
 import {
   getInitials,
   roleIcon,
   NATIONALITY_OPTIONS,
-  LANGUAGE_FLAGS,
   DAY_OPTIONS,
 } from "@/data/utils";
 
@@ -113,7 +113,11 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
               </div>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink/60">
                 <span className="inline-flex items-center gap-1"><MapPin size={12} /> {worker.city || "Portugal"}</span>
-                {nationality && <span>{nationality.flag} {nationality.name}</span>}
+                {nationality && (
+                  <span className="inline-flex items-center gap-1">
+                    <Flag code={nationality.code} title={nationality.name} size={12} /> {nationality.name}
+                  </span>
+                )}
               </p>
               <p className="mt-1.5 text-sm font-medium text-ink">
                 {worker.mainRole}
@@ -143,8 +147,8 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
                 <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ink/50"><Languages size={13} /> Languages</p>
                 <div className="flex flex-wrap gap-1.5">
                   {worker.languages.map((l) => (
-                    <span key={l.language} className="rounded-full bg-white px-2 py-0.5 text-xs text-ink/70 ring-1 ring-ink/10">
-                      {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
+                    <span key={l.language} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-xs text-ink/70 ring-1 ring-ink/10">
+                      <LanguageFlag language={l.language} size={11} /> {l.language}
                     </span>
                   ))}
                 </div>
