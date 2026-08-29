@@ -147,8 +147,8 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
                 <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ink/50"><Languages size={13} /> Languages</p>
                 <div className="flex flex-wrap gap-1.5">
                   {worker.languages.map((l) => (
-                    <span key={l.language} className="rounded-full bg-white px-2 py-0.5 text-xs text-ink/70 ring-1 ring-ink/10">
-                      {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
+                    <span key={l.language} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-xs text-ink/70 ring-1 ring-ink/10">
+                      <LanguageFlag language={l.language} size={11} /> {l.language}
                     </span>
                   ))}
                 </div>
