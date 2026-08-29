@@ -8,12 +8,11 @@ import { useAuth } from "@/lib/auth";
 import { getWorkerContact } from "@/lib/talent.functions";
 import WorkerProfileModal from "@/components/features/WorkerProfileModal";
 import HaccpBadge from "@/components/features/HaccpBadge";
+import { Flag, LanguageFlag } from "@/components/ui/Flag";
 import {
   getInitials,
   roleIcon,
   NATIONALITY_OPTIONS,
-  LANGUAGE_FLAGS,
-
   DAY_OPTIONS,
   TIME_SLOT_OPTIONS,
 } from "@/data/utils";
