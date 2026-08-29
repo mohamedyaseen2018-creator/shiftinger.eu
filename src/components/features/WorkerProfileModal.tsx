@@ -113,7 +113,11 @@ export default function WorkerProfileModal({ worker, open, onOpenChange, onWhats
               </div>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink/60">
                 <span className="inline-flex items-center gap-1"><MapPin size={12} /> {worker.city || "Portugal"}</span>
-                {nationality && <span>{nationality.flag} {nationality.name}</span>}
+                {nationality && (
+                  <span className="inline-flex items-center gap-1">
+                    <Flag code={nationality.code} title={nationality.name} size={12} /> {nationality.name}
+                  </span>
+                )}
               </p>
               <p className="mt-1.5 text-sm font-medium text-ink">
                 {worker.mainRole}
