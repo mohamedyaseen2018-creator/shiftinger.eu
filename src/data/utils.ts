@@ -101,6 +101,18 @@ export const LANGUAGE_FLAGS: Record<string, string> = {
   Hindi: "🇮🇳", Other: "🌐",
 };
 
+/**
+ * ISO 3166-1 alpha-2 codes used to render real flag images.
+ * Emoji flags don't render on Windows/Chrome and many Android builds, so the UI
+ * uses <Flag code="pt" /> images instead — this map is the single source.
+ */
+export const LANGUAGE_FLAG_CODES: Record<string, string> = {
+  Portuguese: "pt", English: "gb", Spanish: "es", French: "fr",
+  Arabic: "eg", Mandarin: "cn", Romanian: "ro", Ukrainian: "ua",
+  Hindi: "in",
+};
+
+
 // ── All Portuguese cities (district capitals + major municipalities + islands) ──
 export const CITY_OPTIONS = [
   "Lisbon", "Porto", "Amadora", "Braga", "Setúbal", "Coimbra", "Queluz",
