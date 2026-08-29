@@ -12,11 +12,11 @@ import { getWorkerPublicDetails } from "@/lib/talent.functions";
 import { useAuth } from "@/lib/auth";
 import HaccpBadge from "@/components/features/HaccpBadge";
 import ShiftOfferModal from "@/components/features/ShiftOfferModal";
+import { Flag, LanguageFlag } from "@/components/ui/Flag";
 import {
   getInitials,
   roleIcon,
   NATIONALITY_OPTIONS,
-  LANGUAGE_FLAGS,
   DAY_OPTIONS,
 } from "@/data/utils";
 
