@@ -230,9 +230,9 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               worker.languages.map((l) => (
                 <span
                   key={l.language}
-                  className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
+                  className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
                 >
-                  {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
+                  <LanguageFlag language={l.language} size={11} /> {l.language}
                 </span>
               ))
             ) : (
