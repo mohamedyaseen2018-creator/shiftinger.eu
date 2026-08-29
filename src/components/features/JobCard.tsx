@@ -2,7 +2,8 @@ import { Lock, Clock, Users, Check, X, BadgeCheck } from "lucide-react";
 import type { Job, MatchCriterion } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { matchColor } from "@/lib/matching";
-import { timeAgo, formatDate, roleIcon, LANGUAGE_FLAGS } from "@/data/utils";
+import { timeAgo, formatDate, roleIcon } from "@/data/utils";
+import { LanguageFlag } from "@/components/ui/Flag";
 
 interface JobCardProps {
   job: Job;
