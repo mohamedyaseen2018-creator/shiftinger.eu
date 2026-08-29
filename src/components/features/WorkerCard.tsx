@@ -213,8 +213,8 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           <span className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-ink/50">Nationality</span>
             {nationality ? (
-              <span className="text-xs font-medium text-ink/70">
-                {nationality.flag} {nationality.name}
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-ink/70">
+                <Flag code={nationality.code} title={nationality.name} /> {nationality.name}
               </span>
             ) : (
               <span className="text-xs text-ink/30">—</span>
