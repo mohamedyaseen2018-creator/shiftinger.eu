@@ -12,8 +12,8 @@ import Logo from "@/components/brand/Logo";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
-    mode: (search.mode as string) === "signup" ? "signup" : "signin",
-    role: (search.role as string) === "business" ? "business" : "worker",
+    mode: ((search.mode as string) === "signup" ? "signup" : "signin") as "signin" | "signup",
+    role: ((search.role as string) === "business" ? "business" : "worker") as AccountType,
   }),
   head: () => ({
     meta: [
