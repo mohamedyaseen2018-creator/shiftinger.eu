@@ -22,6 +22,7 @@ import type { Json } from "@/integrations/supabase/types";
 import type { AccountType } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { setAccountType } from "@/lib/onboarding.functions";
+import { normalizePhoneInput, isValidPhone, phoneErrorMessage } from "@/lib/validation";
 
 import {
   CITY_OPTIONS,
