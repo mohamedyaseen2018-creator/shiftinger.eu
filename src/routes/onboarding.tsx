@@ -1075,6 +1075,101 @@ function BusinessForm({
   const [contactPosition, setContactPosition] = useState("");
   const [phone, setPhone] = useState("+351 ");
   const [description, setDescription] = useState("");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Resume a partially completed business profile instead of losing answers.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: bp }, { data: bc }, { data: bd }, { data: bl }] = await Promise.all([
+        supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_contacts").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_documents").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_locations").select("address").eq("business_id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (bp) {
+        if (bp.business_name) setBusinessName(bp.business_name);
+        const savedCats = (bp.categories ?? []) as unknown as string[];
+        if (savedCats.length) setCategories(savedCats);
+        else if (bp.category) setCategories([bp.category]);
+        if (bp.city) setCity(bp.city);
+        if (bp.area) setArea(bp.area);
+        if (bp.description) setDescription(bp.description);
+        if (bp.facebook_url) setFacebookUrl(bp.facebook_url);
+        if (bp.instagram_url) setInstagramUrl(bp.instagram_url);
+        if (bp.tiktok_url) setTiktokUrl(bp.tiktok_url);
+        if (bp.google_maps_url) setGoogleMapsUrl(bp.google_maps_url);
+      }
+      if (bc) {
+        if (bc.phone) {
+          setBusinessPhone(bc.phone);
+          setPhone(bc.phone);
+        }
+        if (bc.contact_name) setContactName(bc.contact_name);
+        if (bc.contact_position) setContactPosition(bc.contact_position);
+      }
+      if (bd?.document_url) {
+        setDocPath(bd.document_url);
+        setDocName(bd.document_url.split("/").pop() ?? "Uploaded document");
+        if (bd.doc_type === "nif" || bd.doc_type === "alvara") setVerifyOption(bd.doc_type);
+      }
+      if (bl?.address) setAddress(bl.address);
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  /** Persist what has been filled so far; returns false when saving failed. */
+  const saveDraft = async (): Promise<boolean> => {
+    if (!hydrated) return true;
+    const { error } = await supabase
+      .from("business_profiles")
+      .update({
+        business_name: businessName || null,
+        categories: categories as unknown as Json,
+        category: categories[0] ?? null,
+        city: city || null,
+        area: area || null,
+        description: description || null,
+        facebook_url: facebookUrl.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
+        tiktok_url: tiktokUrl.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null,
+      })
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("Could not save your progress. Please try again.");
+      return false;
+    }
+    const contactPhone = businessPhone.trim() || phone.trim();
+    if (contactPhone) {
+      const { error: cErr } = await supabase.from("business_contacts").upsert(
+        {
+          user_id: userId,
+          phone: normalizePhoneInput(contactPhone),
+          contact_name: contactName || null,
+          contact_position: contactPosition || null,
+        },
+        { onConflict: "user_id" },
+      );
+      if (cErr) {
+        toast.error(phoneErrorMessage(cErr));
+        return false;
+      }
+    }
+    if (docPath) {
+      await supabase
+        .from("business_documents")
+        .upsert({ user_id: userId, doc_type: verifyOption, document_url: docPath }, { onConflict: "user_id" });
+    }
+    if (address) {
+      await supabase.from("business_locations").upsert({ business_id: userId, address });
+    }
+    return true;
+  };
 
   const toggleCategory = (cat: string) =>
     setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
