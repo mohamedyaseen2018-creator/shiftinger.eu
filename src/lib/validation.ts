@@ -43,3 +43,26 @@ export const signUpSchema = z.object({
 
 export type SignInInput = z.infer<typeof signInSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
+
+/** Keep a leading + and digits only, collapsing spaces/dashes. */
+export function normalizePhoneInput(raw: string): string {
+  const trimmed = raw.trim();
+  const plus = trimmed.startsWith("+");
+  const digits = trimmed.replace(/\D/g, "");
+  return (plus ? "+" : "") + digits;
+}
+
+/** Accepts international numbers with 8–15 digits. */
+export function isValidPhone(raw: string): boolean {
+  const digits = normalizePhoneInput(raw).replace(/\D/g, "");
+  return digits.length >= 8 && digits.length <= 15;
+}
+
+/** Friendly message for phone save failures (duplicates, bans, etc.). */
+export function phoneErrorMessage(error: { message?: string; code?: string } | null): string {
+  const msg = error?.message ?? "";
+  if (error?.code === "23505" || /duplicate key|unique/i.test(msg))
+    return "That phone number is already used by another account.";
+  if (/banned/i.test(msg)) return "This phone number cannot be used. Please contact support.";
+  return "Could not save your phone number. Please try again.";
+}
