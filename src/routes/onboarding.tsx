@@ -573,7 +573,7 @@ function WorkerForm({
       .upsert({ user_id: userId, phone }, { onConflict: "user_id" });
     if (cErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(cErr));
       return;
     }
     const { error: wErr } = await supabase
@@ -1267,7 +1267,7 @@ function BusinessForm({
       .upsert(
         {
           user_id: userId,
-          phone: businessPhone.trim() || phone,
+          phone: normalizePhoneInput(businessPhone.trim() || phone),
           contact_name: contactName || null,
           contact_position: contactPosition || null,
         },
@@ -1275,7 +1275,7 @@ function BusinessForm({
       );
     if (bcErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(bcErr));
       return;
     }
     if (docPath) {
@@ -1494,7 +1494,7 @@ function BusinessForm({
           )}
           <div className="flex justify-between">
             {step > 0 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+              <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
                 <ChevronLeft size={16} /> Back
               </button>
             ) : (
@@ -1511,7 +1511,7 @@ function BusinessForm({
         </div>
       ) : (
         <div className="mt-8 border-t border-ink/5 pt-6">
-          <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+          <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
             <ChevronLeft size={16} /> Back
           </button>
         </div>
