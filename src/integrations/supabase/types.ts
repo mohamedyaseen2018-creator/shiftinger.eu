@@ -786,6 +786,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_intake: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          kind: string
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          kind: string
+          payload?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_config: {
         Row: {
           cities: string[]
@@ -1258,6 +1288,7 @@ export type Database = {
         Args: { _email: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      claim_pending_intake: { Args: never; Returns: Json }
       confirm_application: {
         Args: { _app_id: string; _message?: string }
         Returns: string
