@@ -570,7 +570,7 @@ function WorkerForm({
     setBusy(true);
     const { error: cErr } = await supabase
       .from("worker_contacts")
-      .upsert({ user_id: userId, phone }, { onConflict: "user_id" });
+      .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
     if (cErr) {
       setBusy(false);
       toast.error(phoneErrorMessage(cErr));
