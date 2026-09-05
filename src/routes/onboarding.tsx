@@ -1207,22 +1207,32 @@ function BusinessForm({
   };
 
   const canNext = () => {
-    if (step === 0) return businessName.trim() && categories.length > 0 && city;
-    if (step === 1) return contactName.trim() && phone.trim();
+    if (step === 0)
+      return Boolean(
+        businessName.trim() && categories.length > 0 && city && isValidPhone(businessPhone),
+      );
+    if (step === 1) return Boolean(contactName.trim() && isValidPhone(phone));
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!canNext()) {
-      toast.error("Please fill the required fields.");
+      if (step === 0 && businessName.trim() && categories.length > 0 && city)
+        toast.error("Please enter a valid business phone number.");
+      else if (step === 1 && contactName.trim())
+        toast.error("Please enter a valid contact phone number.");
+      else toast.error("Please fill the required fields.");
       return;
     }
     if (step === 0 && !hasVerification && !showVerifyWarning) {
       setShowVerifyWarning(true);
       return;
     }
+    const ok = await saveDraft();
+    if (!ok) return;
     setStep(step + 1);
   };
+
 
 
   const submit = async () => {
