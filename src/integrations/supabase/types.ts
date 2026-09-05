@@ -1359,7 +1359,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       conversation_status: "open" | "agreed" | "completed" | "closed"
-      job_status: "open" | "closed" | "filled" | "private_offer"
+      job_status: "open" | "closed" | "filled" | "private_offer" | "draft"
       job_type: "single" | "parttime"
       profile_status:
         | "incomplete"
@@ -1506,7 +1506,7 @@ export const Constants = {
         "cancelled",
       ],
       conversation_status: ["open", "agreed", "completed", "closed"],
-      job_status: ["open", "closed", "filled", "private_offer"],
+      job_status: ["open", "closed", "filled", "private_offer", "draft"],
       job_type: ["single", "parttime"],
       profile_status: [
         "incomplete",
