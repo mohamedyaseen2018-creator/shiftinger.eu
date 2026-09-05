@@ -30,7 +30,6 @@ import {
   ROLE_OPTIONS,
   LANGUAGE_OPTIONS,
   LANGUAGE_LEVELS,
-  LANGUAGE_FLAGS,
   DAY_OPTIONS,
   TIME_SLOT_OPTIONS,
   roleIcon,
@@ -570,10 +569,10 @@ function WorkerForm({
     setBusy(true);
     const { error: cErr } = await supabase
       .from("worker_contacts")
-      .upsert({ user_id: userId, phone }, { onConflict: "user_id" });
+      .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
     if (cErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(cErr));
       return;
     }
     const { error: wErr } = await supabase
@@ -658,7 +657,7 @@ function WorkerForm({
               <select className={inputClass} value={nationality} onChange={(e) => setNationality(e.target.value)}>
                 <option value="">Select…</option>
                 {NATIONALITY_OPTIONS.map((n) => (
-                  <option key={n.name} value={n.name}>{n.flag} {n.name}</option>
+                  <option key={n.name} value={n.name}>{n.name}</option>
                 ))}
               </select>
             </div>
@@ -809,7 +808,7 @@ function WorkerForm({
               <div key={i} className="mb-2 flex gap-2">
                 <select className={`${inputClass} flex-1`} value={l.language} onChange={(e) => { const u = [...languages]; u[i].language = e.target.value; setLanguages(u); }}>
                   <option value="">Select language…</option>
-                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{LANGUAGE_FLAGS[lang] ?? "🌐"} {lang}</option>)}
+                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{lang}</option>)}
                 </select>
                 <select className={`${inputClass} flex-1`} value={l.level} onChange={(e) => { const u = [...languages]; u[i].level = e.target.value; setLanguages(u); }}>
                   {LANGUAGE_LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
@@ -1267,7 +1266,7 @@ function BusinessForm({
       .upsert(
         {
           user_id: userId,
-          phone: businessPhone.trim() || phone,
+          phone: normalizePhoneInput(businessPhone.trim() || phone),
           contact_name: contactName || null,
           contact_position: contactPosition || null,
         },
@@ -1275,7 +1274,7 @@ function BusinessForm({
       );
     if (bcErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(bcErr));
       return;
     }
     if (docPath) {
@@ -1494,7 +1493,7 @@ function BusinessForm({
           )}
           <div className="flex justify-between">
             {step > 0 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+              <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
                 <ChevronLeft size={16} /> Back
               </button>
             ) : (
@@ -1511,7 +1510,7 @@ function BusinessForm({
         </div>
       ) : (
         <div className="mt-8 border-t border-ink/5 pt-6">
-          <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+          <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
             <ChevronLeft size={16} /> Back
           </button>
         </div>

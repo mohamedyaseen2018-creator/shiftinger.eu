@@ -159,7 +159,7 @@ function WorkerEdit({ userId }: { userId: string }) {
         <div><Label>Nationality</Label>
           <select className={inputClass} value={(data.nationality as string) ?? ""} onChange={(e) => setData({ ...data, nationality: e.target.value })}>
             <option value="">Select nationality</option>
-            {NATIONALITY_OPTIONS.map((n) => <option key={n.name} value={n.name}>{n.flag} {n.name}</option>)}
+            {NATIONALITY_OPTIONS.map((n) => <option key={n.name} value={n.name}>{n.name}</option>)}
           </select>
         </div>
         <div><Label>Main role</Label>
