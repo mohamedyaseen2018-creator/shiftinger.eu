@@ -658,7 +658,7 @@ function WorkerForm({
               <select className={inputClass} value={nationality} onChange={(e) => setNationality(e.target.value)}>
                 <option value="">Select…</option>
                 {NATIONALITY_OPTIONS.map((n) => (
-                  <option key={n.name} value={n.name}>{n.flag} {n.name}</option>
+                  <option key={n.name} value={n.name}>{n.name}</option>
                 ))}
               </select>
             </div>
@@ -809,7 +809,7 @@ function WorkerForm({
               <div key={i} className="mb-2 flex gap-2">
                 <select className={`${inputClass} flex-1`} value={l.language} onChange={(e) => { const u = [...languages]; u[i].language = e.target.value; setLanguages(u); }}>
                   <option value="">Select language…</option>
-                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{LANGUAGE_FLAGS[lang] ?? "🌐"} {lang}</option>)}
+                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{lang}</option>)}
                 </select>
                 <select className={`${inputClass} flex-1`} value={l.level} onChange={(e) => { const u = [...languages]; u[i].level = e.target.value; setLanguages(u); }}>
                   {LANGUAGE_LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
