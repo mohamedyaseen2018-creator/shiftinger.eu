@@ -10,6 +10,7 @@ interface BusinessLite {
   rating: number;
   rating_count: number;
   is_early_bird: boolean;
+  avatar_url: string | null;
 }
 
 export interface JobRow {
@@ -34,6 +35,20 @@ export interface JobRow {
   created_at: string;
 }
 
+/** Coerce a languages value (which may be strings or {language, level} objects) to a string[]. */
+function normalizeLanguages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object" && "language" in item) {
+        return String((item as { language: unknown }).language ?? "");
+      }
+      return "";
+    })
+    .filter((lang): lang is string => lang.length > 0);
+}
+
 /** Map a DB job row + its business to the legacy Job shape used by JobCard. */
 export function toJob(row: JobRow, biz?: BusinessLite): Job {
   return {
@@ -54,7 +69,7 @@ export function toJob(row: JobRow, biz?: BusinessLite): Job {
     rate: Number(row.rate),
     spots: row.spots,
     spotsRemaining: row.spots_remaining,
-    languages: Array.isArray(row.languages) ? (row.languages as string[]) : [],
+    languages: normalizeLanguages(row.languages),
     atividade: row.atividade as Job["atividade"],
     note: row.note ?? undefined,
     skills: Array.isArray(row.skills) ? (row.skills as string[]) : [],
@@ -63,6 +78,7 @@ export function toJob(row: JobRow, biz?: BusinessLite): Job {
     applicants: 0,
     placeRating: biz?.rating ?? null,
     placeRatingCount: biz?.rating_count ?? 0,
+    businessAvatarUrl: biz?.avatar_url ?? null,
   };
 }
 
@@ -78,11 +94,23 @@ export async function fetchOpenJobs(): Promise<{ jobs: JobRow[]; businesses: Rec
   const ownerIds = [...new Set(rows.map((j) => j.owner_id))];
   const businesses: Record<string, BusinessLite> = {};
   if (ownerIds.length) {
-    const { data: bps } = await supabase
-      .from("business_profiles_public")
-      .select("user_id, business_name, category, city, area, rating, rating_count, is_early_bird")
-      .in("user_id", ownerIds);
-    (bps ?? []).forEach((b) => (businesses[(b as BusinessLite).user_id] = b as BusinessLite));
+    const { data: bps } = await supabase.rpc("get_public_business_profiles", {
+      _user_ids: ownerIds,
+    });
+    (bps ?? []).forEach((b) => {
+      const row = b as BusinessLite;
+      businesses[row.user_id] = {
+        user_id: row.user_id,
+        business_name: row.business_name,
+        category: row.category,
+        city: row.city,
+        area: row.area,
+        rating: row.rating,
+        rating_count: row.rating_count,
+        is_early_bird: row.is_early_bird,
+        avatar_url: row.avatar_url ?? null,
+      };
+    });
   }
   return { jobs: rows, businesses };
 }

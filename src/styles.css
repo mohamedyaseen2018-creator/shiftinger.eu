@@ -1,47 +1,101 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..600;1,9..40,300..600&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── Shiftinger brand tokens (locked palette + fonts) ── */
+/* ── Shiftinger brand tokens (official brand guidelines) ── */
 @theme {
-  --color-teal: #006C6B;
-  --color-teal-light: #00847F;
-  --color-teal-dark: #003D3B;
-  --color-gold: #C9A84C;
-  --color-gold-light: #D4B96A;
-  --color-gold-dark: #A8872A;
-  --color-ink: #1A1A1A;
-  --color-canvas: #F7F5F0;
-  --color-canvas-dark: #E8E4DB;
-  /* Admin console palette */
-  --color-pine: #1D9E75;
-  --color-pine-dark: #168560;
-  --color-pine-soft: #E7F5EF;
-  --color-amber: #FAC775;
-  --color-amber-dark: #E0A845;
-  --color-amber-soft: #FEF3DD;
-  --color-slate: #475569;
-  --color-mist: #F1F5F4;
-  --color-line: #E2E8E5;
-  --font-serif: 'DM Serif Display', Georgia, serif;
-  --font-sans: 'DM Sans', system-ui, sans-serif;
+  /* ── Final brand identity ──
+     primary (Deep Forest)  #06332A   hover #0A4A3A   tint #E8F4F0
+     accent  (Brand Gold)   #D89733   hover #B87E28   tint #F5E6C0
+     text-dark #06332A   text-muted #486962
+     Existing token names are remapped onto these values so all
+     components inherit the new brand automatically. */
+
+  /* Primary — Deep Forest scale */
+  --color-teal: #06332A;
+  --color-teal-deep: #0A4A3A;
+  --color-teal-dark: #06332A;
+  --color-teal-mid: #0A4A3A;
+  --color-teal-light: #E8F4F0;
+  --color-teal-soft: #A9CFC4;
+  --color-teal-pale: #4E8C7D;
+
+  /* Accent — Brand Gold scale */
+  --color-amber: #D89733;
+  --color-amber-deep: #B87E28;
+  --color-amber-dark: #8A5E1C;
+  --color-amber-light: #F5E6C0;
+  --color-amber-text: #5C3D0A;
+
+  /* Neutrals */
+  --color-charcoal: #06332A;
+  --color-offwhite: #F5F5F3;
+  --color-gray-light: #D3D1C7;
+  --color-gray-mid: #486962;
+  --color-gray-dark: #2E4A44;
+
+  /* Semantic */
+  --color-danger: #E24B4A;
+  --color-danger-light: #FCEBEB;
+  --color-danger-dark: #A32D2D;
+  --color-success: #0A4A3A;
+  --color-warning: #D89733;
+  --color-warning-text: #5C3D0A;
+  --color-info: #378ADD;
+  --color-info-light: #E6F1FB;
+  --color-info-text: #185FA5;
+
+  /* Surfaces */
+  --color-surface-page: #F5F5F3;
+  --color-surface-card: #FFFFFF;
+  --color-surface-hover: #E8F4F0;
+
+  /* ── Legacy aliases remapped onto the brand palette so existing
+        components inherit the brand colors automatically ── */
+  --color-gold: #D89733;
+  --color-gold-light: #F5E6C0;
+  --color-gold-dark: #B87E28;
+  --color-ink: #06332A;
+  --color-canvas: #F5F5F3;
+  --color-canvas-dark: #D3D1C7;
+  /* Admin console palette → brand */
+  --color-pine: #06332A;
+  --color-pine-dark: #06332A;
+  --color-pine-soft: #E8F4F0;
+  --color-amber-soft: #F5E6C0;
+
+  --color-slate: #486962;
+  --color-mist: #F5F5F3;
+  --color-line: #D3D1C7;
+
+  /* Typography */
+  --font-serif: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-display: 28px;
+  --font-size-h1: 22px;
+  --font-size-h2: 18px;
+  --font-size-h3: 16px;
+  --font-size-body: 14px;
+  --font-size-small: 12px;
+  --font-size-micro: 11px;
+  --font-weight-bold: 700;
+  --font-weight-medium: 500;
+  --font-weight-regular: 400;
+  --font-weight-light: 300;
+
+  /* Spacing / radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
 }
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * shadcn semantic tokens, remapped onto the Shiftinger brand palette.
+ * All design-system colors flow through these variables.
  */
 
 @theme inline {
@@ -88,74 +142,74 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --radius: 0.5rem;
+  --background: #F5F5F3;
+  --foreground: #06332A;
+  --card: #FFFFFF;
+  --card-foreground: #06332A;
+  --popover: #FFFFFF;
+  --popover-foreground: #06332A;
+  --primary: #06332A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FFFFFF;
+  --secondary-foreground: #06332A;
+  --muted: #F5F5F3;
+  --muted-foreground: #486962;
+  --accent: #E8F4F0;
+  --accent-foreground: #06332A;
+  --destructive: #E24B4A;
+  --destructive-foreground: #FFFFFF;
+  --border: #D3D1C7;
+  --input: #D3D1C7;
+  --ring: #06332A;
+  --chart-1: #06332A;
+  --chart-2: #D89733;
+  --chart-3: #A9CFC4;
+  --chart-4: #E24B4A;
+  --chart-5: #D3D1C7;
+  --sidebar: #06332A;
+  --sidebar-foreground: #A9CFC4;
+  --sidebar-primary: #D89733;
+  --sidebar-primary-foreground: #06332A;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #D89733;
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: #06332A;
+  --foreground: #F5F5F3;
+  --card: #0A4A3A;
+  --card-foreground: #F5F5F3;
+  --popover: #0A4A3A;
+  --popover-foreground: #F5F5F3;
+  --primary: #D89733;
+  --primary-foreground: #06332A;
+  --secondary: #0A4A3A;
+  --secondary-foreground: #F5F5F3;
+  --muted: #0A4A3A;
+  --muted-foreground: #A9CFC4;
+  --accent: #0A4A3A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E24B4A;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #D89733;
+  --chart-1: #D89733;
+  --chart-2: #A9CFC4;
+  --chart-3: #4E8C7D;
+  --chart-4: #E24B4A;
+  --chart-5: #D3D1C7;
+  --sidebar: #06332A;
+  --sidebar-foreground: #A9CFC4;
+  --sidebar-primary: #D89733;
+  --sidebar-primary-foreground: #06332A;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #D89733;
 }
 
 @layer base {
@@ -163,19 +217,83 @@
     border-color: var(--color-border);
   }
 
+  html,
   body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  body {
     font-family: var(--font-sans);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-charcoal);
+    background: var(--color-surface-page);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Media never forces horizontal overflow */
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif);
-    font-weight: 400;
+    font-family: var(--font-sans);
+  }
+
+  h1 {
+    font-size: var(--font-size-h1);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-charcoal);
+    letter-spacing: -0.3px;
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-charcoal);
+  }
+
+  h3 {
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-charcoal);
+  }
+
+  /* Visible teal focus glow on interactive elements */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-teal-light);
   }
 }
 
+@keyframes shiftinger-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@utility pulse-window {
+  animation: shiftinger-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes shiftinger-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@utility animate-sheet-up {
+  animation: shiftinger-sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-canvas); }
-::-webkit-scrollbar-thumb { background: var(--color-teal-dark); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--color-surface-page); }
+::-webkit-scrollbar-thumb { background: var(--color-teal-deep); border-radius: 3px; }

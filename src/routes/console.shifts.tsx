@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, TextInput, TextArea, SelectInput, PrimaryButton, GhostButton } from "@/components/console/forms";
+import { Field, TextInput, TextArea, SelectInput, TagMultiSelect, PrimaryButton, GhostButton } from "@/components/console/forms";
 import { useAdminStore, maskBusiness, type Shift, type JobStatus } from "@/data/adminStore";
 
 export const Route = createFileRoute("/console/shifts")({
@@ -45,6 +45,10 @@ function ShiftEditor({ shift, onClose }: { shift: Shift | null; onClose: () => v
         spots: form.spots,
         status: form.status,
         note: form.note,
+        date: form.date,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        skills: form.skills,
       });
       toast.success("Shift updated");
       onClose();
@@ -57,30 +61,54 @@ function ShiftEditor({ shift, onClose }: { shift: Shift | null; onClose: () => v
 
   return (
     <Dialog open={!!shift} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-sans">Edit shift</DialogTitle>
           <DialogDescription>{maskBusiness(form.businessName, form.businessVerified)} · {form.city || "—"}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <Field label="Role" required>
+          <Field label="Title / role" required>
             <TextInput value={form.role} onChange={(e) => set({ role: e.target.value })} />
           </Field>
+          <Field label="Location" hint="Set by the business profile (area / city)">
+            <TextInput value={form.city || "—"} disabled className="bg-mist text-slate" />
+          </Field>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Date">
+              <TextInput type="date" value={form.date ?? ""} onChange={(e) => set({ date: e.target.value || null })} />
+            </Field>
+            <Field label="Start time">
+              <TextInput type="time" value={form.startTime ?? ""} onChange={(e) => set({ startTime: e.target.value || null })} />
+            </Field>
+            <Field label="End time">
+              <TextInput type="time" value={form.endTime ?? ""} onChange={(e) => set({ endTime: e.target.value || null })} />
+            </Field>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <Field label="Rate (€/h)">
               <TextInput type="number" min={0} step={0.5} value={form.rate} onChange={(e) => set({ rate: Number(e.target.value) })} />
             </Field>
-            <Field label="Spots">
+            <Field label="Workers needed">
               <TextInput type="number" min={0} value={form.spots} onChange={(e) => set({ spots: Number(e.target.value) })} />
             </Field>
             <Field label="Status">
               <SelectInput value={form.status} onChange={(v) => set({ status: v as JobStatus })} options={STATUS_OPTIONS} />
             </Field>
           </div>
-          <Field label="Note">
+          <Field label="Required skills">
+            <TagMultiSelect
+              selected={form.skills}
+              options={store.listFor("skill")}
+              onChange={(v) => set({ skills: v })}
+              onAddOption={(value) => store.upsertListOption({ listKey: "skill", value }).catch(() => {})}
+              placeholder="New skill…"
+            />
+          </Field>
+          <Field label="Description / note">
             <TextArea value={form.note} onChange={(e) => set({ note: e.target.value })} />
           </Field>
         </div>
+
         <DialogFooter>
           <GhostButton onClick={onClose}>Cancel</GhostButton>
           <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</PrimaryButton>

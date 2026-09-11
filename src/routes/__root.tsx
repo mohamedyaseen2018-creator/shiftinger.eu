@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import OnboardingGuard from "@/components/site/OnboardingGuard";
 import { SiteContentProvider } from "@/components/site/SiteContentProvider";
+import { DeviceTypeProvider } from "@/context/DeviceTypeContext";
 
 function NotFoundComponent() {
   return (
@@ -83,18 +84,39 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Shiftinger — Flexible hospitality work in Portugal" },
-      { name: "description", content: "Shiftinger connects workers with restaurants, cafés and event businesses across Portugal. Find shifts, post availability, and hire verified, skill-matched talent — privately." },
+      { name: "description", content: "Connect with restaurants, cafés and event venues across Portugal. Find hospitality shifts, post availability, and hire verified, skill-matched talent — privately." },
       { name: "author", content: "Shiftinger" },
       { property: "og:title", content: "Shiftinger — Flexible hospitality work in Portugal" },
-      { property: "og:description", content: "Find shifts. Find talent. Build your income." },
+      { property: "og:description", content: "Connect with restaurants, cafés and event venues across Portugal. Find hospitality shifts, post availability, and hire verified, skill-matched talent — privately." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Shiftinger" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Shiftinger" },
+      { name: "twitter:title", content: "Shiftinger — Flexible hospitality work in Portugal" },
+      { name: "twitter:description", content: "Connect with restaurants, cafés and event venues across Portugal. Find hospitality shifts, post availability, and hire verified, skill-matched talent — privately." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/hw8ZdcZhsEWL6NZholxekATbhQz2/social-images/social-1780953313066-07_app_icon_teal_512.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/hw8ZdcZhsEWL6NZholxekATbhQz2/social-images/social-1780953313066-07_app_icon_teal_512.webp" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Shiftinger",
+          url: "https://shiftinger.eu",
+          description:
+            "Shiftinger connects hospitality workers with restaurants, cafés and event venues across Portugal.",
+          logo: "https://storage.googleapis.com/gpt-engineer-file-uploads/hw8ZdcZhsEWL6NZholxekATbhQz2/social-images/social-1780953313066-07_app_icon_teal_512.webp",
+        }),
       },
     ],
   }),
@@ -133,12 +155,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SiteContentProvider>
-          <OnboardingGuard />
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-          <Toaster />
-        </SiteContentProvider>
+        <DeviceTypeProvider>
+          <SiteContentProvider>
+            <OnboardingGuard />
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+            <Toaster />
+          </SiteContentProvider>
+        </DeviceTypeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -19,6 +19,8 @@ function describe(a: AuditEntry): { icon: typeof Activity; label: string; tone: 
     return { icon: ShieldX, label: `Revoked admin${who}`, tone: "text-red-600" };
   if (action === "delete")
     return { icon: Trash2, label: `Deleted ${a.targetType ?? "user"}${who}`, tone: "text-red-600" };
+  if (action === "ban")
+    return { icon: Ban, label: `Banned ${a.targetType ?? "user"}${who}`, tone: "text-red-600" };
   return { icon: Activity, label: `${action}${who}`, tone: "text-slate" };
 }
 

@@ -1,4 +1,4 @@
-export type AccountType = "worker" | "business";
+export type AccountType = "worker" | "business" | "admin";
 export type ProfileStatus =
   | "incomplete"
   | "pending_review"
@@ -58,6 +58,7 @@ export interface WorkerProfile {
   nationality: string;
   avatarUrl?: string | null;
   portfolioUrl?: string | null;
+  haccp?: boolean;
 }
 
 export interface Job {

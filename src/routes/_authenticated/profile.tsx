@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import AvatarUpload from "@/components/features/AvatarUpload";
 import { CITY_OPTIONS, NATIONALITY_OPTIONS, ROLE_OPTIONS, LANGUAGE_OPTIONS, DAY_OPTIONS, TIME_SLOT_OPTIONS, LOOKING_FOR_OPTIONS } from "@/data/utils";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -61,7 +62,7 @@ function WorkerEdit({ userId }: { userId: string }) {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("worker_profiles").select("id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, experience, atividade, bio, min_rate, looking_for, available_days, time_slots, availability_visible, messages_open, verified, rating, rating_count, shifts_completed, avatar_url, created_at, updated_at, residence, portfolio_url, atividade_number").eq("user_id", userId).maybeSingle(),
       supabase.from("worker_contacts").select("phone").eq("user_id", userId).maybeSingle(),
     ]).then(([{ data: wp }, { data: wc }]) => {
       if (wp) setData({ ...wp, phone: (wc?.phone as string) ?? "" });
@@ -135,7 +136,18 @@ function WorkerEdit({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl bg-canvas p-4">
+        <AvatarUpload
+          userId={userId}
+          table="worker_profiles"
+          initialPath={(data.avatar_url as string) ?? null}
+          variant="worker"
+          label="Profile photo"
+          helper="Recommended: 400 × 400 px · Square · JPG or PNG · Max 2 MB"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
+
         <div><Label>Full name</Label><input className={inputClass} value={(data.name as string) ?? ""} onChange={(e) => setData({ ...data, name: e.target.value })} /></div>
         <div><Label>WhatsApp number</Label><input className={inputClass} value={(data.phone as string) ?? ""} onChange={(e) => setData({ ...data, phone: e.target.value })} /></div>
         <div><Label>City</Label>
@@ -147,7 +159,7 @@ function WorkerEdit({ userId }: { userId: string }) {
         <div><Label>Nationality</Label>
           <select className={inputClass} value={(data.nationality as string) ?? ""} onChange={(e) => setData({ ...data, nationality: e.target.value })}>
             <option value="">Select nationality</option>
-            {NATIONALITY_OPTIONS.map((n) => <option key={n.name} value={n.name}>{n.flag} {n.name}</option>)}
+            {NATIONALITY_OPTIONS.map((n) => <option key={n.name} value={n.name}>{n.name}</option>)}
           </select>
         </div>
         <div><Label>Main role</Label>
@@ -269,7 +281,7 @@ function BusinessEdit({ userId }: { userId: string }) {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("business_profiles").select("id, user_id, business_name, category, city, area, description, is_early_bird, verified, rating, rating_count, avatar_url, created_at, updated_at, categories, nif, sub_sector, display_initials, languages_required, preferred_roles").eq("user_id", userId).maybeSingle(),
       supabase.from("business_contacts").select("phone").eq("user_id", userId).maybeSingle(),
     ]).then(([bp, bc]) => {
       if (bp.data) setData({ ...bp.data, phone: (bc.data?.phone as string) ?? "" });
@@ -303,7 +315,18 @@ function BusinessEdit({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl bg-canvas p-4">
+        <AvatarUpload
+          userId={userId}
+          table="business_profiles"
+          initialPath={(data.avatar_url as string) ?? null}
+          variant="business"
+          label="Business logo or photo"
+          helper="Recommended: 400 × 400 px · Square · JPG or PNG · Max 2 MB"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
+
         <div><Label>Business name</Label><input className={inputClass} value={(data.business_name as string) ?? ""} onChange={(e) => setData({ ...data, business_name: e.target.value })} /></div>
         <div><Label>Category</Label><input className={inputClass} value={(data.category as string) ?? ""} onChange={(e) => setData({ ...data, category: e.target.value })} /></div>
         <div><Label>City</Label>

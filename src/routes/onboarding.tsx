@@ -1,4 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+
 import { useEffect, useRef, useState } from "react";
 import {
   Loader2,
@@ -9,20 +11,25 @@ import {
   ChevronLeft,
   Plus,
   X,
+  Check,
   Upload,
   LogOut,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import type { AccountType } from "@/data/types";
 import { useAuth } from "@/lib/auth";
+import { setAccountType } from "@/lib/onboarding.functions";
+import { normalizePhoneInput, isValidPhone, phoneErrorMessage } from "@/lib/validation";
+
 import {
   CITY_OPTIONS,
   NATIONALITY_OPTIONS,
   ROLE_OPTIONS,
   LANGUAGE_OPTIONS,
   LANGUAGE_LEVELS,
-  LANGUAGE_FLAGS,
   DAY_OPTIONS,
   TIME_SLOT_OPTIONS,
   roleIcon,
@@ -57,6 +64,8 @@ export const Route = createFileRoute("/onboarding")({
 function OnboardingPage() {
   const navigate = useNavigate();
   const { user, profile, loading, refreshProfile, signOut } = useAuth();
+  const switchAccountType = useServerFn(setAccountType);
+  const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -68,6 +77,44 @@ function OnboardingPage() {
       navigate({ to: "/dashboard" });
     }
   }, [loading, user, profile, navigate]);
+
+  // Auto-correct the account type for fresh sign-ups (notably Google, where the
+  // chosen role can't pass through OAuth and the DB trigger defaults to worker).
+  useEffect(() => {
+    if (loading || !profile || profile.status !== "incomplete") return;
+    let desired: string | null = null;
+    try {
+      desired = window.localStorage.getItem("shiftinger:signup_role");
+    } catch {
+      desired = null;
+    }
+    if (!desired) return;
+    try {
+      window.localStorage.removeItem("shiftinger:signup_role");
+    } catch {
+      /* ignore */
+    }
+    if (
+      (desired === "worker" || desired === "business") &&
+      desired !== profile.account_type
+    ) {
+      void switchAccountType({ data: { accountType: desired } }).then(() => refreshProfile());
+    }
+  }, [loading, profile, switchAccountType, refreshProfile]);
+
+  const handleSwitch = async (next: AccountType) => {
+    if (!profile || next === profile.account_type || switching) return;
+    setSwitching(true);
+    try {
+      await switchAccountType({ data: { accountType: next } });
+      await refreshProfile();
+      toast.success(next === "business" ? "Switched to a business account." : "Switched to a worker account.");
+    } catch {
+      toast.error("Could not switch account type. Please try again.");
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   if (loading || !profile) {
     return (
@@ -110,6 +157,35 @@ function OnboardingPage() {
             </p>
           </div>
 
+          {/* Account type switcher — only available while the profile is new. */}
+          <div className="mx-auto mt-6 max-w-sm">
+            <p className="mb-2 text-center text-xs font-medium text-ink/50">
+              Wrong account type? Switch below.
+            </p>
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-white p-1.5 ring-1 ring-ink/5">
+              <button
+                type="button"
+                onClick={() => handleSwitch("worker")}
+                disabled={switching}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  isWorker ? "bg-teal/10 text-teal ring-1 ring-teal" : "text-ink/60 hover:bg-ink/5"
+                }`}
+              >
+                I'm looking for work
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitch("business")}
+                disabled={switching}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  !isWorker ? "bg-gold/10 text-gold-dark ring-1 ring-gold" : "text-ink/60 hover:bg-ink/5"
+                }`}
+              >
+                I'm hiring staff
+              </button>
+            </div>
+          </div>
+
           <div className="mt-8">
             {isWorker ? (
               <WorkerForm userId={user!.id} email={profile.email} onDone={refreshProfile} />
@@ -127,6 +203,7 @@ function OnboardingPage() {
     </div>
   );
 }
+
 
 /* ──────────────────────────── shared bits ──────────────────────────── */
 
@@ -189,9 +266,24 @@ function SubmittedNote() {
         Thanks! Our team will review and confirm your account. You'll get an email once you're
         verified, and then you can start matching.
       </p>
+      <div className="mt-6 rounded-xl bg-canvas p-5 ring-1 ring-ink/5">
+        <p className="text-sm font-medium text-ink">Join the Shiftinger Community</p>
+        <p className="mt-1 text-xs text-ink/60">
+          Connect with other members, get tips and stay up to date while you wait.
+        </p>
+        <a
+          href="https://chat.whatsapp.com/E8Ovtrle2bs7AqQ1F4LdNq?s=sh&p=i&mlu=4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+        >
+          <MessageCircle size={16} /> Join our Community
+        </a>
+      </div>
     </div>
   );
 }
+
 
 /* ──────────────────────────── worker form ──────────────────────────── */
 
@@ -224,10 +316,12 @@ function WorkerForm({
 }) {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const haccpRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [haccpUploading, setHaccpUploading] = useState(false);
 
   // Account
   const [name, setName] = useState("");
@@ -248,13 +342,137 @@ function WorkerForm({
   ]);
   // Documents + extras
   const [atividade, setAtividade] = useState<"yes" | "no">("no");
+  const [idDocType, setIdDocType] = useState<string | null>(null);
   const [docPath, setDocPath] = useState<string | null>(null);
   const [docName, setDocName] = useState("");
+  const [haccpPath, setHaccpPath] = useState<string | null>(null);
+  const [haccpName, setHaccpName] = useState("");
   const [minRate, setMinRate] = useState("");
   const [bio, setBio] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [days, setDays] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  // Draft handling — nothing typed in onboarding should ever be lost.
+  const [hydrated, setHydrated] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+
+  // Re-load any partially completed profile so refreshing, signing out or
+  // coming back later resumes exactly where the worker stopped.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: wp }, { data: wc }, { data: wd }] = await Promise.all([
+        supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("worker_contacts").select("phone").eq("user_id", userId).maybeSingle(),
+        supabase.from("worker_documents").select("*").eq("user_id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (wp) {
+        if (wp.name) setName(wp.name);
+        if (wp.city) setCity(wp.city);
+        if (wp.nationality) setNationality(wp.nationality);
+        if (wp.residence) setResidence(wp.residence);
+        if (wp.main_role) setMainRole(wp.main_role);
+        if (wp.main_role_years) setMainRoleYears(String(wp.main_role_years));
+        const savedSubRoles = (wp.sub_roles ?? []) as unknown as { role: string; years: number | string }[];
+        if (savedSubRoles.length)
+          setSubRoles(savedSubRoles.map((s) => ({ role: s.role, years: String(s.years ?? 0) })));
+        const savedExp = (wp.experience ?? []) as unknown as ExpEntry[];
+        if (savedExp.length) setExperiences(savedExp);
+        const savedLangs = (wp.languages ?? []) as unknown as LangEntry[];
+        if (savedLangs.length) setLanguages(savedLangs);
+        setAtividade(wp.atividade ? "yes" : "no");
+        if (wp.min_rate) setMinRate(String(wp.min_rate));
+        if (wp.bio) setBio(wp.bio);
+        const savedLookingFor = (wp.looking_for ?? []) as unknown as string[];
+        if (savedLookingFor.length) setLookingFor(savedLookingFor);
+        const savedDays = (wp.available_days ?? []) as unknown as string[];
+        if (savedDays.length) setDays(savedDays);
+        const savedSlots = (wp.time_slots ?? []) as unknown as string[];
+        if (savedSlots.length) setTimeSlots(savedSlots);
+      }
+      if (wc?.phone) setPhone(wc.phone);
+      if (wd) {
+        if (wd.id_document_type) setIdDocType(wd.id_document_type);
+        if (wd.id_document_url) {
+          setDocPath(wd.id_document_url);
+          setDocName(wd.id_document_url.split("/").pop() ?? "Uploaded document");
+        }
+        if (wd.haccp_document_url) {
+          setHaccpPath(wd.haccp_document_url);
+          setHaccpName(wd.haccp_document_url.split("/").pop() ?? "Uploaded certificate");
+        }
+      }
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const profilePayload = () => ({
+    name: name || null,
+    city: city || null,
+    nationality: nationality || null,
+    residence: residence || null,
+    main_role: mainRole || null,
+    main_role_years: Number(mainRoleYears) || 0,
+    sub_roles: subRoles.filter((s) => s.role) as unknown as Json,
+    experience: experiences.filter((x) => x.position || x.employer) as unknown as Json,
+    languages: languages.filter((l) => l.language) as unknown as Json,
+    atividade: atividade === "yes",
+    min_rate: Number(minRate) || 0,
+    bio: bio || null,
+    looking_for: lookingFor,
+    available_days: days,
+    time_slots: timeSlots,
+  });
+
+  /** Persist everything captured so far. Returns false when saving failed. */
+  const saveDraft = async (): Promise<boolean> => {
+    if (!hydrated) return true;
+    setSavingDraft(true);
+    try {
+      if (phone.trim()) {
+        const { error } = await supabase
+          .from("worker_contacts")
+          .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
+        if (error) {
+          toast.error(phoneErrorMessage(error));
+          return false;
+        }
+      }
+      const { error: wErr } = await supabase
+        .from("worker_profiles")
+        .update(profilePayload())
+        .eq("user_id", userId);
+      if (wErr) {
+        toast.error("Could not save your progress. Please try again.");
+        return false;
+      }
+      if (docPath || haccpPath || idDocType) {
+        await supabase.from("worker_documents").upsert(
+          {
+            user_id: userId,
+            id_document_url: docPath ?? undefined,
+            id_document_type: idDocType ?? undefined,
+            haccp_document_url: haccpPath ?? undefined,
+          },
+          { onConflict: "user_id" },
+        );
+      }
+      return true;
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const goToStep = async (next: number) => {
+    // Always save before moving so partial answers survive a drop-off.
+    const ok = await saveDraft();
+    if (!ok && next > step) return;
+    setStep(next);
+  };
 
   const toggleLookingFor = (v: string) =>
     setLookingFor((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
@@ -264,14 +482,36 @@ function WorkerForm({
     setTimeSlots((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
   const canNext = () => {
-    if (step === 0) return name.trim() && city && phone.trim();
+    if (step === 0) return Boolean(name.trim() && city && isValidPhone(phone));
     if (step === 1) return Boolean(mainRole);
+    // Rate, availability and bio are now mandatory and asked early.
+    if (step === 2) return Boolean(Number(minRate) > 0 && days.length > 0 && bio.trim().length >= 20);
     return true;
   };
+
+  const stepError = () => {
+    if (step === 0) {
+      if (!name.trim()) return "Please enter your full name.";
+      if (!city) return "Please select your city.";
+      return "Please enter a valid WhatsApp / phone number.";
+    }
+    if (step === 1) return "Please choose your main role.";
+    if (step === 2) {
+      if (!(Number(minRate) > 0)) return "Please set your minimum hourly rate.";
+      if (days.length === 0) return "Please pick at least one available day.";
+      return "Please write a short bio (at least 20 characters).";
+    }
+    return "Please fill the required fields.";
+  };
+
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/jpg", "image/png", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG or PDF.");
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File too large — max 5MB.");
       return;
@@ -292,6 +532,34 @@ function WorkerForm({
     toast.success("Document uploaded.");
   };
 
+  const handleHaccpUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/jpg", "image/png", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG or PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large — max 5MB.");
+      return;
+    }
+    setHaccpUploading(true);
+    const ext = file.name.split(".").pop() ?? "dat";
+    const path = `${userId}/haccp-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("worker-docs").upload(path, file, {
+      upsert: true,
+    });
+    setHaccpUploading(false);
+    if (error) {
+      toast.error("Upload failed. Please try again.");
+      return;
+    }
+    setHaccpPath(path);
+    setHaccpName(file.name);
+    toast.success("Certificate uploaded.");
+  };
+
+
   const submit = async () => {
     if (!name || !city || !phone) {
       toast.error("Please complete your account details.");
@@ -301,10 +569,10 @@ function WorkerForm({
     setBusy(true);
     const { error: cErr } = await supabase
       .from("worker_contacts")
-      .upsert({ user_id: userId, phone }, { onConflict: "user_id" });
+      .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
     if (cErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(cErr));
       return;
     }
     const { error: wErr } = await supabase
@@ -327,10 +595,18 @@ function WorkerForm({
         time_slots: timeSlots,
       })
       .eq("user_id", userId);
-    if (!wErr && docPath) {
+    if (!wErr && (docPath || haccpPath || idDocType)) {
       await supabase
         .from("worker_documents")
-        .upsert({ user_id: userId, id_document_url: docPath }, { onConflict: "user_id" });
+        .upsert(
+          {
+            user_id: userId,
+            id_document_url: docPath ?? undefined,
+            id_document_type: idDocType ?? undefined,
+            haccp_document_url: haccpPath ?? undefined,
+          },
+          { onConflict: "user_id" },
+        );
     }
     if (wErr) {
       setBusy(false);
@@ -381,7 +657,7 @@ function WorkerForm({
               <select className={inputClass} value={nationality} onChange={(e) => setNationality(e.target.value)}>
                 <option value="">Select…</option>
                 {NATIONALITY_OPTIONS.map((n) => (
-                  <option key={n.name} value={n.name}>{n.flag} {n.name}</option>
+                  <option key={n.name} value={n.name}>{n.name}</option>
                 ))}
               </select>
             </div>
@@ -435,24 +711,60 @@ function WorkerForm({
             </div>
           )}
           <div>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between">
               <Label>Additional roles (optional)</Label>
-              {subRoles.length < 3 && (
-                <button type="button" onClick={() => setSubRoles([...subRoles, { role: "", years: "0" }])} className="flex items-center gap-1 text-xs text-teal hover:underline">
-                  <Plus size={12} /> Add role
-                </button>
-              )}
+              <span className="text-xs text-ink/40">{subRoles.length}/3 selected</span>
             </div>
-            {subRoles.map((sr, i) => (
-              <div key={i} className="mb-2 flex gap-2">
-                <select className={`${inputClass} flex-1`} value={sr.role} onChange={(e) => { const u = [...subRoles]; u[i].role = e.target.value; setSubRoles(u); }}>
-                  <option value="">Select role…</option>
-                  {ROLE_OPTIONS.filter((r) => r !== mainRole).map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <input type="number" min={0} max={40} className={`${inputClass} w-20`} placeholder="Yrs" value={sr.years} onChange={(e) => { const u = [...subRoles]; u[i].years = e.target.value; setSubRoles(u); }} />
-                <button type="button" onClick={() => setSubRoles(subRoles.filter((_, j) => j !== i))} className="text-ink/40 hover:text-red-500"><X size={16} /></button>
-              </div>
-            ))}
+            <p className="mb-2 text-xs text-ink/50">Tap any tile to add it as a secondary role you can work.</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {ROLE_OPTIONS.filter((r) => r !== mainRole).map((r) => {
+                const Icon = roleIcon(r);
+                const idx = subRoles.findIndex((s) => s.role === r);
+                const active = idx !== -1;
+                const atLimit = subRoles.length >= 3;
+                return (
+                  <div
+                    key={r}
+                    className={`overflow-hidden rounded-lg ring-1 transition-colors ${
+                      active ? "bg-gold/5 ring-2 ring-gold" : "ring-ink/10 hover:ring-teal"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      disabled={!active && atLimit}
+                      onClick={() => {
+                        if (active) setSubRoles(subRoles.filter((s) => s.role !== r));
+                        else if (!atLimit) setSubRoles([...subRoles, { role: r, years: "0" }]);
+                      }}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        active ? "font-medium text-ink" : "text-ink/70"
+                      }`}
+                    >
+                      <Icon size={15} className="shrink-0" /> {r}
+                      {active && <Check size={14} className="ml-auto shrink-0 text-gold" />}
+                    </button>
+                    {active && (
+                      <label className="flex items-center gap-2 border-t border-gold/25 bg-gold/5 px-3 py-2">
+                        <span className="text-xs font-medium text-ink/60">Years</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={40}
+                          className="w-16 rounded-md border border-ink/15 bg-white px-2 py-1 text-sm focus:border-gold focus:outline-none"
+                          placeholder="0"
+                          value={subRoles[idx].years}
+                          onChange={(e) => {
+                            const u = [...subRoles];
+                            u[idx].years = e.target.value;
+                            setSubRoles(u);
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -496,7 +808,7 @@ function WorkerForm({
               <div key={i} className="mb-2 flex gap-2">
                 <select className={`${inputClass} flex-1`} value={l.language} onChange={(e) => { const u = [...languages]; u[i].language = e.target.value; setLanguages(u); }}>
                   <option value="">Select language…</option>
-                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{LANGUAGE_FLAGS[lang] ?? "🌐"} {lang}</option>)}
+                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{lang}</option>)}
                 </select>
                 <select className={`${inputClass} flex-1`} value={l.level} onChange={(e) => { const u = [...languages]; u[i].level = e.target.value; setLanguages(u); }}>
                   {LANGUAGE_LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
@@ -514,33 +826,103 @@ function WorkerForm({
       {step === 3 && (
         <div className="space-y-6">
           <h2 className="font-serif text-2xl text-ink">Documents &amp; rate</h2>
+          {/* Confirm your identity */}
           <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
-            <p className="mb-1 text-sm font-medium text-ink">ID document (passport or NIF card)</p>
-            <p className="mb-3 text-xs text-ink/50">Required for the Verified badge. Stored privately and never shown publicly.</p>
-            <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleUpload} />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-8 text-center transition-colors hover:border-teal disabled:opacity-50"
-            >
-              {uploading ? (
-                <Loader2 size={20} className="animate-spin text-teal" />
-              ) : docPath ? (
-                <>
-                  <CheckCircle size={20} className="text-teal" />
-                  <p className="text-sm text-ink">{docName}</p>
-                  <p className="text-xs text-ink/40">Click to replace</p>
-                </>
-              ) : (
-                <>
-                  <Upload size={20} className="text-ink/40" />
-                  <p className="text-sm text-ink/60">Click to upload</p>
-                  <p className="text-xs text-ink/40">JPG, PNG or PDF, max 5MB</p>
-                </>
-              )}
-            </button>
+            <h3 className="text-sm font-semibold text-ink">Confirm your identity</h3>
+            <p className="mt-1 text-xs text-ink/50">
+              We only need to verify that you are who you say you are. Your document is never shared with businesses.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                "Cartão de Cidadão (CC)",
+                "Passaporte",
+                "Título de Residência",
+                "Carta de Condução (Driving licence)",
+              ].map((t) => {
+                const active = idDocType === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setIdDocType(t)}
+                    className={`flex items-center gap-2 rounded-lg p-3 text-left text-sm ring-1 transition-colors ${active ? "bg-teal/5 text-teal ring-teal" : "text-ink/70 ring-ink/10 hover:ring-teal"}`}
+                  >
+                    <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${active ? "border-teal bg-teal" : "border-ink/30"}`}>
+                      {active && <Check size={11} className="text-white" />}
+                    </span>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            {idDocType && (
+              <div className="mt-3">
+                <p className="mb-1 text-sm font-medium text-ink">Photo of the front side only</p>
+                <p className="mb-2 text-xs text-ink/50">A clear phone photo is fine. We just need to read your name and photo.</p>
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleUpload} />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-teal disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 size={20} className="animate-spin text-teal" />
+                  ) : docPath ? (
+                    <>
+                      <CheckCircle size={20} className="text-teal" />
+                      <p className="text-sm text-ink">{docName}</p>
+                      <p className="text-xs text-ink/40">Click to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-ink/40" />
+                      <p className="text-sm text-ink/60">Click to upload</p>
+                      <p className="text-xs text-ink/40">Max 5 MB · JPG, PNG or PDF</p>
+                    </>
+                  )}
+                </button>
+                <div className="mt-3 rounded-lg bg-teal/5 px-3 py-2 text-xs text-teal ring-1 ring-teal/10">
+                  We only use this to confirm your identity. It is never visible to businesses or other workers.
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Food hygiene certificate (optional) */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Food hygiene certificate</h3>
+            <p className="mt-1 text-xs text-ink/50">
+              Very common in hospitality — if you have one, upload it to unlock your HACCP badge on your profile.
+            </p>
+            <div className="mt-3">
+              <p className="mb-2 text-sm font-medium text-ink">HACCP or food hygiene certificate (optional)</p>
+              <input ref={haccpRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleHaccpUpload} />
+              <button
+                type="button"
+                onClick={() => haccpRef.current?.click()}
+                disabled={haccpUploading}
+                className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-teal disabled:opacity-50"
+              >
+                {haccpUploading ? (
+                  <Loader2 size={20} className="animate-spin text-teal" />
+                ) : haccpPath ? (
+                  <>
+                    <CheckCircle size={20} className="text-teal" />
+                    <p className="text-sm text-ink">{haccpName}</p>
+                    <p className="text-xs text-ink/40">Click to replace</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} className="text-ink/40" />
+                    <p className="text-sm text-ink/60">Click to upload</p>
+                    <p className="text-xs text-ink/40">Max 5 MB · JPG, PNG or PDF</p>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
 
           <div>
             <Label>Do you have an active Atividade (recibos verdes)?</Label>
@@ -664,30 +1046,193 @@ function BusinessForm({
   onDone: () => Promise<void>;
 }) {
   const navigate = useNavigate();
+  const docRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Business
   const [businessName, setBusinessName] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [businessPhone, setBusinessPhone] = useState("+351 ");
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
+  // Verification doc
+  const [verifyOption, setVerifyOption] = useState<"nif" | "alvara" | null>(null);
+  const [docPath, setDocPath] = useState<string | null>(null);
+  const [docName, setDocName] = useState("");
+  const [showVerifyWarning, setShowVerifyWarning] = useState(false);
+  // Social presence
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   // Contact
   const [contactName, setContactName] = useState("");
   const [contactPosition, setContactPosition] = useState("");
   const [phone, setPhone] = useState("+351 ");
   const [description, setDescription] = useState("");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Resume a partially completed business profile instead of losing answers.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: bp }, { data: bc }, { data: bd }, { data: bl }] = await Promise.all([
+        supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_contacts").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_documents").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_locations").select("address").eq("business_id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (bp) {
+        if (bp.business_name) setBusinessName(bp.business_name);
+        const savedCats = (bp.categories ?? []) as unknown as string[];
+        if (savedCats.length) setCategories(savedCats);
+        else if (bp.category) setCategories([bp.category]);
+        if (bp.city) setCity(bp.city);
+        if (bp.area) setArea(bp.area);
+        if (bp.description) setDescription(bp.description);
+        if (bp.facebook_url) setFacebookUrl(bp.facebook_url);
+        if (bp.instagram_url) setInstagramUrl(bp.instagram_url);
+        if (bp.tiktok_url) setTiktokUrl(bp.tiktok_url);
+        if (bp.google_maps_url) setGoogleMapsUrl(bp.google_maps_url);
+      }
+      if (bc) {
+        if (bc.phone) {
+          setBusinessPhone(bc.phone);
+          setPhone(bc.phone);
+        }
+        if (bc.contact_name) setContactName(bc.contact_name);
+        if (bc.contact_position) setContactPosition(bc.contact_position);
+      }
+      if (bd?.document_url) {
+        setDocPath(bd.document_url);
+        setDocName(bd.document_url.split("/").pop() ?? "Uploaded document");
+        if (bd.doc_type === "nif" || bd.doc_type === "alvara") setVerifyOption(bd.doc_type);
+      }
+      if (bl?.address) setAddress(bl.address);
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  /** Persist what has been filled so far; returns false when saving failed. */
+  const saveDraft = async (): Promise<boolean> => {
+    if (!hydrated) return true;
+    const { error } = await supabase
+      .from("business_profiles")
+      .update({
+        business_name: businessName || null,
+        categories: categories as unknown as Json,
+        category: categories[0] ?? null,
+        city: city || null,
+        area: area || null,
+        description: description || null,
+        facebook_url: facebookUrl.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
+        tiktok_url: tiktokUrl.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null,
+      })
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("Could not save your progress. Please try again.");
+      return false;
+    }
+    const contactPhone = businessPhone.trim() || phone.trim();
+    if (contactPhone) {
+      const { error: cErr } = await supabase.from("business_contacts").upsert(
+        {
+          user_id: userId,
+          phone: normalizePhoneInput(contactPhone),
+          contact_name: contactName || null,
+          contact_position: contactPosition || null,
+        },
+        { onConflict: "user_id" },
+      );
+      if (cErr) {
+        toast.error(phoneErrorMessage(cErr));
+        return false;
+      }
+    }
+    if (docPath) {
+      await supabase
+        .from("business_documents")
+        .upsert({ user_id: userId, doc_type: verifyOption, document_url: docPath }, { onConflict: "user_id" });
+    }
+    if (address) {
+      await supabase.from("business_locations").upsert({ business_id: userId, address });
+    }
+    return true;
+  };
 
   const toggleCategory = (cat: string) =>
     setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 
+  const hasSocialLink = Boolean(
+    facebookUrl.trim() || instagramUrl.trim() || tiktokUrl.trim() || googleMapsUrl.trim(),
+  );
+  const hasVerification = Boolean(docPath) || hasSocialLink;
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const okType = ["application/pdf", "image/jpeg", "image/jpg", "image/png"].includes(file.type);
+    if (!okType) {
+      toast.error("Please upload a PDF, JPG or PNG.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large — max 5MB.");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() ?? "dat";
+    const path = `${userId}/verification-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("business-docs").upload(path, file, { upsert: true });
+    setUploading(false);
+    if (error) {
+      toast.error("Upload failed. Please try again.");
+      return;
+    }
+    setDocPath(path);
+    setDocName(file.name);
+    setShowVerifyWarning(false);
+    toast.success("Document uploaded.");
+  };
+
   const canNext = () => {
-    if (step === 0) return businessName.trim() && categories.length > 0 && city;
-    if (step === 1) return contactName.trim() && phone.trim();
+    if (step === 0)
+      return Boolean(
+        businessName.trim() && categories.length > 0 && city && isValidPhone(businessPhone),
+      );
+    if (step === 1) return Boolean(contactName.trim() && isValidPhone(phone));
     return true;
   };
+
+  const handleNext = async () => {
+    if (!canNext()) {
+      if (step === 0 && businessName.trim() && categories.length > 0 && city)
+        toast.error("Please enter a valid business phone number.");
+      else if (step === 1 && contactName.trim())
+        toast.error("Please enter a valid contact phone number.");
+      else toast.error("Please fill the required fields.");
+      return;
+    }
+    if (step === 0 && !hasVerification && !showVerifyWarning) {
+      setShowVerifyWarning(true);
+      return;
+    }
+    const ok = await saveDraft();
+    if (!ok) return;
+    setStep(step + 1);
+  };
+
+
 
   const submit = async () => {
     if (!businessName || categories.length === 0 || !city || !phone) {
@@ -705,6 +1250,10 @@ function BusinessForm({
         city,
         area: area || null,
         description: description || null,
+        facebook_url: facebookUrl.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
+        tiktok_url: tiktokUrl.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null,
       })
       .eq("user_id", userId);
     if (bErr) {
@@ -717,7 +1266,7 @@ function BusinessForm({
       .upsert(
         {
           user_id: userId,
-          phone,
+          phone: normalizePhoneInput(businessPhone.trim() || phone),
           contact_name: contactName || null,
           contact_position: contactPosition || null,
         },
@@ -725,8 +1274,16 @@ function BusinessForm({
       );
     if (bcErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(bcErr));
       return;
+    }
+    if (docPath) {
+      await supabase
+        .from("business_documents")
+        .upsert(
+          { user_id: userId, doc_type: verifyOption, document_url: docPath },
+          { onConflict: "user_id" },
+        );
     }
     if (address) {
       await supabase.from("business_locations").upsert({ business_id: userId, address });
@@ -770,6 +1327,10 @@ function BusinessForm({
               ))}
             </div>
           </div>
+          <div>
+            <Label>Business phone number</Label>
+            <input type="tel" className={inputClass} placeholder="+351 9XX XXX XXX" value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>City</Label>
@@ -788,6 +1349,88 @@ function BusinessForm({
             <Label>Exact address (kept private)</Label>
             <input className={inputClass} placeholder="Shared with a worker only after you agree to work" value={address} onChange={(e) => setAddress(e.target.value)} />
             <p className="mt-1 text-xs text-ink/40">Only revealed to a worker once you confirm and agree to work.</p>
+          </div>
+
+          {/* Verify your business */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Verify your business</h3>
+            <p className="mt-1 text-xs text-ink/50">Upload one document to build trust with workers. Takes under 2 minutes.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {([
+                { key: "nif", title: "Business NIF document", sub: "A letter or certificate showing your NIF from AT or your accountant" },
+                { key: "alvara", title: "Alvará or licença de utilização", sub: "Your operating licence — often already on file or framed on-site" },
+              ] as const).map((opt) => {
+                const active = verifyOption === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setVerifyOption(opt.key)}
+                    className={`rounded-lg p-3 text-left ring-1 transition-colors ${active ? "bg-gold/10 ring-gold" : "bg-white ring-ink/10 hover:ring-gold"}`}
+                  >
+                    <span className="flex items-center gap-2 text-sm font-medium text-ink">
+                      <span className={`flex size-4 items-center justify-center rounded-full border ${active ? "border-gold bg-gold" : "border-ink/30"}`}>
+                        {active && <Check size={11} className="text-white" />}
+                      </span>
+                      {opt.title}
+                    </span>
+                    <span className="mt-1 block pl-6 text-xs text-ink/50">{opt.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {verifyOption && (
+              <div className="mt-3">
+                <input ref={docRef} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={handleDocUpload} />
+                <button
+                  type="button"
+                  onClick={() => docRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-ink/15 p-6 text-center transition-colors hover:border-gold disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 size={20} className="animate-spin text-gold" />
+                  ) : docPath ? (
+                    <>
+                      <CheckCircle size={20} className="text-teal" />
+                      <p className="text-sm text-ink">{docName}</p>
+                      <p className="text-xs text-ink/40">Click to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-ink/40" />
+                      <p className="text-sm text-ink/60">Click to upload</p>
+                      <p className="text-xs text-ink/40">Max 5 MB · PDF, JPG or PNG</p>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Your online presence */}
+          <div className="rounded-xl bg-canvas p-5 ring-1 ring-ink/10">
+            <h3 className="text-sm font-semibold text-ink">Your online presence</h3>
+            <p className="mt-1 text-xs text-ink/50">Add at least one link so workers can find you. Your exact address stays private.</p>
+            <div className="mt-3 space-y-3">
+              <div>
+                <Label>Facebook page URL</Label>
+                <input type="url" className={inputClass} placeholder="https://facebook.com/yourbusiness" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>Instagram profile URL</Label>
+                <input type="url" className={inputClass} placeholder="https://instagram.com/yourbusiness" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>TikTok profile URL</Label>
+                <input type="url" className={inputClass} placeholder="https://tiktok.com/@yourbusiness" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} />
+              </div>
+              <div>
+                <Label>Google Maps link</Label>
+                <input type="url" className={inputClass} placeholder="Paste your Google Maps business link" value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} />
+                <p className="mt-1 text-xs text-ink/40">Open Google Maps → find your business → Share → Copy link</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -842,25 +1485,32 @@ function BusinessForm({
 
       {/* Nav */}
       {step < BUSINESS_STEPS.length - 1 ? (
-        <div className="mt-8 flex justify-between border-t border-ink/5 pt-6">
-          {step > 0 ? (
-            <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
-              <ChevronLeft size={16} /> Back
-            </button>
-          ) : (
-            <div />
+        <div className="mt-8 border-t border-ink/5 pt-6">
+          {step === 0 && showVerifyWarning && !hasVerification && (
+            <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+              Please upload a verification document or add at least one social media link so workers can trust your listing.
+            </div>
           )}
-          <button
-            type="button"
-            onClick={() => (canNext() ? setStep(step + 1) : toast.error("Please fill the required fields."))}
-            className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold/90"
-          >
-            Next <ChevronRight size={16} />
-          </button>
+          <div className="flex justify-between">
+            {step > 0 ? (
+              <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+                <ChevronLeft size={16} /> Back
+              </button>
+            ) : (
+              <div />
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold/90"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       ) : (
         <div className="mt-8 border-t border-ink/5 pt-6">
-          <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+          <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
             <ChevronLeft size={16} /> Back
           </button>
         </div>

@@ -97,9 +97,21 @@ export const LANGUAGE_LEVELS = [
 
 export const LANGUAGE_FLAGS: Record<string, string> = {
   Portuguese: "🇵🇹", English: "🇬🇧", Spanish: "🇪🇸", French: "🇫🇷",
-  Arabic: "🇲🇦", Mandarin: "🇨🇳", Romanian: "🇷🇴", Ukrainian: "🇺🇦",
+  Arabic: "🇪🇬", Mandarin: "🇨🇳", Romanian: "🇷🇴", Ukrainian: "🇺🇦",
   Hindi: "🇮🇳", Other: "🌐",
 };
+
+/**
+ * ISO 3166-1 alpha-2 codes used to render real flag images.
+ * Emoji flags don't render on Windows/Chrome and many Android builds, so the UI
+ * uses <Flag code="pt" /> images instead — this map is the single source.
+ */
+export const LANGUAGE_FLAG_CODES: Record<string, string> = {
+  Portuguese: "pt", English: "gb", Spanish: "es", French: "fr",
+  Arabic: "eg", Mandarin: "cn", Romanian: "ro", Ukrainian: "ua",
+  Hindi: "in",
+};
+
 
 // ── All Portuguese cities (district capitals + major municipalities + islands) ──
 export const CITY_OPTIONS = [
@@ -118,42 +130,51 @@ export const CITY_OPTIONS = [
 ];
 
 // ── Nationalities (broad set, flagged) ──
-export const NATIONALITY_OPTIONS: { name: string; flag: string }[] = [
-  { name: "Portuguese", flag: "🇵🇹" }, { name: "Brazilian", flag: "🇧🇷" },
-  { name: "Spanish", flag: "🇪🇸" }, { name: "French", flag: "🇫🇷" },
-  { name: "Italian", flag: "🇮🇹" }, { name: "German", flag: "🇩🇪" },
-  { name: "British", flag: "🇬🇧" }, { name: "Irish", flag: "🇮🇪" },
-  { name: "Dutch", flag: "🇳🇱" }, { name: "Belgian", flag: "🇧🇪" },
-  { name: "Swiss", flag: "🇨🇭" }, { name: "Austrian", flag: "🇦🇹" },
-  { name: "Polish", flag: "🇵🇱" }, { name: "Romanian", flag: "🇷🇴" },
-  { name: "Bulgarian", flag: "🇧🇬" }, { name: "Ukrainian", flag: "🇺🇦" },
-  { name: "Russian", flag: "🇷🇺" }, { name: "Moldovan", flag: "🇲🇩" },
-  { name: "Hungarian", flag: "🇭🇺" }, { name: "Czech", flag: "🇨🇿" },
-  { name: "Slovak", flag: "🇸🇰" }, { name: "Greek", flag: "🇬🇷" },
-  { name: "Croatian", flag: "🇭🇷" }, { name: "Serbian", flag: "🇷🇸" },
-  { name: "Albanian", flag: "🇦🇱" }, { name: "Lithuanian", flag: "🇱🇹" },
-  { name: "Latvian", flag: "🇱🇻" }, { name: "Estonian", flag: "🇪🇪" },
-  { name: "Swedish", flag: "🇸🇪" }, { name: "Norwegian", flag: "🇳🇴" },
-  { name: "Danish", flag: "🇩🇰" }, { name: "Finnish", flag: "🇫🇮" },
-  { name: "Moroccan", flag: "🇲🇦" }, { name: "Algerian", flag: "🇩🇿" },
-  { name: "Tunisian", flag: "🇹🇳" }, { name: "Egyptian", flag: "🇪🇬" },
-  { name: "Nigerian", flag: "🇳🇬" }, { name: "Ghanaian", flag: "🇬🇭" },
-  { name: "Senegalese", flag: "🇸🇳" }, { name: "Angolan", flag: "🇦🇴" },
-  { name: "Mozambican", flag: "🇲🇿" }, { name: "Cape Verdean", flag: "🇨🇻" },
-  { name: "Guinean", flag: "🇬🇼" }, { name: "South African", flag: "🇿🇦" },
-  { name: "Kenyan", flag: "🇰🇪" }, { name: "Ethiopian", flag: "🇪🇹" },
-  { name: "Indian", flag: "🇮🇳" }, { name: "Pakistani", flag: "🇵🇰" },
-  { name: "Bangladeshi", flag: "🇧🇩" }, { name: "Nepali", flag: "🇳🇵" },
-  { name: "Sri Lankan", flag: "🇱🇰" }, { name: "Chinese", flag: "🇨🇳" },
-  { name: "Japanese", flag: "🇯🇵" }, { name: "South Korean", flag: "🇰🇷" },
-  { name: "Filipino", flag: "🇵🇭" }, { name: "Vietnamese", flag: "🇻🇳" },
-  { name: "Thai", flag: "🇹🇭" }, { name: "Indonesian", flag: "🇮🇩" },
-  { name: "Turkish", flag: "🇹🇷" }, { name: "Lebanese", flag: "🇱🇧" },
-  { name: "Syrian", flag: "🇸🇾" }, { name: "Iranian", flag: "🇮🇷" },
-  { name: "Iraqi", flag: "🇮🇶" }, { name: "American", flag: "🇺🇸" },
-  { name: "Canadian", flag: "🇨🇦" }, { name: "Mexican", flag: "🇲🇽" },
-  { name: "Argentine", flag: "🇦🇷" }, { name: "Colombian", flag: "🇨🇴" },
-  { name: "Venezuelan", flag: "🇻🇪" }, { name: "Peruvian", flag: "🇵🇪" },
-  { name: "Chilean", flag: "🇨🇱" }, { name: "Australian", flag: "🇦🇺" },
-  { name: "Other", flag: "🌍" },
-];
+// `code` is the ISO 3166-1 alpha-2 code used to render a real flag image.
+export const NATIONALITY_OPTIONS: { name: string; flag: string; code: string }[] = [
+  { name: "Portuguese", flag: "🇵🇹", code: "pt" }, { name: "Brazilian", flag: "🇧🇷", code: "br" },
+  { name: "Spanish", flag: "🇪🇸", code: "es" }, { name: "French", flag: "🇫🇷", code: "fr" },
+  { name: "Italian", flag: "🇮🇹", code: "it" }, { name: "German", flag: "🇩🇪", code: "de" },
+  { name: "British", flag: "🇬🇧", code: "gb" }, { name: "Irish", flag: "🇮🇪", code: "ie" },
+  { name: "Dutch", flag: "🇳🇱", code: "nl" }, { name: "Belgian", flag: "🇧🇪", code: "be" },
+  { name: "Swiss", flag: "🇨🇭", code: "ch" }, { name: "Austrian", flag: "🇦🇹", code: "at" },
+  { name: "Polish", flag: "🇵🇱", code: "pl" }, { name: "Romanian", flag: "🇷🇴", code: "ro" },
+  { name: "Bulgarian", flag: "🇧🇬", code: "bg" }, { name: "Ukrainian", flag: "🇺🇦", code: "ua" },
+  { name: "Russian", flag: "🇷🇺", code: "ru" }, { name: "Moldovan", flag: "🇲🇩", code: "md" },
+  { name: "Hungarian", flag: "🇭🇺", code: "hu" }, { name: "Czech", flag: "🇨🇿", code: "cz" },
+  { name: "Slovak", flag: "🇸🇰", code: "sk" }, { name: "Greek", flag: "🇬🇷", code: "gr" },
+  { name: "Croatian", flag: "🇭🇷", code: "hr" }, { name: "Serbian", flag: "🇷🇸", code: "rs" },
+  { name: "Albanian", flag: "🇦🇱", code: "al" }, { name: "Lithuanian", flag: "🇱🇹", code: "lt" },
+  { name: "Latvian", flag: "🇱🇻", code: "lv" }, { name: "Estonian", flag: "🇪🇪", code: "ee" },
+  { name: "Swedish", flag: "🇸🇪", code: "se" }, { name: "Norwegian", flag: "🇳🇴", code: "no" },
+  { name: "Danish", flag: "🇩🇰", code: "dk" }, { name: "Finnish", flag: "🇫🇮", code: "fi" },
+  { name: "Moroccan", flag: "🇲🇦", code: "ma" }, { name: "Algerian", flag: "🇩🇿", code: "dz" },
+  { name: "Tunisian", flag: "🇹🇳", code: "tn" }, { name: "Egyptian", flag: "🇪🇬", code: "eg" },
+  { name: "Nigerian", flag: "🇳🇬", code: "ng" }, { name: "Ghanaian", flag: "🇬🇭", code: "gh" },
+  { name: "Senegalese", flag: "🇸🇳", code: "sn" }, { name: "Angolan", flag: "🇦🇴", code: "ao" },
+  { name: "Mozambican", flag: "🇲🇿", code: "mz" }, { name: "Cape Verdean", flag: "🇨🇻", code: "cv" },
+  { name: "Guinean", flag: "🇬🇼", code: "gw" }, { name: "South African", flag: "🇿🇦", code: "za" },
+  { name: "Kenyan", flag: "🇰🇪", code: "ke" }, { name: "Ethiopian", flag: "🇪🇹", code: "et" },
+  { name: "Indian", flag: "🇮🇳", code: "in" }, { name: "Pakistani", flag: "🇵🇰", code: "pk" },
+  { name: "Bangladeshi", flag: "🇧🇩", code: "bd" }, { name: "Nepali", flag: "🇳🇵", code: "np" },
+  { name: "Sri Lankan", flag: "🇱🇰", code: "lk" }, { name: "Chinese", flag: "🇨🇳", code: "cn" },
+  { name: "Japanese", flag: "🇯🇵", code: "jp" }, { name: "South Korean", flag: "🇰🇷", code: "kr" },
+  { name: "Filipino", flag: "🇵🇭", code: "ph" }, { name: "Vietnamese", flag: "🇻🇳", code: "vn" },
+  { name: "Thai", flag: "🇹🇭", code: "th" }, { name: "Indonesian", flag: "🇮🇩", code: "id" },
+  { name: "Turkish", flag: "🇹🇷", code: "tr" }, { name: "Lebanese", flag: "🇱🇧", code: "lb" },
+  { name: "Syrian", flag: "🇸🇾", code: "sy" }, { name: "Iranian", flag: "🇮🇷", code: "ir" },
+  { name: "Iraqi", flag: "🇮🇶", code: "iq" }, { name: "American", flag: "🇺🇸", code: "us" },
+  { name: "Canadian", flag: "🇨🇦", code: "ca" }, { name: "Mexican", flag: "🇲🇽", code: "mx" },
+  { name: "Argentine", flag: "🇦🇷", code: "ar" }, { name: "Colombian", flag: "🇨🇴", code: "co" },
+  { name: "Venezuelan", flag: "🇻🇪", code: "ve" }, { name: "Peruvian", flag: "🇵🇪", code: "pe" },
+  { name: "Chilean", flag: "🇨🇱", code: "cl" }, { name: "Australian", flag: "🇦🇺", code: "au" },
+  { name: "Other", flag: "🌍", code: "" },
+]
+
+  // Sort alphabetically by the visible nationality name (A→Z),
+  // keeping the "Other" catch-all pinned to the end.
+  .sort((a, b) => {
+    if (a.name === "Other") return 1;
+    if (b.name === "Other") return -1;
+    return a.name.localeCompare(b.name);
+  });

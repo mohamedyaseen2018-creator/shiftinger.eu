@@ -1,23 +1,27 @@
-import { Lock, Clock, Users } from "lucide-react";
-import type { Job } from "@/data/types";
-import { maskBusinessName, timeAgo, formatDate, roleIcon, LANGUAGE_FLAGS } from "@/data/utils";
+import { Lock, Clock, Users, Check, X, BadgeCheck } from "lucide-react";
+import type { Job, MatchCriterion } from "@/data/types";
+import { useAuth } from "@/lib/auth";
+import { matchColor } from "@/lib/matching";
+import { timeAgo, formatDate, roleIcon } from "@/data/utils";
+import { LanguageFlag } from "@/components/ui/Flag";
 
 interface JobCardProps {
   job: Job;
   matchScore?: number;
+  matchCriteria?: MatchCriterion[];
   applied?: boolean;
   onApply?: (jobId: string) => void;
   compact?: boolean;
+  /** Worker's own languages — enables per-language match colouring. */
+  workerLanguages?: string[];
 }
 
-function matchColor(score: number) {
-  if (score >= 80) return { text: "text-green-600", bar: "bg-green-500" };
-  if (score >= 50) return { text: "text-amber-600", bar: "bg-amber-500" };
-  return { text: "text-red-500", bar: "bg-red-400" };
-}
-
-export default function JobCard({ job, matchScore, applied, onApply, compact }: JobCardProps) {
+export default function JobCard({ job, matchScore, matchCriteria, applied, onApply, compact, workerLanguages }: JobCardProps) {
   const Icon = roleIcon(job.role);
+  const { user, profile, isAdmin } = useAuth();
+  const avatar = job.businessAvatarUrl && /^https?:\/\//.test(job.businessAvatarUrl) ? job.businessAvatarUrl : null;
+  // A single-spot shift with no spots left is filled / successfully matched.
+  const filled = job.status !== "open" || job.spotsRemaining <= 0;
   const totalHours =
     job.startTime && job.endTime
       ? (() => {
@@ -27,12 +31,45 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
         })()
       : null;
 
+  // Role-based action area (reads from session, not props)
+  let action: React.ReactNode = null;
+  if (isAdmin) {
+    action = <span className="rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/40">Admin view</span>;
+  } else if (profile?.account_type === "business") {
+    action =
+      user?.id === job.businessId ? (
+        <span className="rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/40">Posted by you</span>
+      ) : null;
+  } else if (onApply && !filled) {
+    action = (
+      <button
+        onClick={() => onApply(job.id)}
+        disabled={applied}
+        className="rounded-full bg-teal px-4 py-1.5 text-xs font-medium text-canvas transition-colors hover:bg-teal-light disabled:opacity-50"
+      >
+        {applied ? "Applied ✓" : "Apply"}
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-white p-5 ring-1 ring-ink/5 transition-shadow hover:shadow-sm">
+      {filled && (
+        <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700 ring-1 ring-green-200">
+          <BadgeCheck size={14} /> Successfully Matched
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex size-11 flex-shrink-0 items-center justify-center rounded-lg bg-teal/5 text-teal">
-            <Icon size={20} />
+          <div className="relative flex size-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-teal/5 text-teal">
+            {avatar ? (
+              <>
+                <img src={avatar} alt={job.businessName} className="absolute inset-0 size-full object-cover" style={{ filter: "blur(3px)" }} />
+                <Icon size={20} className="relative text-canvas drop-shadow" />
+              </>
+            ) : (
+              <Icon size={20} />
+            )}
           </div>
           <div>
             <h3 className="text-base font-medium leading-tight text-ink">{job.role}</h3>
@@ -40,10 +77,8 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
               <span>{job.businessCategory}</span>
               <span className="text-ink/20">·</span>
               <span className="inline-flex items-center gap-1 rounded bg-ink/5 px-1.5 py-0.5">
-                <Lock size={9} /> {job.area || "—"}
+                <Lock size={9} /> {[job.area, job.city].filter(Boolean).join(", ") || "—"}
               </span>
-              <span className="text-ink/20">·</span>
-              <span className="italic text-ink/40">{maskBusinessName(job.businessName || "Business")}</span>
             </p>
           </div>
         </div>
@@ -87,11 +122,22 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
 
       {!compact && job.languages.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {job.languages.map((lang) => (
-            <span key={lang} className="flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/60">
-              <span>{LANGUAGE_FLAGS[lang] ?? "🌐"}</span> {lang}
-            </span>
-          ))}
+          {job.languages.map((lang) => {
+            // Per-language match: only colour when we know the worker's languages.
+            const known = workerLanguages !== undefined;
+            const has = known && workerLanguages!.some((l) => l.toLowerCase() === lang.toLowerCase());
+            const cls = !known
+              ? "bg-ink/5 text-ink/60"
+              : has
+                ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                : "bg-red-50 text-red-600 ring-1 ring-red-200";
+            return (
+              <span key={lang} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${cls}`}>
+                <LanguageFlag language={lang} size={11} /> {lang}
+                {known && (has ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={3} />)}
+              </span>
+            );
+          })}
         </div>
       )}
 
@@ -104,6 +150,20 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
           <div className="h-1.5 overflow-hidden rounded-full bg-ink/5">
             <div className={`h-full rounded-full ${matchColor(matchScore).bar}`} style={{ width: `${matchScore}%` }} />
           </div>
+          {matchCriteria && matchCriteria.length > 0 && (
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+              {matchCriteria.slice(0, 5).map((c, i) => (
+                <span key={i} className="flex min-w-0 items-center gap-1.5 text-xs text-ink/70">
+                  {c.matched ? (
+                    <Check size={12} className="flex-shrink-0 text-[#22c55e]" strokeWidth={3} />
+                  ) : (
+                    <X size={12} className="flex-shrink-0 text-[#ef4444]" strokeWidth={3} />
+                  )}
+                  <span className="truncate">{c.label}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -112,18 +172,10 @@ export default function JobCard({ job, matchScore, applied, onApply, compact }: 
       )}
 
       <div className="flex items-center justify-between border-t border-ink/5 pt-2">
-        <span className="text-xs text-ink/40">
-          {timeAgo(job.postedAt)} · {job.applicants} applicants
+        <span className="text-xs text-ink/40" suppressHydrationWarning>
+          {timeAgo(job.postedAt)} · {job.applicants} applicant{job.applicants !== 1 ? "s" : ""}
         </span>
-        {onApply && (
-          <button
-            onClick={() => onApply(job.id)}
-            disabled={applied}
-            className="rounded-full bg-teal px-4 py-1.5 text-xs font-medium text-canvas transition-colors hover:bg-teal-light disabled:opacity-50"
-          >
-            {applied ? "Applied" : "Apply"}
-          </button>
-        )}
+        {action}
       </div>
     </div>
   );

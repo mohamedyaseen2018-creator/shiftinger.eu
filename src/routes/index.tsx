@@ -6,32 +6,43 @@ import JobCard from "@/components/features/JobCard";
 import WorkerCard from "@/components/features/WorkerCard";
 import { MOCK_JOBS, MOCK_WORKERS } from "@/data/mockData";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { getPlatformStats } from "@/lib/stats.functions";
 import cafeHero from "@/assets/cafe-hero.jpg";
 
 export const Route = createFileRoute("/")({
+  loader: () => getPlatformStats(),
   head: () => ({
     meta: [
       { title: "Shiftinger — Flexible hospitality work in Portugal" },
       {
         name: "description",
         content:
-          "Shiftinger connects workers with restaurants, cafés and event businesses across Portugal. Find shifts, post availability, and hire verified, skill-matched talent — privately.",
+          "Connect with restaurants, cafés and event venues across Portugal. Find hospitality shifts, post availability, and hire verified, skill-matched talent — privately.",
       },
       { property: "og:title", content: "Shiftinger — Flexible hospitality work in Portugal" },
       {
         property: "og:description",
         content: "Find shifts. Find talent. Build your income. Privacy-first flexible work across Portugal.",
       },
+      { property: "og:url", content: "https://shiftinger.eu/" },
+    ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Shiftinger",
+          url: "https://shiftinger.eu",
+          description:
+            "Flexible hospitality work in Portugal — find shifts, post availability, and hire verified talent.",
+        }),
+      },
     ],
   }),
   component: HomePage,
 });
-
-const STATS = [
-  { value: "340+", label: "Shifts posted" },
-  { value: "1,200+", label: "Registered workers" },
-  { value: "95%", label: "Fill rate" },
-];
 
 const WORKER_STEPS = [
   { n: "01", title: "Create your profile", body: "Register with your skills, experience, languages, and upload your ID for verification." },
@@ -57,6 +68,13 @@ const PRIVACY_ITEMS = [
 function HomePage() {
   const [applied, setApplied] = useState<Set<string>>(new Set());
   const { c } = useSiteContent();
+  const stats = Route.useLoaderData();
+
+  const STATS = [
+    { value: stats.shiftsPosted.toLocaleString("en"), label: "Shifts posted" },
+    { value: stats.registeredWorkers.toLocaleString("en"), label: "Registered workers" },
+    { value: stats.fillRate === null ? "—" : `${stats.fillRate}%`, label: "Fill rate" },
+  ];
 
   return (
     <SiteLayout>
@@ -66,7 +84,7 @@ function HomePage() {
       </div>
 
       {/* ── HERO (asymmetric + sticky rail) ── */}
-      <section className="py-16 lg:py-28">
+      <section className="py-10 lg:py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="flex flex-col gap-12 lg:flex-row">
             {/* Main */}
@@ -77,11 +95,12 @@ function HomePage() {
                   {c("home.hero_eyebrow")}
                 </span>
               </div>
-              <h1 className="max-w-[18ch] text-balance font-serif text-5xl leading-[1.1] text-ink lg:text-7xl">
+              <h1 className="max-w-[18ch] text-balance font-serif text-3xl leading-[1.1] text-ink sm:text-4xl md:text-5xl lg:text-7xl">
                 {c("home.hero_title")}
               </h1>
               <p className="mt-8 max-w-[52ch] text-pretty text-lg text-ink/70">
-                {c("home.hero_subtitle")}
+                <span className="font-semibold text-ink">Need extra shifts?</span>{" "}
+                Shiftinger connects chefs, baristas, and hospitality professionals with restaurants, cafés, and event venues across Portugal — work when you want, as much as you want.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
@@ -97,10 +116,10 @@ function HomePage() {
                   {c("home.hero_cta_secondary")}
                 </Link>
               </div>
-              <div className="mt-12 flex gap-10">
+              <div className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
                 {STATS.map((s) => (
                   <div key={s.label}>
-                    <p className="font-serif text-3xl text-teal">{s.value}</p>
+                    <p className="font-serif text-2xl text-teal sm:text-3xl">{s.value}</p>
                     <p className="mt-0.5 text-sm text-ink/50">{s.label}</p>
                   </div>
                 ))}
@@ -134,7 +153,7 @@ function HomePage() {
                 <div className="overflow-hidden rounded-2xl ring-1 ring-ink/5">
                   <img
                     src={cafeHero}
-                    alt="Sunlit minimalist Lisbon café interior"
+                    alt="Inside a sunlit minimalist Lisbon café showcasing a hospitality work environment"
                     width={600}
                     height={800}
                     className="aspect-[3/4] w-full object-cover"
@@ -147,60 +166,66 @@ function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS (dark) ── */}
-      <section className="bg-ink py-24 text-canvas">
+      <section className="bg-ink py-12 text-canvas sm:py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-16 max-w-xl">
+          <div className="mb-8 max-w-xl">
             <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
-            <h2 className="mt-3 font-serif text-4xl leading-tight">
+            <h2 className="mt-2 font-serif text-2xl leading-tight sm:text-3xl">
               {c("home.how_title")}
             </h2>
-            <p className="mt-4 text-canvas/60">
+            <p className="mt-3 text-sm text-canvas/60">
               {c("home.how_subtitle")}
             </p>
           </div>
-          <div className="grid gap-16 lg:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
             <div>
-              <span className="mb-8 inline-block rounded-full bg-teal px-3 py-1 text-xs font-medium text-canvas">
+              <span className="mb-4 inline-block rounded-full bg-teal px-3 py-1 text-[10px] font-medium text-canvas">
                 For workers
               </span>
-              <div className="space-y-8">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {WORKER_STEPS.map((step) => (
-                  <div key={step.n} className="flex gap-6">
-                    <span className="font-serif text-2xl italic text-gold/60">{step.n}</span>
-                    <div>
-                      <h3 className="mb-1 text-base font-medium">{step.title}</h3>
-                      <p className="max-w-[48ch] text-sm text-canvas/60">{step.body}</p>
+                  <div
+                    key={step.n}
+                    className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="font-serif text-base italic text-teal-pale">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight text-teal-soft">{step.title}</h3>
                     </div>
+                    <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
                 ))}
               </div>
               <Link
                 to="/register"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal px-4 py-2 text-xs font-medium text-canvas transition-colors hover:bg-teal-light"
               >
-                Register as a worker <ArrowRight size={15} />
+                Register as a worker <ArrowRight size={14} />
               </Link>
             </div>
-            <div className="lg:border-l lg:border-canvas/10 lg:pl-16">
-              <span className="mb-8 inline-block rounded-full bg-gold px-3 py-1 text-xs font-medium text-canvas">
+            <div className="lg:border-l lg:border-canvas/10 lg:pl-10">
+              <span className="mb-4 inline-block rounded-full bg-gold px-3 py-1 text-[10px] font-medium text-canvas">
                 For businesses
               </span>
-              <div className="space-y-8">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {BUSINESS_STEPS.map((step) => (
-                  <div key={step.n} className="flex gap-6">
-                    <span className="font-serif text-2xl italic text-gold/60">{step.n}</span>
-                    <div>
-                      <h3 className="mb-1 text-base font-medium">{step.title}</h3>
-                      <p className="max-w-[48ch] text-sm text-canvas/60">{step.body}</p>
+                  <div
+                    key={step.n}
+                    className="rounded-lg bg-canvas/[0.03] p-3 ring-1 ring-canvas/10"
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="font-serif text-base italic text-gold/70">{step.n}</span>
+                      <h3 className="text-xs font-medium leading-tight text-gold">{step.title}</h3>
                     </div>
+                    <p className="text-[11px] leading-relaxed text-canvas/60">{step.body}</p>
                   </div>
                 ))}
               </div>
               <Link
                 to="/register"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-gold-dark"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-xs font-medium text-canvas transition-colors hover:bg-gold-dark"
               >
-                Register as a business <ArrowRight size={15} />
+                Register as a business <ArrowRight size={14} />
               </Link>
             </div>
           </div>
@@ -208,7 +233,7 @@ function HomePage() {
       </section>
 
       {/* ── PRIVACY ── */}
-      <section className="py-24">
+      <section className="py-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="rounded-2xl bg-gold/5 p-8 ring-1 ring-gold/10 lg:p-12">
             <div className="grid items-center gap-10 lg:grid-cols-2">
@@ -235,12 +260,12 @@ function HomePage() {
       </section>
 
       {/* ── SHIFTS PREVIEW ── */}
-      <section className="pb-12">
+      <section className="pb-10">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Latest shifts</span>
-              <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
+              <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
                 {c("home.shifts_title")}
               </h2>
               <p className="mt-2 text-ink/60">{c("home.shifts_subtitle")}</p>
@@ -267,12 +292,12 @@ function HomePage() {
       </section>
 
       {/* ── TALENT PREVIEW ── */}
-      <section className="pb-28">
+      <section className="pb-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-widest text-gold">Available workers</span>
-              <h2 className="mt-2 font-serif text-4xl leading-tight text-ink">
+              <h2 className="mt-2 font-serif text-3xl leading-tight text-ink sm:text-4xl">
                 {c("home.talent_title")}
               </h2>
               <p className="mt-2 text-ink/60">{c("home.talent_subtitle")}</p>
@@ -284,7 +309,7 @@ function HomePage() {
               Browse all talent
             </Link>
           </div>
-          <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {MOCK_WORKERS.slice(0, 3).map((w) => (
               <WorkerCard key={w.id} worker={w} />
             ))}

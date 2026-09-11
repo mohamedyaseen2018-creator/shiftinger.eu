@@ -50,14 +50,47 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_emails: {
+        Row: {
+          added_by: string | null
+          added_by_email: string | null
+          created_at: string
+          email: string
+          id: string
+          note: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          added_by?: string | null
+          added_by_email?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          added_by?: string | null
+          added_by_email?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           business_confirmed: boolean
+          confirmation_message: string | null
           created_at: string
           id: string
           job_id: string
           match_score: number
           matched_criteria: Json
+          message: string | null
+          offer_type: string
           owner_id: string
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
@@ -66,11 +99,14 @@ export type Database = {
         }
         Insert: {
           business_confirmed?: boolean
+          confirmation_message?: string | null
           created_at?: string
           id?: string
           job_id: string
           match_score?: number
           matched_criteria?: Json
+          message?: string | null
+          offer_type?: string
           owner_id: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -79,11 +115,14 @@ export type Database = {
         }
         Update: {
           business_confirmed?: boolean
+          confirmation_message?: string | null
           created_at?: string
           id?: string
           job_id?: string
           match_score?: number
           matched_criteria?: Json
+          message?: string | null
+          offer_type?: string
           owner_id?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -99,6 +138,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      banned_identities: {
+        Row: {
+          banned_by: string | null
+          banned_by_email: string | null
+          banned_user_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          phone: string | null
+          reason: string | null
+        }
+        Insert: {
+          banned_by?: string | null
+          banned_by_email?: string | null
+          banned_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+        }
+        Update: {
+          banned_by?: string | null
+          banned_by_email?: string | null
+          banned_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+        }
+        Relationships: []
       }
       business_contacts: {
         Row: {
@@ -122,6 +194,30 @@ export type Database = {
           contact_position?: string | null
           created_at?: string
           phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      business_documents: {
+        Row: {
+          created_at: string
+          doc_type: string | null
+          document_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string | null
+          document_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string | null
+          document_url?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -151,6 +247,7 @@ export type Database = {
       business_profiles: {
         Row: {
           admin_notes: string
+          alvara: string | null
           area: string | null
           avatar_url: string | null
           business_name: string | null
@@ -160,7 +257,10 @@ export type Database = {
           created_at: string
           description: string | null
           display_initials: string
+          facebook_url: string | null
+          google_maps_url: string | null
           id: string
+          instagram_url: string | null
           is_early_bird: boolean
           languages_required: Json
           nif: string
@@ -168,12 +268,14 @@ export type Database = {
           rating: number
           rating_count: number
           sub_sector: string
+          tiktok_url: string | null
           updated_at: string
           user_id: string
           verified: boolean
         }
         Insert: {
           admin_notes?: string
+          alvara?: string | null
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -183,7 +285,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_initials?: string
+          facebook_url?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram_url?: string | null
           is_early_bird?: boolean
           languages_required?: Json
           nif?: string
@@ -191,12 +296,14 @@ export type Database = {
           rating?: number
           rating_count?: number
           sub_sector?: string
+          tiktok_url?: string | null
           updated_at?: string
           user_id: string
           verified?: boolean
         }
         Update: {
           admin_notes?: string
+          alvara?: string | null
           area?: string | null
           avatar_url?: string | null
           business_name?: string | null
@@ -206,7 +313,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_initials?: string
+          facebook_url?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram_url?: string | null
           is_early_bird?: boolean
           languages_required?: Json
           nif?: string
@@ -214,6 +324,7 @@ export type Database = {
           rating?: number
           rating_count?: number
           sub_sector?: string
+          tiktok_url?: string | null
           updated_at?: string
           user_id?: string
           verified?: boolean
@@ -250,6 +361,27 @@ export type Database = {
           start_time?: string
           timezone?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      contact_reveals: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          worker_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          worker_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          worker_id?: string
         }
         Relationships: []
       }
@@ -364,6 +496,78 @@ export type Database = {
           title?: string
           updated_at?: string
           worker_label?: string
+        }
+        Relationships: []
+      }
+      email_outbox: {
+        Row: {
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          recipient_email: string
+          recipient_id: string | null
+          status: string
+          subject: string
+          template_key: string | null
+          triggered_by: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          recipient_email: string
+          recipient_id?: string | null
+          status?: string
+          subject: string
+          template_key?: string | null
+          triggered_by?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          recipient_email?: string
+          recipient_id?: string | null
+          status?: string
+          subject?: string
+          template_key?: string | null
+          triggered_by?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name: string
+          subject: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          subject?: string
+          template_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -545,6 +749,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pending_intake: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          kind: string
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          kind: string
+          payload?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       platform_config: {
         Row: {
@@ -812,18 +1082,24 @@ export type Database = {
       worker_documents: {
         Row: {
           created_at: string
+          haccp_document_url: string | null
+          id_document_type: string | null
           id_document_url: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          haccp_document_url?: string | null
+          id_document_type?: string | null
           id_document_url?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          haccp_document_url?: string | null
+          id_document_type?: string | null
           id_document_url?: string | null
           updated_at?: string
           user_id?: string
@@ -842,6 +1118,7 @@ export type Database = {
           city: string | null
           created_at: string
           experience: Json
+          haccp_verified: boolean
           id: string
           languages: Json
           looking_for: Json
@@ -873,6 +1150,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           experience?: Json
+          haccp_verified?: boolean
           id?: string
           languages?: Json
           looking_for?: Json
@@ -904,6 +1182,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           experience?: Json
+          haccp_verified?: boolean
           id?: string
           languages?: Json
           looking_for?: Json
@@ -928,99 +1207,6 @@ export type Database = {
       }
     }
     Views: {
-      applicant_worker_profiles: {
-        Row: {
-          avatar_url: string | null
-          main_role: string | null
-          name: string | null
-          rating: number | null
-          user_id: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          main_role?: string | null
-          name?: string | null
-          rating?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          avatar_url?: string | null
-          main_role?: string | null
-          name?: string | null
-          rating?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
-      business_profiles_public: {
-        Row: {
-          area: string | null
-          avatar_url: string | null
-          business_name: string | null
-          categories: Json | null
-          category: string | null
-          city: string | null
-          created_at: string | null
-          description: string | null
-          display_initials: string | null
-          id: string | null
-          is_early_bird: boolean | null
-          languages_required: Json | null
-          preferred_roles: Json | null
-          rating: number | null
-          rating_count: number | null
-          sub_sector: string | null
-          updated_at: string | null
-          user_id: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          area?: string | null
-          avatar_url?: string | null
-          business_name?: string | null
-          categories?: Json | null
-          category?: string | null
-          city?: string | null
-          created_at?: string | null
-          description?: string | null
-          display_initials?: string | null
-          id?: string | null
-          is_early_bird?: boolean | null
-          languages_required?: Json | null
-          preferred_roles?: Json | null
-          rating?: number | null
-          rating_count?: number | null
-          sub_sector?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          area?: string | null
-          avatar_url?: string | null
-          business_name?: string | null
-          categories?: Json | null
-          category?: string | null
-          city?: string | null
-          created_at?: string | null
-          description?: string | null
-          display_initials?: string | null
-          id?: string | null
-          is_early_bird?: boolean | null
-          languages_required?: Json | null
-          preferred_roles?: Json | null
-          rating?: number | null
-          rating_count?: number | null
-          sub_sector?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
       worker_profiles_public: {
         Row: {
           atividade: boolean | null
@@ -1028,6 +1214,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           city: string | null
+          haccp_verified: boolean | null
           id: string | null
           languages: Json | null
           looking_for: Json | null
@@ -1051,6 +1238,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          haccp_verified?: boolean | null
           id?: string | null
           languages?: Json | null
           looking_for?: Json | null
@@ -1074,6 +1262,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          haccp_verified?: boolean | null
           id?: string | null
           languages?: Json | null
           looking_for?: Json | null
@@ -1095,8 +1284,77 @@ export type Database = {
       }
     }
     Functions: {
-      confirm_application: { Args: { _app_id: string }; Returns: string }
+      admin_email_role: {
+        Args: { _email: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      claim_pending_intake: { Args: never; Returns: Json }
+      confirm_application: {
+        Args: { _app_id: string; _message?: string }
+        Returns: string
+      }
+      create_private_offer: {
+        Args: {
+          _date: string
+          _end: string
+          _rate: number
+          _role: string
+          _start: string
+          _worker_id: string
+        }
+        Returns: string
+      }
+      create_shift_offer: {
+        Args: { _job_id: string; _worker_id: string }
+        Returns: string
+      }
       end_job: { Args: { _conversation_id: string }; Returns: undefined }
+      get_applicant_worker_profiles: {
+        Args: { _worker_ids: string[] }
+        Returns: {
+          avatar_url: string
+          main_role: string
+          name: string
+          rating: number
+          user_id: string
+          verified: boolean
+        }[]
+      }
+      get_public_business_profiles: {
+        Args: { _user_ids?: string[] }
+        Returns: {
+          area: string
+          avatar_url: string
+          business_name: string
+          categories: Json
+          category: string
+          city: string
+          created_at: string
+          description: string
+          display_initials: string
+          id: string
+          is_early_bird: boolean
+          languages_required: Json
+          preferred_roles: Json
+          rating: number
+          rating_count: number
+          sub_sector: string
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }[]
+      }
+      get_public_reviews: {
+        Args: { _reviewee_id: string }
+        Returns: {
+          comment: string
+          created_at: string
+          id: string
+          rating: number
+          reviewer_name: string
+          reviewer_type: string
+        }[]
+      }
       has_pending_review: { Args: { _user: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -1105,6 +1363,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_identity_banned: {
+        Args: { _email: string; _phone: string }
+        Returns: boolean
+      }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
       set_agreement: {
         Args: { _conversation_id: string; _send_location?: boolean }
         Returns: undefined
@@ -1115,7 +1379,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_type: "worker" | "business"
+      account_type: "worker" | "business" | "admin"
       app_role: "admin" | "moderator" | "user"
       application_status:
         | "applied"
@@ -1126,7 +1390,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       conversation_status: "open" | "agreed" | "completed" | "closed"
-      job_status: "open" | "closed" | "filled"
+      job_status: "open" | "closed" | "filled" | "private_offer" | "draft"
       job_type: "single" | "parttime"
       profile_status:
         | "incomplete"
@@ -1149,12 +1413,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1178,11 +1442,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1203,11 +1467,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1228,11 +1492,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1245,11 +1509,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1261,7 +1525,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: ["worker", "business"],
+      account_type: ["worker", "business", "admin"],
       app_role: ["admin", "moderator", "user"],
       application_status: [
         "applied",
@@ -1273,7 +1537,7 @@ export const Constants = {
         "cancelled",
       ],
       conversation_status: ["open", "agreed", "completed", "closed"],
-      job_status: ["open", "closed", "filled"],
+      job_status: ["open", "closed", "filled", "private_offer", "draft"],
       job_type: ["single", "parttime"],
       profile_status: [
         "incomplete",

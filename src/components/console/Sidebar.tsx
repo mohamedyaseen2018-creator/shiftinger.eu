@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
@@ -9,11 +9,16 @@ import {
   Settings,
   FileCheck2,
   PencilRuler,
+  Mail,
   Home,
-  Zap,
+  LogOut,
+  KeyRound,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
+import { clearAdminMfa } from "@/lib/adminMfa.functions";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/brand/Logo";
 
 const NAV = [
   { to: "/console", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -24,6 +29,8 @@ const NAV = [
   { to: "/console/matches", label: "Matches", icon: GitMerge },
   { to: "/console/disputes", label: "Disputes", icon: ShieldAlert },
   { to: "/console/content", label: "Site content", icon: PencilRuler },
+  { to: "/console/emails", label: "Emails", icon: Mail },
+  { to: "/console/access", label: "Access", icon: KeyRound },
   { to: "/console/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -38,9 +45,19 @@ function initials(value: string): string {
 }
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { profile, user } = useAuth();
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const clearMfa = useServerFn(clearAdminMfa);
   const displayName = profile?.full_name || profile?.email || user?.email || "Admin";
   const email = profile?.email || user?.email || "";
+
+  const handleSignOut = async () => {
+    onNavigate?.();
+    await clearMfa().catch(() => {});
+    await signOut();
+    navigate({ to: "/" });
+  };
+
 
   return (
     <div className="flex h-full flex-col bg-pine-dark text-white">
@@ -48,16 +65,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         to="/"
         onClick={onNavigate}
         title="Back to website"
-        className="flex items-center gap-2 px-5 py-5 transition-colors hover:bg-white/5"
+        className="flex items-center px-5 py-5 transition-colors hover:bg-white/5"
       >
-        <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber text-pine-dark">
-          <Zap size={18} />
-        </div>
-        <div>
-          <p className="font-sans text-sm font-bold leading-tight">Shiftinger</p>
-          <p className="text-[11px] leading-tight text-white/60">Admin console</p>
-        </div>
+        <Logo variant="full" theme="dark" size={36} />
       </Link>
+
 
       <nav className="flex-1 space-y-1 px-3 py-2">
         {NAV.map((item) => (
@@ -97,6 +109,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <p className="truncate text-[11px] text-white/60">Super admin · {email}</p>
           </div>
         </div>
+        <button
+          onClick={handleSignOut}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
       </div>
     </div>
   );

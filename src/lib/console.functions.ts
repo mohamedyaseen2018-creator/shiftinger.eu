@@ -58,7 +58,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR] =
+    const [profilesR, workersR, wContactsR, wDocsR, businessesR, bContactsR, jobsR, appsR, rolesR, auditR, adminEmailsR] =
       await Promise.all([
         supabaseAdmin.from("profiles").select("*"),
         supabaseAdmin.from("worker_profiles").select("*"),
@@ -70,6 +70,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         supabaseAdmin.from("applications").select("*"),
         supabaseAdmin.from("user_roles").select("user_id, role"),
         supabaseAdmin.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(40),
+        supabaseAdmin.from("admin_emails").select("*").order("created_at", { ascending: false }),
       ]);
 
     const profiles = profilesR.data ?? [];
@@ -109,11 +110,16 @@ export const getConsoleData = createServerFn({ method: "GET" })
         ratingCount: w.rating_count ?? 0,
         shiftsCompleted: w.shifts_completed ?? 0,
         verified: !!w.verified,
+        haccpVerified: !!w.haccp_verified,
         status: (p?.status ?? "incomplete") as ConsoleStatus,
         portfolioUrl: w.portfolio_url ?? "",
         bio: w.bio ?? "",
         adminNotes: w.admin_notes ?? "",
         atividadeNumber: w.atividade_number ?? "",
+        lookingFor: arr(w.looking_for),
+        availableDays: arr(w.available_days),
+        timeSlots: arr(w.time_slots),
+        availabilityVisible: !!w.availability_visible,
         hasCv: !!(w.portfolio_url && String(w.portfolio_url).trim()),
         hasDocuments: !!(docByUser.get(w.user_id) ?? "").toString().trim(),
         idDocumentPath: (docByUser.get(w.user_id) ?? "") as string,
@@ -141,6 +147,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
         description: b.description ?? "",
         adminNotes: b.admin_notes ?? "",
         nif: b.nif ?? "",
+        alvara: b.alvara ?? "",
         subSector: b.sub_sector ?? "",
         displayInitials: b.display_initials || maskInitials(b.business_name ?? ""),
         languagesRequired: arr(b.languages_required),
@@ -164,6 +171,8 @@ export const getConsoleData = createServerFn({ method: "GET" })
         spots: j.spots ?? 0,
         spotsRemaining: j.spots_remaining ?? 0,
         note: j.note ?? "",
+        skills: arr(j.skills),
+        languages: arr(j.languages),
         city: b?.city ?? "",
         status: (j.status ?? "open") as (typeof JOB_STATUS)[number],
         applications: appCountByJob.get(j.id) ?? 0,
@@ -198,20 +207,38 @@ export const getConsoleData = createServerFn({ method: "GET" })
         id: p.id,
         email: p.email,
         name: p.full_name ?? p.email,
-        accountType: p.account_type as "worker" | "business",
+        accountType: p.account_type as "worker" | "business" | "admin",
         role: (roleByUser.get(p.id) ?? []).includes("admin") ? "admin" : "moderator",
       }));
 
+    // Admin/moderator accounts belong in the Access section, never in the
+    // Workers or Businesses lists — even if they hold a worker/business profile.
+    const adminUserIds = new Set(admins.map((a) => a.id));
+    const visibleWorkers = workers.filter((w) => !adminUserIds.has(w.id));
+    const visibleBusinesses = businesses.filter((b) => !adminUserIds.has(b.id));
+
+    const profileEmails = new Set(profiles.map((p) => (p.email ?? "").toLowerCase()));
+    const adminEmails = (adminEmailsR.data ?? []).map((a) => ({
+      id: a.id,
+      email: a.email,
+      role: a.role as string,
+      note: a.note ?? "",
+      addedByEmail: a.added_by_email ?? null,
+      createdAt: a.created_at,
+      // true once a real account exists for this allowlisted email
+      registered: profileEmails.has((a.email ?? "").toLowerCase()),
+    }));
+
     const metrics = {
-      workers: workers.length,
-      businesses: businesses.length,
+      workers: visibleWorkers.length,
+      businesses: visibleBusinesses.length,
       jobs: shifts.length,
       openJobs: shifts.filter((s) => s.status === "open").length,
       applications: matches.length,
       confirmed: matches.filter(
         (m) => m.status === "confirmed" || m.status === "working" || m.status === "completed",
       ).length,
-      pendingApprovals: [...workers, ...businesses].filter((x) => x.status === "pending_review").length,
+      pendingApprovals: [...visibleWorkers, ...visibleBusinesses].filter((x) => x.status === "pending_review").length,
     };
 
     const audit = (auditR.data ?? []).map((a) => ({
@@ -223,7 +250,7 @@ export const getConsoleData = createServerFn({ method: "GET" })
       createdAt: a.created_at,
     }));
 
-    return { workers, businesses, shifts, matches, admins, metrics, audit };
+    return { workers: visibleWorkers, businesses: visibleBusinesses, shifts, matches, admins, adminEmails, metrics, audit };
   });
 
 // ── WRITE: status (approve / reject / block) ─────────────────────────────────
@@ -262,6 +289,17 @@ export const consoleSetStatus = createServerFn({ method: "POST" })
       target_label: data.targetLabel ?? null,
       details: { status: data.status, verified },
     });
+
+    // Approval email — best-effort, never blocks the status change.
+    if (data.status === "approved") {
+      try {
+        const { sendApprovalEmail } = await import("@/lib/email.server");
+        await sendApprovalEmail(data.userId, data.accountType);
+      } catch (err) {
+        console.error("Approval email failed:", err);
+      }
+    }
+
     return { ok: true };
   });
 
@@ -273,6 +311,7 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid(),
         name: z.string().min(1).max(120),
+        email: z.string().email().max(200).optional().default(""),
         phone: z.string().max(40).optional().default(""),
         nationality: z.string().max(80).optional().default(""),
         city: z.string().max(80).optional().default(""),
@@ -287,6 +326,12 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         bio: z.string().max(2000).optional().default(""),
         adminNotes: z.string().max(2000).optional().default(""),
         atividadeNumber: z.string().max(80).optional().default(""),
+        haccpVerified: z.boolean().optional().default(false),
+        verified: z.boolean().optional(),
+        lookingFor: z.array(z.string().max(60)).max(40).optional().default([]),
+        availableDays: z.array(z.string().max(20)).max(14).optional().default([]),
+        timeSlots: z.array(z.string().max(40)).max(20).optional().default([]),
+        availabilityVisible: z.boolean().optional(),
       })
       .parse(i),
   )
@@ -311,6 +356,12 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         bio: data.bio,
         admin_notes: data.adminNotes,
         atividade_number: data.atividadeNumber,
+        haccp_verified: data.haccpVerified,
+        looking_for: data.lookingFor,
+        available_days: data.availableDays,
+        time_slots: data.timeSlots,
+        ...(data.verified !== undefined ? { verified: data.verified } : {}),
+        ...(data.availabilityVisible !== undefined ? { availability_visible: data.availabilityVisible } : {}),
       })
       .eq("user_id", data.id);
     if (error) throw new Error(error.message);
@@ -320,6 +371,23 @@ export const consoleUpdateWorker = createServerFn({ method: "POST" })
         .from("worker_contacts")
         .upsert({ user_id: data.id, phone: data.phone }, { onConflict: "user_id" });
     }
+
+    // Optional login-email change (admin only). Skipped when unchanged.
+    if (data.email) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (prof && (prof.email ?? "").toLowerCase() !== data.email.toLowerCase()) {
+        const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+          email: data.email,
+        });
+        if (authErr) throw new Error(authErr.message);
+        await supabaseAdmin.from("profiles").update({ email: data.email }).eq("id", data.id);
+      }
+    }
+
     await supabaseAdmin.from("profiles").update({ full_name: data.name }).eq("id", data.id);
     return { ok: true };
   });
@@ -332,6 +400,7 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid(),
         name: z.string().min(1).max(160),
+        email: z.string().email().max(200).optional().default(""),
         city: z.string().max(80).optional().default(""),
         area: z.string().max(120).optional().default(""),
         category: z.string().max(80).optional().default(""),
@@ -343,6 +412,7 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         isEarlyBird: z.boolean().optional().default(false),
         adminNotes: z.string().max(2000).optional().default(""),
         nif: z.string().max(40).optional().default(""),
+        alvara: z.string().max(80).optional().default(""),
         subSector: z.string().max(120).optional().default(""),
         displayInitials: z.string().max(40).optional().default(""),
         languagesRequired: z.array(z.string().max(60)).max(40).optional().default([]),
@@ -366,6 +436,7 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
         is_early_bird: data.isEarlyBird,
         admin_notes: data.adminNotes,
         nif: data.nif,
+        alvara: data.alvara,
         sub_sector: data.subSector,
         display_initials: data.displayInitials,
         languages_required: data.languagesRequired,
@@ -383,6 +454,23 @@ export const consoleUpdateBusiness = createServerFn({ method: "POST" })
       },
       { onConflict: "user_id" },
     );
+
+    // Optional login / contact email change (admin only). Skipped when unchanged.
+    if (data.email) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (prof && (prof.email ?? "").toLowerCase() !== data.email.toLowerCase()) {
+        const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+          email: data.email,
+        });
+        if (authErr) throw new Error(authErr.message);
+        await supabaseAdmin.from("profiles").update({ email: data.email }).eq("id", data.id);
+      }
+    }
+
     await supabaseAdmin.from("profiles").update({ full_name: data.name }).eq("id", data.id);
     return { ok: true };
   });
@@ -399,6 +487,10 @@ export const consoleUpdateShift = createServerFn({ method: "POST" })
         spots: z.number().int().min(0).max(500),
         status: z.enum(JOB_STATUS),
         note: z.string().max(1000).optional().default(""),
+        date: z.string().max(20).nullable().optional(),
+        startTime: z.string().max(20).nullable().optional(),
+        endTime: z.string().max(20).nullable().optional(),
+        skills: z.array(z.string().max(60)).max(40).optional().default([]),
       })
       .parse(i),
   )
@@ -407,11 +499,22 @@ export const consoleUpdateShift = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("jobs")
-      .update({ role: data.role, rate: data.rate, spots: data.spots, status: data.status, note: data.note })
+      .update({
+        role: data.role,
+        rate: data.rate,
+        spots: data.spots,
+        status: data.status,
+        note: data.note,
+        skills: data.skills,
+        ...(data.date !== undefined ? { date: data.date || null } : {}),
+        ...(data.startTime !== undefined ? { start_time: data.startTime || null } : {}),
+        ...(data.endTime !== undefined ? { end_time: data.endTime || null } : {}),
+      })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 // ── WRITE: match (application) status ─────────────────────────────────────────
 export const consoleSetMatchStatus = createServerFn({ method: "POST" })
@@ -491,7 +594,126 @@ export const consoleSetAdminRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ── WRITE: delete a user (auth + owned rows) ─────────────────────────────────
+// ── WRITE: pre-authorize an admin email (allowlist) ──────────────────────────
+// Adds the email to the allowlist so that, when they sign up, they are created
+// as an admin (no worker/business profile). If an account already exists with
+// this email, the admin role is granted immediately.
+export const consoleAddAdminEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        email: z.string().email().max(200),
+        note: z.string().max(300).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const email = data.email.trim().toLowerCase();
+
+    const { error } = await supabaseAdmin.from("admin_emails").upsert(
+      {
+        email,
+        role: "admin",
+        note: data.note?.trim() || null,
+        added_by: adminId,
+        added_by_email: adminEmail,
+      },
+      { onConflict: "email" },
+    );
+    if (error) throw new Error(error.message);
+
+    // If they already have an account, grant the admin role right away.
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+    if (prof) {
+      await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: prof.id, role: "admin" }, { onConflict: "user_id,role" });
+    }
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: "admin_email:add",
+      target_type: "admin",
+      target_id: prof?.id ?? null,
+      target_label: email,
+      details: { note: data.note ?? null },
+    });
+    return { ok: true };
+  });
+
+// ── WRITE: remove an admin email from the allowlist + revoke any admin role ───
+export const consoleRemoveAdminEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z.object({ email: z.string().email().max(200) }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const email = data.email.trim().toLowerCase();
+
+    if (adminEmail && adminEmail.toLowerCase() === email) {
+      throw new Error("You cannot remove your own admin access.");
+    }
+
+    const { error } = await supabaseAdmin.from("admin_emails").delete().ilike("email", email);
+    if (error) throw new Error(error.message);
+
+    // Revoke the admin role from an existing account, if any.
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+    if (prof && prof.id !== adminId) {
+      await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", prof.id)
+        .eq("role", "admin");
+    }
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: "admin_email:remove",
+      target_type: "admin",
+      target_id: prof?.id ?? null,
+      target_label: email,
+      details: {},
+    });
+    return { ok: true };
+  });
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function purgeUser(supabaseAdmin: any, userId: string): Promise<void> {
+  await supabaseAdmin.from("applications").delete().or(`worker_id.eq.${userId},owner_id.eq.${userId}`);
+  await supabaseAdmin.from("jobs").delete().eq("owner_id", userId);
+  await supabaseAdmin.from("conversations").delete().or(`worker_id.eq.${userId},business_id.eq.${userId}`);
+  await supabaseAdmin.from("worker_contacts").delete().eq("user_id", userId);
+  await supabaseAdmin.from("worker_documents").delete().eq("user_id", userId);
+  await supabaseAdmin.from("worker_profiles").delete().eq("user_id", userId);
+  await supabaseAdmin.from("business_contacts").delete().eq("user_id", userId);
+  await supabaseAdmin.from("business_profiles").delete().eq("user_id", userId);
+  await supabaseAdmin.from("business_locations").delete().eq("business_id", userId);
+  await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+  await supabaseAdmin.from("profiles").delete().eq("id", userId);
+
+  const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (delErr) throw new Error(delErr.message);
+}
+
+// ── WRITE: delete a user (auth + owned rows) — email becomes reusable ─────────
 export const consoleDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
@@ -519,22 +741,67 @@ export const consoleDeleteUser = createServerFn({ method: "POST" })
       details: {},
     });
 
-    await supabaseAdmin.from("applications").delete().or(`worker_id.eq.${data.userId},owner_id.eq.${data.userId}`);
-    await supabaseAdmin.from("jobs").delete().eq("owner_id", data.userId);
-    await supabaseAdmin.from("conversations").delete().or(`worker_id.eq.${data.userId},business_id.eq.${data.userId}`);
-    await supabaseAdmin.from("worker_contacts").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("worker_documents").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("worker_profiles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("business_contacts").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("business_profiles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("business_locations").delete().eq("business_id", data.userId);
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("profiles").delete().eq("id", data.userId);
-
-    const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
-    if (delErr) throw new Error(delErr.message);
+    await purgeUser(supabaseAdmin, data.userId);
     return { ok: true };
   });
+
+// ── WRITE: ban a user — blacklist email + phone, then remove the account ──────
+export const consoleBanUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        targetLabel: z.string().max(200).optional(),
+        accountType: z.enum(["worker", "business"]).optional(),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId: adminId, email: adminEmail } = await assertAdmin(context);
+    if (data.userId === adminId) throw new Error("You cannot ban your own admin account.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Gather the identity (email + phone) before deleting the rows.
+    const [{ data: prof }, { data: wc }, { data: bc }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("email").eq("id", data.userId).maybeSingle(),
+      supabaseAdmin.from("worker_contacts").select("phone").eq("user_id", data.userId).maybeSingle(),
+      supabaseAdmin.from("business_contacts").select("phone").eq("user_id", data.userId).maybeSingle(),
+    ]);
+
+    const email = prof?.email ?? null;
+    const rawPhone = wc?.phone ?? bc?.phone ?? null;
+    const phone = rawPhone ? rawPhone.replace(/\D/g, "") || null : null;
+
+    if (!email && !phone) {
+      throw new Error("No email or phone on file — cannot ban this account.");
+    }
+
+    await supabaseAdmin.from("banned_identities").insert({
+      email,
+      phone,
+      reason: data.reason ?? null,
+      banned_user_id: data.userId,
+      banned_by: adminId,
+      banned_by_email: adminEmail,
+    });
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      admin_email: adminEmail,
+      action: "ban",
+      target_type: data.accountType ?? "user",
+      target_id: data.userId,
+      target_label: data.targetLabel ?? null,
+      details: { email, phone, reason: data.reason ?? null },
+    });
+
+    await purgeUser(supabaseAdmin, data.userId);
+    return { ok: true };
+  });
+
 
 // ── READ: signed URL for a worker's uploaded ID document ─────────────────────
 export const consoleSignWorkerDoc = createServerFn({ method: "POST" })

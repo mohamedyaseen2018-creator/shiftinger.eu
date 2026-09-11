@@ -24,7 +24,10 @@ import {
   consoleUpdateShift,
   consoleSetMatchStatus,
   consoleSetAdminRole,
+  consoleAddAdminEmail,
+  consoleRemoveAdminEmail,
   consoleDeleteUser,
+  consoleBanUser,
   consoleSignWorkerDoc,
   consoleSetWorkerVerified,
   type ConsoleStatus,
@@ -87,10 +90,15 @@ export interface Worker {
   ratingCount: number;
   shiftsCompleted: number;
   verified: boolean;
+  haccpVerified: boolean;
   status: ConsoleStatus;
   portfolioUrl: string;
   bio: string;
   adminNotes: string;
+  lookingFor: string[];
+  availableDays: string[];
+  timeSlots: string[];
+  availabilityVisible: boolean;
   hasCv: boolean;
   hasDocuments: boolean;
   idDocumentPath: string;
@@ -123,6 +131,7 @@ export interface Business {
   description: string;
   adminNotes: string;
   nif: string;
+  alvara: string;
   subSector: string;
   displayInitials: string;
   languagesRequired: string[];
@@ -143,6 +152,8 @@ export interface Shift {
   spots: number;
   spotsRemaining: number;
   note: string;
+  skills: string[];
+  languages: string[];
   city: string;
   status: JobStatus;
   applications: number;
@@ -163,8 +174,18 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string;
-  accountType: AccountType;
+  accountType: AccountType | "admin";
   role: string;
+}
+
+export interface AdminEmail {
+  id: string;
+  email: string;
+  role: string;
+  note: string;
+  addedByEmail: string | null;
+  createdAt: string;
+  registered: boolean;
 }
 
 export interface AuditEntry {
@@ -315,6 +336,7 @@ interface StoreValue {
   shifts: Shift[];
   matches: Match[];
   admins: AdminUser[];
+  adminEmails: AdminEmail[];
   audit: AuditEntry[];
   metrics: Metrics;
   config: PlatformConfig;
@@ -327,7 +349,7 @@ interface StoreValue {
   refresh: () => Promise<void>;
   saveWorker: (w: Worker) => Promise<void>;
   saveBusiness: (b: Business) => Promise<void>;
-  saveShift: (s: Pick<Shift, "id" | "role" | "rate" | "spots" | "status" | "note">) => Promise<void>;
+  saveShift: (s: Pick<Shift, "id" | "role" | "rate" | "spots" | "status" | "note" | "date" | "startTime" | "endTime" | "skills">) => Promise<void>;
   setMatchStatus: (id: string, status: ApplicationStatus) => Promise<void>;
   setStatus: (
     userId: string,
@@ -336,8 +358,11 @@ interface StoreValue {
     label?: string,
   ) => Promise<void>;
   deleteUser: (userId: string, accountType: AccountType, label?: string) => Promise<void>;
+  banUser: (userId: string, accountType: AccountType, label?: string, reason?: string) => Promise<void>;
   grantAdmin: (email: string) => Promise<void>;
   revokeAdmin: (userId: string) => Promise<void>;
+  addAdminEmail: (email: string, note?: string) => Promise<void>;
+  removeAdminEmail: (email: string) => Promise<void>;
 
   createWorker: (input: NewWorkerInput) => Promise<void>;
   createBusiness: (input: NewBusinessInput) => Promise<void>;
@@ -368,6 +393,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [adminEmails, setAdminEmails] = useState<AdminEmail[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [metrics, setMetrics] = useState<Metrics>(EMPTY_METRICS);
   const [config, setConfig] = useState<PlatformConfig>(EMPTY_CONFIG);
@@ -386,6 +412,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       setShifts(data.shifts as Shift[]);
       setMatches(data.matches as Match[]);
       setAdmins(data.admins as AdminUser[]);
+      setAdminEmails(data.adminEmails as AdminEmail[]);
       setAudit(data.audit as AuditEntry[]);
       setMetrics(data.metrics as Metrics);
       setConfig(cfg.config as PlatformConfig);
@@ -415,6 +442,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       shifts,
       matches,
       admins,
+      adminEmails,
       audit,
       metrics,
       config,
@@ -429,6 +457,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           data: {
             id: w.id,
             name: w.name,
+            email: w.email,
             phone: w.phone,
             nationality: w.nationality,
             city: w.city,
@@ -443,6 +472,12 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             bio: w.bio,
             adminNotes: w.adminNotes,
             atividadeNumber: w.atividadeNumber,
+            haccpVerified: w.haccpVerified,
+            verified: w.verified,
+            lookingFor: w.lookingFor,
+            availableDays: w.availableDays,
+            timeSlots: w.timeSlots,
+            availabilityVisible: w.availabilityVisible,
           },
         });
         await refresh();
@@ -452,6 +487,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           data: {
             id: b.id,
             name: b.name,
+            email: b.email,
             city: b.city,
             area: b.area,
             category: b.category,
@@ -463,6 +499,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
             isEarlyBird: b.isEarlyBird,
             adminNotes: b.adminNotes,
             nif: b.nif,
+            alvara: b.alvara,
             subSector: b.subSector,
             displayInitials: b.displayInitials,
             languagesRequired: b.languagesRequired,
@@ -473,10 +510,22 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       },
       saveShift: async (s) => {
         await consoleUpdateShift({
-          data: { id: s.id, role: s.role, rate: s.rate, spots: s.spots, status: s.status, note: s.note },
+          data: {
+            id: s.id,
+            role: s.role,
+            rate: s.rate,
+            spots: s.spots,
+            status: s.status,
+            note: s.note,
+            date: s.date,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            skills: s.skills,
+          },
         });
         await refresh();
       },
+
       setMatchStatus: async (id, status) => {
         await consoleSetMatchStatus({ data: { id, status } });
         await refresh();
@@ -489,12 +538,24 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         await consoleDeleteUser({ data: { userId, accountType, targetLabel: label } });
         await refresh();
       },
+      banUser: async (userId, accountType, label, reason) => {
+        await consoleBanUser({ data: { userId, accountType, targetLabel: label, reason } });
+        await refresh();
+      },
       grantAdmin: async (email) => {
         await consoleSetAdminRole({ data: { email, makeAdmin: true } });
         await refresh();
       },
       revokeAdmin: async (userId) => {
         await consoleSetAdminRole({ data: { userId, makeAdmin: false } });
+        await refresh();
+      },
+      addAdminEmail: async (email, note) => {
+        await consoleAddAdminEmail({ data: { email, note } });
+        await refresh();
+      },
+      removeAdminEmail: async (email) => {
+        await consoleRemoveAdminEmail({ data: { email } });
         await refresh();
       },
       createWorker: async (input) => {
@@ -611,7 +672,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
           .map((l) => l.value),
       businessLabel: (name, revealed = false) => maskBusiness(name, revealed),
     }),
-    [loading, error, workers, businesses, shifts, matches, admins, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
+    [loading, error, workers, businesses, shifts, matches, admins, adminEmails, audit, metrics, config, confirmationWindow, kpis, disputes, lists, jobCatalog, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

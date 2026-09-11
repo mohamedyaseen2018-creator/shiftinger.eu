@@ -1,7 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { CheckCircle, ArrowRight, Shield, Clock, MessageCircle, Star, Zap } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import { useAuth } from "@/lib/auth";
+import { HowItWorks, PricingTeaser, type JourneyStep } from "@/components/site/JourneySections";
+import stepSignup from "@/assets/step-signup.jpg";
+import stepProfile from "@/assets/step-profile.jpg";
+import stepPostjob from "@/assets/step-postjob.jpg";
+import stepApplications from "@/assets/step-applications.jpg";
+import stepAccept from "@/assets/step-accept.jpg";
+import stepRating from "@/assets/step-rating.jpg";
 
 export const Route = createFileRoute("/for-businesses")({
   head: () => ({
@@ -10,16 +19,77 @@ export const Route = createFileRoute("/for-businesses")({
       { name: "description", content: "Post a shift tonight and have a verified, skill-matched worker confirmed by morning. No agencies, no placement fees." },
       { property: "og:title", content: "For businesses — Shiftinger" },
       { property: "og:description", content: "Post a shift tonight. Have someone confirmed by morning." },
+      { property: "og:url", content: "https://shiftinger.eu/for-businesses" },
     ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/for-businesses" }],
   }),
   component: ForBusinessesPage,
 });
 
-const STEPS = [
-  { n: "01", title: "Post your shift", body: "Select the role, date, hours, and pay. Tick the skills you need. Done in under 3 minutes." },
-  { n: "02", title: "See matched candidates", body: "Applicants ranked by skill match %. Skills, experience, rating, and distance — all at a glance." },
-  { n: "03", title: "Accept with one click", body: "Accept, waitlist, or decline. The worker gets a notification instantly. Chat opens automatically." },
-  { n: "04", title: "Worker confirms", body: "They have 2 hours to confirm. Once confirmed, you both exchange contacts and your address is shared." },
+const STEPS: JourneyStep[] = [
+  {
+    n: "01",
+    title: "Sign up & fill the form",
+    image: stepSignup,
+    points: [
+      "Create a business account in under a minute.",
+      "Add your company name and contact details.",
+      "Verify your email to activate your account.",
+      "No subscription required to get started.",
+    ],
+  },
+  {
+    n: "02",
+    title: "Build your company profile",
+    image: stepProfile,
+    points: [
+      "Add your venue details and location.",
+      "Upload your logo so workers recognise you.",
+      "Describe what makes your team a great place to work.",
+    ],
+  },
+  {
+    n: "03",
+    title: "Post jobs & reach out to talent",
+    image: stepPostjob,
+    points: [
+      "Create a shift with role, date, hours, and pay in minutes.",
+      "Tick the exact skills you need for the role.",
+      "Or browse verified workers and invite them directly.",
+      "Your post goes live to matched workers instantly.",
+    ],
+  },
+  {
+    n: "04",
+    title: "Check applications",
+    image: stepApplications,
+    points: [
+      "See applicants ranked by skill-match percentage.",
+      "Review experience, ratings, and distance at a glance.",
+      "Filter for verified workers or Atividade status.",
+    ],
+  },
+  {
+    n: "05",
+    title: "Contact & accept the perfect one",
+    image: stepAccept,
+    points: [
+      "Open a private chat with your shortlisted workers.",
+      "Accept the best fit with one click.",
+      "The worker confirms within the 2-hour window.",
+      "Exchange contacts and share your address securely.",
+    ],
+  },
+  {
+    n: "06",
+    title: "Rate the worker",
+    image: stepRating,
+    points: [
+      "Leave a rating after the shift is complete.",
+      "Help the community recognise reliable workers.",
+      "Build a roster of favourites for next time.",
+    ],
+  },
 ];
 
 const FEATURE_CARDS = [
@@ -40,6 +110,17 @@ const STATS = [
 
 function ForBusinessesPage() {
   const { c } = useSiteContent();
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  // This page is for anonymous visitors and business-role users. Workers who
+  // land here directly are sent to their dashboard.
+  useEffect(() => {
+    if (profile?.account_type === "worker") navigate({ to: "/dashboard" });
+  }, [profile, navigate]);
+
+  if (profile?.account_type === "worker") return null;
+
   return (
     <SiteLayout>
       {/* Hero */}
@@ -79,26 +160,18 @@ function ForBusinessesPage() {
         </div>
       </section>
 
-      {/* Process */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="mb-14 text-center">
-            <span className="text-xs font-semibold uppercase tracking-widest text-gold">How it works</span>
-            <h2 className="mt-2 font-serif text-4xl text-ink">
-              {c("why.process_title")}
-            </h2>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step) => (
-              <div key={step.n} className="rounded-xl bg-white p-6 ring-1 ring-ink/5">
-                <span className="font-serif text-4xl text-ink/15">{step.n}</span>
-                <h3 className="mb-2 mt-3 font-medium text-ink">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-ink/60">{step.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* How it works */}
+      <HowItWorks
+        eyebrow="How it works"
+        title={c("why.process_title")}
+        subtitle="Six simple steps take you from posting a shift to rating the worker who nailed it."
+        steps={STEPS}
+        ctas={[
+          { label: "Get started", to: "/register", variant: "primary" },
+          { label: "Sign up as a business", to: "/auth", search: { mode: "signup", role: "business" }, variant: "secondary" },
+        ]}
+      />
+
 
       {/* Features */}
       <section className="pb-24">
@@ -128,6 +201,10 @@ function ForBusinessesPage() {
           </div>
         </div>
       </section>
+
+      {/* Pricing (obscured) */}
+      <PricingTeaser />
     </SiteLayout>
+
   );
 }

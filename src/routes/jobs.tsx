@@ -1,12 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import JobCard from "@/components/features/JobCard";
+import ApplyJobModal from "@/components/features/ApplyJobModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { fetchOpenJobs, toJob, type JobRow } from "@/lib/jobs";
+import { getApplicantCounts } from "@/lib/jobs.functions";
 import { computeMatch } from "@/lib/matching";
 import { ROLE_OPTIONS, CITY_OPTIONS } from "@/data/utils";
 import type { Job } from "@/data/types";
@@ -14,10 +16,24 @@ import type { Job } from "@/data/types";
 export const Route = createFileRoute("/jobs")({
   head: () => ({
     meta: [
-      { title: "Jobs available — Shiftinger" },
+      { title: "Hospitality jobs in Portugal — Shiftinger" },
       { name: "description", content: "Browse the latest hospitality shifts and part-time roles across Portugal on Shiftinger." },
-      { property: "og:title", content: "Jobs available — Shiftinger" },
-      { property: "og:description", content: "Find your next shift across Portugal." },
+      { property: "og:title", content: "Hospitality jobs in Portugal — Shiftinger" },
+      { property: "og:description", content: "Find your next hospitality shift across Portugal." },
+      { property: "og:url", content: "https://shiftinger.eu/jobs" },
+    ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/jobs" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Hospitality jobs in Portugal",
+          url: "https://shiftinger.eu/jobs",
+          description: "Latest hospitality shifts and part-time roles across Portugal.",
+        }),
+      },
     ],
   }),
   component: JobsPage,
@@ -40,6 +56,7 @@ interface DisplayJob {
 
 function JobsPage() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [role, setRole] = useState("All roles");
   const [type, setType] = useState("All types");
   const [city, setCity] = useState("All cities");
@@ -49,13 +66,26 @@ function JobsPage() {
   const [items, setItems] = useState<DisplayJob[]>([]);
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [worker, setWorker] = useState<Record<string, unknown> | null>(null);
+  const [applyTarget, setApplyTarget] = useState<DisplayJob | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     const { jobs, businesses } = await fetchOpenJobs();
+
+    // Live applicant counts straight from the applications table (count only, no PII).
+    let counts: Record<string, number> = {};
+    if (jobs.length) {
+      try {
+        counts = await getApplicantCounts({ data: { jobIds: jobs.map((j) => j.id) } });
+      } catch {
+        counts = {};
+      }
+    }
+
     let workerProfile: Record<string, unknown> | null = null;
     if (user && profile?.account_type === "worker") {
-      const { data } = await supabase.from("worker_profiles").select("*").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase.from("worker_profiles").select("id, user_id, name, city, nationality, main_role, main_role_years, sub_roles, languages, experience, atividade, bio, min_rate, looking_for, available_days, time_slots, availability_visible, messages_open, verified, rating, rating_count, shifts_completed, avatar_url, created_at, updated_at, residence, portfolio_url, atividade_number").eq("user_id", user.id).maybeSingle();
       workerProfile = data;
       setWorker(data);
       const { data: apps } = await supabase.from("applications").select("job_id").eq("worker_id", user.id);
@@ -63,6 +93,7 @@ function JobsPage() {
     }
     const display: DisplayJob[] = jobs.map((row) => {
       const job = toJob(row, businesses[row.owner_id]);
+      job.applicants = counts[row.id] ?? 0;
       let match;
       if (workerProfile) {
         match = computeMatch(
@@ -73,8 +104,20 @@ function JobsPage() {
             min_rate: workerProfile.min_rate as number,
             atividade: Boolean(workerProfile.atividade),
             looking_for: workerProfile.looking_for,
+            rating: (workerProfile.rating as number) ?? 0,
+            main_role_years: (workerProfile.main_role_years as number) ?? 0,
+            available_days: workerProfile.available_days,
+            city: (workerProfile.city as string) ?? null,
           },
-          { role: row.role, type: row.type, rate: Number(row.rate), languages: row.languages, atividade: row.atividade },
+          {
+            role: row.role,
+            type: row.type,
+            rate: Number(row.rate),
+            languages: row.languages,
+            atividade: row.atividade,
+            date: row.date,
+            city: businesses[row.owner_id]?.city ?? null,
+          },
         );
       }
       return { job, row, match };
@@ -87,9 +130,11 @@ function JobsPage() {
     load();
   }, [load]);
 
-  const apply = async (jobId: string) => {
+  /** Pre-checks, then open the in-page application modal. */
+  const openApply = async (jobId: string) => {
     if (!user) {
       toast.error("Please sign in as a worker to apply.");
+      navigate({ to: "/auth", search: { mode: "signin", role: "worker" } });
       return;
     }
     if (profile?.account_type !== "worker") {
@@ -107,20 +152,34 @@ function JobsPage() {
     }
     const item = items.find((i) => i.row.id === jobId);
     if (!item) return;
+    setApplyTarget(item);
+  };
+
+  const submitApplication = async (message: string) => {
+    if (!applyTarget || !user) return;
+    setSubmitting(true);
     const { error } = await supabase.from("applications").insert({
-      job_id: jobId,
+      job_id: applyTarget.row.id,
       worker_id: user.id,
-      owner_id: item.row.owner_id,
-      match_score: item.match?.score ?? 0,
-      matched_criteria: item.match?.criteria ?? [],
+      owner_id: applyTarget.row.owner_id,
+      match_score: applyTarget.match?.score ?? 0,
+      matched_criteria: applyTarget.match?.criteria ?? [],
       status: "applied",
+      message: message.trim() || null,
     });
+    setSubmitting(false);
     if (error) {
       toast.error(error.message.includes("duplicate") ? "You already applied to this shift." : "Could not apply.");
       return;
     }
+    const jobId = applyTarget.row.id;
     setAppliedIds((p) => new Set([...p, jobId]));
-    toast.success("Application sent!");
+    // Reactive count: increment immediately on the card.
+    setItems((prev) =>
+      prev.map((i) => (i.row.id === jobId ? { ...i, job: { ...i.job, applicants: i.job.applicants + 1 } } : i)),
+    );
+    setApplyTarget(null);
+    toast.success("Application sent! You'll be notified once confirmed.");
   };
 
   const filtered = useMemo(() => {
@@ -141,7 +200,7 @@ function JobsPage() {
       <div className="border-b border-ink/5 bg-ink px-6 py-14 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <span className="text-xs font-semibold uppercase tracking-widest text-gold">Browse shifts</span>
-          <h1 className="mt-2 font-serif text-4xl text-canvas">Jobs available now</h1>
+          <h1 className="mt-2 font-serif text-4xl text-canvas">Hospitality jobs in Portugal</h1>
           <p className="mt-2 text-canvas/60">Find your next shift across Portugal.</p>
         </div>
       </div>
@@ -190,13 +249,32 @@ function JobsPage() {
                 key={job.id}
                 job={job}
                 matchScore={worker ? match?.score : undefined}
+                matchCriteria={worker ? match?.criteria : undefined}
+                workerLanguages={
+                  worker
+                    ? (Array.isArray(worker.languages) ? worker.languages : [])
+                        .map((l) =>
+                          typeof l === "string" ? l : l && typeof l === "object" && "language" in l ? String((l as { language: unknown }).language) : "",
+                        )
+                        .filter(Boolean)
+                    : undefined
+                }
                 applied={appliedIds.has(job.id)}
-                onApply={profile?.account_type === "worker" ? apply : undefined}
+                onApply={openApply}
               />
             ))}
           </div>
         )}
       </div>
+
+      <ApplyJobModal
+        job={applyTarget?.job ?? null}
+        criteria={applyTarget?.match?.criteria}
+        open={!!applyTarget}
+        submitting={submitting}
+        onClose={() => setApplyTarget(null)}
+        onSubmit={submitApplication}
+      />
     </SiteLayout>
   );
 }

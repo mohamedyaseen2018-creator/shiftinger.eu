@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Trash2, Star, Mail, Phone, ExternalLink } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Trash2, Star, Phone, ExternalLink, Ban, UserSearch } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -43,6 +44,11 @@ const STATUS_OPTIONS = (Object.keys(STATUS_LABEL) as ConsoleStatus[]).map((value
   label: STATUS_LABEL[value],
 }));
 
+const DAY_OPTIONS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const SLOT_OPTIONS = ["Morning", "Afternoon", "Evening", "Night", "Weekends"];
+
+
+
 export function WorkerDrawer({
   worker,
   open,
@@ -57,6 +63,9 @@ export function WorkerDrawer({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmBan, setConfirmBan] = useState(false);
+  const [banReason, setBanReason] = useState("");
+
 
   useEffect(() => {
     setForm(worker);
@@ -104,12 +113,19 @@ export function WorkerDrawer({
           <SheetHeader className="border-b border-line bg-white px-6 py-4">
             <SheetTitle className="font-sans">Edit worker</SheetTitle>
             <SheetDescription>Edit profile details and review status. Changes are saved to the database.</SheetDescription>
+            <Link
+              to="/console/workers/$workerId"
+              params={{ workerId: form.id }}
+              onClick={onClose}
+              className="mt-1 inline-flex w-fit items-center gap-1.5 text-xs font-medium text-pine-dark hover:underline"
+            >
+              <UserSearch size={13} /> View full profile
+            </Link>
           </SheetHeader>
 
           <div className="space-y-4 px-6 py-5">
             <div className="rounded-xl border border-line bg-white px-4 py-3 text-xs text-slate">
-              <p className="flex items-center gap-2"><Mail size={13} /> {form.email || "—"}</p>
-              <p className="mt-1 flex items-center gap-2"><Phone size={13} /> {form.phone || "—"}</p>
+              <p className="flex items-center gap-2"><Phone size={13} /> {form.phone || "—"}</p>
               <p className="mt-1 flex items-center gap-3">
                 <span className="inline-flex items-center gap-1"><Star size={13} className="fill-amber text-amber" /> {form.rating.toFixed(1)} ({form.ratingCount})</span>
                 <span>· {form.shiftsCompleted} shifts</span>
@@ -126,17 +142,10 @@ export function WorkerDrawer({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Nationality">
-                <ManagedSelect
-                  value={form.nationality}
-                  onChange={(v) => set({ nationality: v })}
-                  options={nationalityOptions}
-                  onAddOption={addOption("nationality")}
-                  placeholder="New nationality…"
-                  allowEmpty
-                />
+              <Field label="Email" hint="Changing this updates the worker's login email">
+                <TextInput type="email" value={form.email} onChange={(e) => set({ email: e.target.value })} />
               </Field>
-              <Field label="City">
+              <Field label="City / location">
                 <ManagedSelect
                   value={form.city}
                   onChange={(v) => set({ city: v })}
@@ -147,6 +156,19 @@ export function WorkerDrawer({
                 />
               </Field>
             </div>
+
+
+            <Field label="Nationality">
+              <ManagedSelect
+                value={form.nationality}
+                onChange={(v) => set({ nationality: v })}
+                options={nationalityOptions}
+                onAddOption={addOption("nationality")}
+                placeholder="New nationality…"
+                allowEmpty
+              />
+            </Field>
+
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Main role">
@@ -189,6 +211,41 @@ export function WorkerDrawer({
               />
             </Field>
 
+            <div className="rounded-xl border border-line bg-white p-3">
+              <p className="mb-2 text-xs font-semibold text-ink">Availability</p>
+              <div className="space-y-3">
+                <Field label="Looking for">
+                  <TagMultiSelect
+                    selected={form.lookingFor}
+                    options={roleOptions}
+                    onChange={(v) => set({ lookingFor: v })}
+                    onAddOption={addOption("skill")}
+                    placeholder="New role…"
+                  />
+                </Field>
+                <Field label="Available days">
+                  <TagMultiSelect
+                    selected={form.availableDays}
+                    options={DAY_OPTIONS}
+                    onChange={(v) => set({ availableDays: v })}
+                  />
+                </Field>
+                <Field label="Time slots">
+                  <TagMultiSelect
+                    selected={form.timeSlots}
+                    options={SLOT_OPTIONS}
+                    onChange={(v) => set({ timeSlots: v })}
+                  />
+                </Field>
+                <ToggleRow
+                  label="Availability visible"
+                  description="Show this worker in the public talent feed"
+                  checked={form.availabilityVisible}
+                  onChange={(v) => set({ availabilityVisible: v })}
+                />
+              </div>
+            </div>
+
             <ToggleRow
               label="Atividade (self-employed status)"
               description="Registered as independent worker with Finanças"
@@ -200,6 +257,21 @@ export function WorkerDrawer({
                 <TextInput value={form.atividadeNumber} onChange={(e) => set({ atividadeNumber: e.target.value })} placeholder="e.g. 123456789" />
               </Field>
             )}
+
+            <ToggleRow
+              label="ID verified"
+              description="Confirms the worker's identity document has been checked"
+              checked={form.verified}
+              onChange={(v) => set({ verified: v })}
+            />
+
+            <ToggleRow
+              label="HACCP certified"
+              description="Show the HACCP badge after verifying the worker's food-hygiene certificate"
+              checked={form.haccpVerified}
+              onChange={(v) => set({ haccpVerified: v })}
+            />
+
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Review status">
@@ -233,17 +305,26 @@ export function WorkerDrawer({
           </div>
 
           <SheetFooter className="mt-auto flex-row items-center justify-between gap-2 border-t border-line bg-white px-6 py-4">
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-            >
-              <Trash2 size={15} /> Delete
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                <Trash2 size={15} /> Delete
+              </button>
+              <button
+                onClick={() => setConfirmBan(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                <Ban size={15} /> Ban
+              </button>
+            </div>
             <div className="flex gap-2">
               <GhostButton onClick={onClose}>Cancel</GhostButton>
               <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</PrimaryButton>
             </div>
           </SheetFooter>
+
         </SheetContent>
       </Sheet>
 
@@ -275,6 +356,46 @@ export function WorkerDrawer({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={confirmBan} onOpenChange={setConfirmBan}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-sans">Ban {form.name || "this worker"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the account and permanently blacklists their email and phone number. They
+              will never be able to register again with the same email or phone. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-1">
+            <Field label="Reason (optional, internal)">
+              <TextInput
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                placeholder="e.g. repeated no-shows, fraud"
+              />
+            </Field>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await store.banUser(form.id, "worker", form.name, banReason || undefined);
+                  toast.success("Worker banned");
+                  setConfirmBan(false);
+                  onClose();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not ban worker");
+                }
+              }}
+              className="rounded-xl bg-red-600 hover:bg-red-700"
+            >
+              Ban permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
+
   );
 }

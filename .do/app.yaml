@@ -1,0 +1,91 @@
+# =============================================================================
+# DigitalOcean App Platform spec
+# -----------------------------------------------------------------------------
+# Deploys this app straight from your GitHub repo using the root Dockerfile.
+# The app is a single unified TanStack Start service (SSR frontend + server
+# functions), so App Platform only needs ONE web component.
+#
+# How to use:
+#   1. Push this repo to GitHub (Lovable's GitHub sync does this automatically
+#      once the project is connected).
+#   2. In DigitalOcean: Apps -> Create App -> choose this GitHub repo/branch.
+#      App Platform detects `Dockerfile` and this spec automatically, OR:
+#      `doctl apps create --spec .do/app.yaml`
+#   3. Fill in the real values for the `github` block and the env vars below.
+#
+# Notes:
+#   - App Platform builds the image from `dockerfile_path` and runs its CMD
+#     (`node .output/server/index.mjs`). No separate build/start command needed.
+#   - App Platform injects PORT = http_port; the server reads PORT, so it binds
+#     to the right port automatically.
+#   - Env vars scoped BUILD_TIME are passed to `docker build` as build args
+#     (that's how the VITE_* values get baked into the client bundle).
+# =============================================================================
+
+name: shiftinger
+region: fra   # pick a region close to you: nyc, sfo, ams, fra, sgp, blr, syd, lon, tor
+
+services:
+  - name: web
+    # ---- Source: point this at YOUR repo ----
+    github:
+      repo: your-github-username/your-repo-name
+      branch: main
+      deploy_on_push: true
+
+    dockerfile_path: Dockerfile
+    source_dir: /
+
+    # The container listens on PORT (App Platform sets PORT = http_port).
+    http_port: 3000
+
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb   # bump if builds/traffic need more
+
+    health_check:
+      http_path: /
+      initial_delay_seconds: 20
+      period_seconds: 30
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+    routes:
+      - path: /
+
+    envs:
+      # ---- Client bundle (baked in at BUILD time) ----
+      - key: VITE_SUPABASE_URL
+        scope: BUILD_TIME
+        value: https://YOUR-PROJECT.supabase.co
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        scope: BUILD_TIME
+        value: your-publishable-anon-key
+      - key: VITE_SUPABASE_PROJECT_ID
+        scope: BUILD_TIME
+        value: your-project-id
+
+      # ---- Server runtime (read by server functions) ----
+      - key: SUPABASE_URL
+        scope: RUN_TIME
+        value: https://YOUR-PROJECT.supabase.co
+      - key: SUPABASE_PUBLISHABLE_KEY
+        scope: RUN_TIME
+        value: your-publishable-anon-key
+      - key: SUPABASE_PROJECT_ID
+        scope: RUN_TIME
+        value: your-project-id
+      # Mark real secrets as SECRET so DO stores them encrypted, e.g.:
+      # - key: SUPABASE_SERVICE_ROLE_KEY
+      #   scope: RUN_TIME
+      #   type: SECRET
+      #   value: <paste-in-DO-dashboard>
+
+# ---- Optional: DigitalOcean Managed PostgreSQL ----
+# The app currently uses Supabase for DB + Auth. If you instead want a DO
+# managed Postgres, uncomment this and reference ${db.DATABASE_URL} in envs.
+# databases:
+#   - name: db
+#     engine: PG
+#     version: "16"
+#     production: false

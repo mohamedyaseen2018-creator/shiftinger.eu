@@ -20,6 +20,30 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTES = ["00", "15", "30", "45"];
+
+/** Time picker restricted to 15-minute increments (00, 15, 30, 45). */
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [h, m] = value ? value.split(":") : ["", ""];
+  const set = (nh: string, nm: string) => onChange(nh && nm ? `${nh}:${nm}` : "");
+  return (
+    <div className="flex gap-2">
+      <select className={inputClass} value={h} onChange={(e) => set(e.target.value, m || "00")} aria-label="Hour">
+        <option value="">HH</option>
+        {HOURS.map((x) => (
+          <option key={x} value={x}>{x}</option>
+        ))}
+      </select>
+      <select className={inputClass} value={m} onChange={(e) => set(h || "00", e.target.value)} aria-label="Minute">
+        <option value="">MM</option>
+        {MINUTES.map((x) => (
+          <option key={x} value={x}>{x}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function PostJobPage() {
   const { user, profile, loading } = useAuth();
@@ -117,8 +141,8 @@ function PostJobPage() {
             {form.type === "single" ? (
               <div className="grid gap-5 sm:grid-cols-3">
                 <div><Label>Date</Label><input type="date" className={inputClass} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                <div><Label>Start</Label><input type="time" className={inputClass} value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} /></div>
-                <div><Label>End</Label><input type="time" className={inputClass} value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} /></div>
+                <div><Label>Start</Label><TimeSelect value={form.startTime} onChange={(v) => setForm({ ...form, startTime: v })} /></div>
+                <div><Label>End</Label><TimeSelect value={form.endTime} onChange={(v) => setForm({ ...form, endTime: v })} /></div>
               </div>
             ) : (
               <>
@@ -136,8 +160,8 @@ function PostJobPage() {
                   </div>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <div><Label>Start time</Label><input type="time" className={inputClass} value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} /></div>
-                  <div><Label>End time</Label><input type="time" className={inputClass} value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} /></div>
+                  <div><Label>Start time</Label><TimeSelect value={form.startTime} onChange={(v) => setForm({ ...form, startTime: v })} /></div>
+                  <div><Label>End time</Label><TimeSelect value={form.endTime} onChange={(v) => setForm({ ...form, endTime: v })} /></div>
                 </div>
               </>
             )}

@@ -3,24 +3,33 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSiteContent } from "@/components/site/SiteContentProvider";
+import NotificationBell from "@/components/site/NotificationBell";
+import { LogoMark } from "@/components/brand/Logo";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`text-xl font-medium tracking-tight ${className}`}>
-      <span className="text-teal">Shift</span>
-      <span className="font-serif italic text-gold">inger</span>
+    <span className={`flex items-center gap-2.5 ${className}`}>
+      <LogoMark size={36} />
+      <span className="text-xl font-medium tracking-tight">
+        <span className="text-teal">Shift</span>
+        <span className="font-serif italic text-gold">inger</span>
+      </span>
     </span>
   );
 }
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, profile } = useAuth();
   const { c } = useSiteContent();
+  // Workers shouldn't see the business marketing page; it's for anonymous
+  // visitors and business-role users only.
+  const isWorker = profile?.account_type === "worker";
   const navLinks = [
     { label: c("header.nav_jobs"), to: "/jobs" as const },
     { label: c("header.nav_talent"), to: "/talent" as const },
-    { label: c("header.nav_business"), to: "/for-businesses" as const },
+    { label: "For workers", to: "/for-workers" as const },
+    ...(!isWorker ? [{ label: c("header.nav_business"), to: "/for-businesses" as const }] : []),
   ];
 
   return (
@@ -56,6 +65,16 @@ export default function Navbar() {
                   Admin
                 </Link>
               )}
+              {profile?.account_type === "business" && (
+                <Link
+                  to="/post-job"
+                  className="rounded-full px-5 py-2 text-sm font-medium text-canvas transition-colors hover:opacity-90"
+                  style={{ backgroundColor: "#06332A" }}
+                >
+                  Post Shift
+                </Link>
+              )}
+              <NotificationBell />
               <Link
                 to="/dashboard"
                 className="rounded-full bg-teal px-5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-teal-light"
@@ -115,6 +134,16 @@ export default function Navbar() {
                     onClick={() => setOpen(false)}
                   >
                     Admin
+                  </Link>
+                )}
+                {profile?.account_type === "business" && (
+                  <Link
+                    to="/post-job"
+                    className="rounded-full px-5 py-2 text-center text-sm font-medium text-canvas"
+                    style={{ backgroundColor: "#06332A" }}
+                    onClick={() => setOpen(false)}
+                  >
+                    Post Shift
                   </Link>
                 )}
                 <Link

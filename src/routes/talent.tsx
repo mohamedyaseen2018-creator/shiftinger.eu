@@ -10,10 +10,24 @@ import type { WorkerProfile } from "@/data/types";
 export const Route = createFileRoute("/talent")({
   head: () => ({
     meta: [
-      { title: "Find talent — Shiftinger" },
+      { title: "Find hospitality talent in Portugal — Shiftinger" },
       { name: "description", content: "Browse verified, skill-matched hospitality workers available for shifts across Portugal." },
-      { property: "og:title", content: "Find talent — Shiftinger" },
+      { property: "og:title", content: "Find hospitality talent in Portugal — Shiftinger" },
       { property: "og:description", content: "Verified, skill-matched workers ready for shifts across Portugal." },
+      { property: "og:url", content: "https://shiftinger.eu/talent" },
+    ],
+    links: [{ rel: "canonical", href: "https://shiftinger.eu/talent" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Hospitality talent in Portugal",
+          url: "https://shiftinger.eu/talent",
+          description: "Verified, skill-matched hospitality workers available for shifts across Portugal.",
+        }),
+      },
     ],
   }),
   component: TalentPage,
@@ -55,7 +69,9 @@ function mapWorker(r: Record<string, unknown>): WorkerProfile {
     minRate: Number(r.min_rate) || 0,
     phone: (r.phone as string) ?? "",
     nationality: (r.nationality as string) ?? "",
+    avatarUrl: (r.avatar_url as string) ?? null,
     portfolioUrl: (r.portfolio_url as string) ?? null,
+    haccp: Boolean(r.haccp_verified),
   };
 }
 
@@ -91,7 +107,7 @@ function TalentPage() {
       <div className="border-b border-ink/5 bg-ink px-6 py-14 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <span className="text-xs font-semibold uppercase tracking-widest text-gold">Browse talent</span>
-          <h1 className="mt-2 font-serif text-4xl text-canvas">Available workers</h1>
+          <h1 className="mt-2 font-serif text-4xl text-canvas">Available hospitality workers in Portugal</h1>
           <p className="mt-2 text-canvas/60">Verified, skill-matched workers ready for shifts across Portugal.</p>
         </div>
       </div>
@@ -123,7 +139,7 @@ function TalentPage() {
             <p className="mt-2 text-sm">Verified workers who make their profile visible will appear here.</p>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((w) => (
               <WorkerCard key={w.id} worker={w} />
             ))}
