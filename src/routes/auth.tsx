@@ -4,7 +4,7 @@ import { Briefcase, Store, Mail, ArrowRight, ShieldCheck, Loader2, Check, X } fr
 import { toast } from "sonner";
 import SiteLayout from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 import { useAuth } from "@/lib/auth";
 import { signInSchema, signUpSchema, checkPasswordRequirements } from "@/lib/validation";
 import type { AccountType } from "@/data/types";
@@ -12,8 +12,8 @@ import Logo from "@/components/brand/Logo";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
-    mode: (search.mode as string) === "signup" ? "signup" : "signin",
-    role: (search.role as string) === "business" ? "business" : "worker",
+    mode: ((search.mode as string) === "signup" ? "signup" : "signin") as "signin" | "signup",
+    role: ((search.role as string) === "business" ? "business" : "worker") as AccountType,
   }),
   head: () => ({
     meta: [
@@ -61,16 +61,16 @@ function AuthPage() {
           /* ignore storage failures */
         }
       }
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/onboarding` },
       });
-      if (result.error) {
+      if (error) {
         toast.error("Google sign-in failed. Please try again.");
         setBusy(false);
         return;
       }
-      if (result.redirected) return;
-      navigate({ to: "/onboarding" });
+      // On success the browser redirects to Google; nothing else to do here.
     } catch {
       toast.error("Google sign-in failed. Please try again.");
       setBusy(false);

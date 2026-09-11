@@ -1,55 +1,54 @@
 import { cn } from "@/lib/utils";
-import markAsset from "@/assets/shiftinger-mark.png.asset.json";
 
-export type LogoVariant = "full" | "mark" | "icon";
-export type LogoTheme = "light" | "dark" | "amber";
+const MARK_SRC = "/shiftinger-mark.png";
 
-interface LogoProps {
-  variant?: LogoVariant;
-  theme?: LogoTheme;
-  /** Pixel size of the square mark. For `full` the wordmark scales with it. */
+interface LogoMarkProps {
   size?: number;
   className?: string;
 }
 
-/** The Shiftinger "S" mark (forest + gold). */
-export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
+export function LogoMark({ size = 36, className }: LogoMarkProps) {
   return (
     <img
-      src={markAsset.url}
+      src={MARK_SRC}
+      alt="Shiftinger"
       width={size}
       height={size}
-      alt="Shiftinger"
-      className={className}
-      style={{ width: size, height: size, objectFit: "contain" }}
+      className={cn("object-contain", className)}
+      style={{ height: size, width: size }}
     />
   );
+}
+
+interface LogoProps {
+  variant?: "full" | "mark";
+  theme?: "light" | "dark";
+  size?: number;
+  className?: string;
 }
 
 export default function Logo({
   variant = "full",
   theme = "light",
-  size,
+  size = 40,
   className,
 }: LogoProps) {
-  if (variant === "mark" || variant === "icon") {
-    return <LogoMark size={size ?? 32} className={className} />;
+  if (variant === "mark") {
+    return <LogoMark size={size} className={className} />;
   }
 
-  const markSize = size ?? 40;
-  const shiftColor = theme === "dark" ? "#FFFFFF" : "#06332A";
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
-      <LogoMark size={markSize} />
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <LogoMark size={size} />
       <span
-        className="font-medium tracking-tight leading-none"
-        style={{ fontSize: markSize * 0.5 }}
+        className={cn(
+          "font-serif font-semibold tracking-tight",
+          theme === "dark" ? "text-white" : "text-ink",
+        )}
+        style={{ fontSize: Math.round(size * 0.55) }}
       >
-        <span style={{ color: shiftColor, fontWeight: 700 }}>Shift</span>
-        <span className="font-serif italic" style={{ color: "#D89733" }}>
-          inger
-        </span>
+        Shiftinger
       </span>
-    </div>
+    </span>
   );
 }

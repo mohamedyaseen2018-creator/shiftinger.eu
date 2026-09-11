@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.check_phone_unique_across_tables() FROM PUBLIC, anon, authenticated;

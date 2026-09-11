@@ -22,6 +22,7 @@ import type { Json } from "@/integrations/supabase/types";
 import type { AccountType } from "@/data/types";
 import { useAuth } from "@/lib/auth";
 import { setAccountType } from "@/lib/onboarding.functions";
+import { normalizePhoneInput, isValidPhone, phoneErrorMessage } from "@/lib/validation";
 
 import {
   CITY_OPTIONS,
@@ -29,7 +30,6 @@ import {
   ROLE_OPTIONS,
   LANGUAGE_OPTIONS,
   LANGUAGE_LEVELS,
-  LANGUAGE_FLAGS,
   DAY_OPTIONS,
   TIME_SLOT_OPTIONS,
   roleIcon,
@@ -352,7 +352,127 @@ function WorkerForm({
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [days, setDays] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  // Draft handling — nothing typed in onboarding should ever be lost.
+  const [hydrated, setHydrated] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
 
+  // Re-load any partially completed profile so refreshing, signing out or
+  // coming back later resumes exactly where the worker stopped.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: wp }, { data: wc }, { data: wd }] = await Promise.all([
+        supabase.from("worker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("worker_contacts").select("phone").eq("user_id", userId).maybeSingle(),
+        supabase.from("worker_documents").select("*").eq("user_id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (wp) {
+        if (wp.name) setName(wp.name);
+        if (wp.city) setCity(wp.city);
+        if (wp.nationality) setNationality(wp.nationality);
+        if (wp.residence) setResidence(wp.residence);
+        if (wp.main_role) setMainRole(wp.main_role);
+        if (wp.main_role_years) setMainRoleYears(String(wp.main_role_years));
+        const savedSubRoles = (wp.sub_roles ?? []) as unknown as { role: string; years: number | string }[];
+        if (savedSubRoles.length)
+          setSubRoles(savedSubRoles.map((s) => ({ role: s.role, years: String(s.years ?? 0) })));
+        const savedExp = (wp.experience ?? []) as unknown as ExpEntry[];
+        if (savedExp.length) setExperiences(savedExp);
+        const savedLangs = (wp.languages ?? []) as unknown as LangEntry[];
+        if (savedLangs.length) setLanguages(savedLangs);
+        setAtividade(wp.atividade ? "yes" : "no");
+        if (wp.min_rate) setMinRate(String(wp.min_rate));
+        if (wp.bio) setBio(wp.bio);
+        const savedLookingFor = (wp.looking_for ?? []) as unknown as string[];
+        if (savedLookingFor.length) setLookingFor(savedLookingFor);
+        const savedDays = (wp.available_days ?? []) as unknown as string[];
+        if (savedDays.length) setDays(savedDays);
+        const savedSlots = (wp.time_slots ?? []) as unknown as string[];
+        if (savedSlots.length) setTimeSlots(savedSlots);
+      }
+      if (wc?.phone) setPhone(wc.phone);
+      if (wd) {
+        if (wd.id_document_type) setIdDocType(wd.id_document_type);
+        if (wd.id_document_url) {
+          setDocPath(wd.id_document_url);
+          setDocName(wd.id_document_url.split("/").pop() ?? "Uploaded document");
+        }
+        if (wd.haccp_document_url) {
+          setHaccpPath(wd.haccp_document_url);
+          setHaccpName(wd.haccp_document_url.split("/").pop() ?? "Uploaded certificate");
+        }
+      }
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const profilePayload = () => ({
+    name: name || null,
+    city: city || null,
+    nationality: nationality || null,
+    residence: residence || null,
+    main_role: mainRole || null,
+    main_role_years: Number(mainRoleYears) || 0,
+    sub_roles: subRoles.filter((s) => s.role) as unknown as Json,
+    experience: experiences.filter((x) => x.position || x.employer) as unknown as Json,
+    languages: languages.filter((l) => l.language) as unknown as Json,
+    atividade: atividade === "yes",
+    min_rate: Number(minRate) || 0,
+    bio: bio || null,
+    looking_for: lookingFor,
+    available_days: days,
+    time_slots: timeSlots,
+  });
+
+  /** Persist everything captured so far. Returns false when saving failed. */
+  const saveDraft = async (): Promise<boolean> => {
+    if (!hydrated) return true;
+    setSavingDraft(true);
+    try {
+      if (phone.trim()) {
+        const { error } = await supabase
+          .from("worker_contacts")
+          .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
+        if (error) {
+          toast.error(phoneErrorMessage(error));
+          return false;
+        }
+      }
+      const { error: wErr } = await supabase
+        .from("worker_profiles")
+        .update(profilePayload())
+        .eq("user_id", userId);
+      if (wErr) {
+        toast.error("Could not save your progress. Please try again.");
+        return false;
+      }
+      if (docPath || haccpPath || idDocType) {
+        await supabase.from("worker_documents").upsert(
+          {
+            user_id: userId,
+            id_document_url: docPath ?? undefined,
+            id_document_type: idDocType ?? undefined,
+            haccp_document_url: haccpPath ?? undefined,
+          },
+          { onConflict: "user_id" },
+        );
+      }
+      return true;
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const goToStep = async (next: number) => {
+    // Always save before moving so partial answers survive a drop-off.
+    const ok = await saveDraft();
+    if (!ok && next > step) return;
+    setStep(next);
+  };
 
   const toggleLookingFor = (v: string) =>
     setLookingFor((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
@@ -362,10 +482,28 @@ function WorkerForm({
     setTimeSlots((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
   const canNext = () => {
-    if (step === 0) return name.trim() && city && phone.trim();
+    if (step === 0) return Boolean(name.trim() && city && isValidPhone(phone));
     if (step === 1) return Boolean(mainRole);
+    // Rate, availability and bio are now mandatory and asked early.
+    if (step === 2) return Boolean(Number(minRate) > 0 && days.length > 0 && bio.trim().length >= 20);
     return true;
   };
+
+  const stepError = () => {
+    if (step === 0) {
+      if (!name.trim()) return "Please enter your full name.";
+      if (!city) return "Please select your city.";
+      return "Please enter a valid WhatsApp / phone number.";
+    }
+    if (step === 1) return "Please choose your main role.";
+    if (step === 2) {
+      if (!(Number(minRate) > 0)) return "Please set your minimum hourly rate.";
+      if (days.length === 0) return "Please pick at least one available day.";
+      return "Please write a short bio (at least 20 characters).";
+    }
+    return "Please fill the required fields.";
+  };
+
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -431,10 +569,10 @@ function WorkerForm({
     setBusy(true);
     const { error: cErr } = await supabase
       .from("worker_contacts")
-      .upsert({ user_id: userId, phone }, { onConflict: "user_id" });
+      .upsert({ user_id: userId, phone: normalizePhoneInput(phone) }, { onConflict: "user_id" });
     if (cErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(cErr));
       return;
     }
     const { error: wErr } = await supabase
@@ -519,7 +657,7 @@ function WorkerForm({
               <select className={inputClass} value={nationality} onChange={(e) => setNationality(e.target.value)}>
                 <option value="">Select…</option>
                 {NATIONALITY_OPTIONS.map((n) => (
-                  <option key={n.name} value={n.name}>{n.flag} {n.name}</option>
+                  <option key={n.name} value={n.name}>{n.name}</option>
                 ))}
               </select>
             </div>
@@ -670,7 +808,7 @@ function WorkerForm({
               <div key={i} className="mb-2 flex gap-2">
                 <select className={`${inputClass} flex-1`} value={l.language} onChange={(e) => { const u = [...languages]; u[i].language = e.target.value; setLanguages(u); }}>
                   <option value="">Select language…</option>
-                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{LANGUAGE_FLAGS[lang] ?? "🌐"} {lang}</option>)}
+                  {LANGUAGE_OPTIONS.map((lang) => <option key={lang} value={lang}>{lang}</option>)}
                 </select>
                 <select className={`${inputClass} flex-1`} value={l.level} onChange={(e) => { const u = [...languages]; u[i].level = e.target.value; setLanguages(u); }}>
                   {LANGUAGE_LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
@@ -936,6 +1074,101 @@ function BusinessForm({
   const [contactPosition, setContactPosition] = useState("");
   const [phone, setPhone] = useState("+351 ");
   const [description, setDescription] = useState("");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Resume a partially completed business profile instead of losing answers.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: bp }, { data: bc }, { data: bd }, { data: bl }] = await Promise.all([
+        supabase.from("business_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_contacts").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_documents").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("business_locations").select("address").eq("business_id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (bp) {
+        if (bp.business_name) setBusinessName(bp.business_name);
+        const savedCats = (bp.categories ?? []) as unknown as string[];
+        if (savedCats.length) setCategories(savedCats);
+        else if (bp.category) setCategories([bp.category]);
+        if (bp.city) setCity(bp.city);
+        if (bp.area) setArea(bp.area);
+        if (bp.description) setDescription(bp.description);
+        if (bp.facebook_url) setFacebookUrl(bp.facebook_url);
+        if (bp.instagram_url) setInstagramUrl(bp.instagram_url);
+        if (bp.tiktok_url) setTiktokUrl(bp.tiktok_url);
+        if (bp.google_maps_url) setGoogleMapsUrl(bp.google_maps_url);
+      }
+      if (bc) {
+        if (bc.phone) {
+          setBusinessPhone(bc.phone);
+          setPhone(bc.phone);
+        }
+        if (bc.contact_name) setContactName(bc.contact_name);
+        if (bc.contact_position) setContactPosition(bc.contact_position);
+      }
+      if (bd?.document_url) {
+        setDocPath(bd.document_url);
+        setDocName(bd.document_url.split("/").pop() ?? "Uploaded document");
+        if (bd.doc_type === "nif" || bd.doc_type === "alvara") setVerifyOption(bd.doc_type);
+      }
+      if (bl?.address) setAddress(bl.address);
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  /** Persist what has been filled so far; returns false when saving failed. */
+  const saveDraft = async (): Promise<boolean> => {
+    if (!hydrated) return true;
+    const { error } = await supabase
+      .from("business_profiles")
+      .update({
+        business_name: businessName || null,
+        categories: categories as unknown as Json,
+        category: categories[0] ?? null,
+        city: city || null,
+        area: area || null,
+        description: description || null,
+        facebook_url: facebookUrl.trim() || null,
+        instagram_url: instagramUrl.trim() || null,
+        tiktok_url: tiktokUrl.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null,
+      })
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("Could not save your progress. Please try again.");
+      return false;
+    }
+    const contactPhone = businessPhone.trim() || phone.trim();
+    if (contactPhone) {
+      const { error: cErr } = await supabase.from("business_contacts").upsert(
+        {
+          user_id: userId,
+          phone: normalizePhoneInput(contactPhone),
+          contact_name: contactName || null,
+          contact_position: contactPosition || null,
+        },
+        { onConflict: "user_id" },
+      );
+      if (cErr) {
+        toast.error(phoneErrorMessage(cErr));
+        return false;
+      }
+    }
+    if (docPath) {
+      await supabase
+        .from("business_documents")
+        .upsert({ user_id: userId, doc_type: verifyOption, document_url: docPath }, { onConflict: "user_id" });
+    }
+    if (address) {
+      await supabase.from("business_locations").upsert({ business_id: userId, address });
+    }
+    return true;
+  };
 
   const toggleCategory = (cat: string) =>
     setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
@@ -973,22 +1206,32 @@ function BusinessForm({
   };
 
   const canNext = () => {
-    if (step === 0) return businessName.trim() && categories.length > 0 && city;
-    if (step === 1) return contactName.trim() && phone.trim();
+    if (step === 0)
+      return Boolean(
+        businessName.trim() && categories.length > 0 && city && isValidPhone(businessPhone),
+      );
+    if (step === 1) return Boolean(contactName.trim() && isValidPhone(phone));
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!canNext()) {
-      toast.error("Please fill the required fields.");
+      if (step === 0 && businessName.trim() && categories.length > 0 && city)
+        toast.error("Please enter a valid business phone number.");
+      else if (step === 1 && contactName.trim())
+        toast.error("Please enter a valid contact phone number.");
+      else toast.error("Please fill the required fields.");
       return;
     }
     if (step === 0 && !hasVerification && !showVerifyWarning) {
       setShowVerifyWarning(true);
       return;
     }
+    const ok = await saveDraft();
+    if (!ok) return;
     setStep(step + 1);
   };
+
 
 
   const submit = async () => {
@@ -1023,7 +1266,7 @@ function BusinessForm({
       .upsert(
         {
           user_id: userId,
-          phone: businessPhone.trim() || phone,
+          phone: normalizePhoneInput(businessPhone.trim() || phone),
           contact_name: contactName || null,
           contact_position: contactPosition || null,
         },
@@ -1031,7 +1274,7 @@ function BusinessForm({
       );
     if (bcErr) {
       setBusy(false);
-      toast.error("Could not save your contact details. Please try again.");
+      toast.error(phoneErrorMessage(bcErr));
       return;
     }
     if (docPath) {
@@ -1250,7 +1493,7 @@ function BusinessForm({
           )}
           <div className="flex justify-between">
             {step > 0 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+              <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
                 <ChevronLeft size={16} /> Back
               </button>
             ) : (
@@ -1267,7 +1510,7 @@ function BusinessForm({
         </div>
       ) : (
         <div className="mt-8 border-t border-ink/5 pt-6">
-          <button type="button" onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
+          <button type="button" onClick={() => { void saveDraft(); setStep(step - 1); }} className="flex items-center gap-2 text-sm text-ink/50 hover:text-ink">
             <ChevronLeft size={16} /> Back
           </button>
         </div>

@@ -8,11 +8,11 @@ import { useAuth } from "@/lib/auth";
 import { getWorkerContact } from "@/lib/talent.functions";
 import WorkerProfileModal from "@/components/features/WorkerProfileModal";
 import HaccpBadge from "@/components/features/HaccpBadge";
+import { Flag, LanguageFlag } from "@/components/ui/Flag";
 import {
   getInitials,
   roleIcon,
   NATIONALITY_OPTIONS,
-  LANGUAGE_FLAGS,
   DAY_OPTIONS,
   TIME_SLOT_OPTIONS,
 } from "@/data/utils";
@@ -213,8 +213,8 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           <span className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-ink/50">Nationality</span>
             {nationality ? (
-              <span className="text-xs font-medium text-ink/70">
-                {nationality.flag} {nationality.name}
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-ink/70">
+                <Flag code={nationality.code} title={nationality.name} /> {nationality.name}
               </span>
             ) : (
               <span className="text-xs text-ink/30">—</span>
@@ -230,9 +230,9 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               worker.languages.map((l) => (
                 <span
                   key={l.language}
-                  className="rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
+                  className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-[11px] text-ink/60 ring-1 ring-ink/10"
                 >
-                  {LANGUAGE_FLAGS[l.language] ?? "🌐"} {l.language}
+                  <LanguageFlag language={l.language} size={11} /> {l.language}
                 </span>
               ))
             ) : (
